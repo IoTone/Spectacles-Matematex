@@ -4,6 +4,7 @@
     - !<own> 00000000-0000-0065-0000-000000000064
     - !<own> 0005641c-028d-459a-0000-000000014b4d
     - !<own> 72b2cd1d-4c65-4bae-aa9e-6d65a9986e57
+    - !<own> 72d33e0c-e4f8-4b15-83e7-634f8ebb8c41
   layers: !<Layers/267ee9a7-aff2-4f9d-9a49-f71214747d03>
     userLayers:
       []
@@ -1007,6 +1008,21 @@
     - !<own> 3a2fd3dd-a9d6-44e6-aec5-5f47f8ef5c51
   Components:
     []
+- !<SceneObject/72d33e0c-e4f8-4b15-83e7-634f8ebb8c41>
+  PrefabRemaps:
+    []
+  Name: Image
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 32.000000, y: 32.000000, z: 32.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> dec0ce25-534a-4a57-a5a2-086c47e5a51d
 - !<SceneObject/770f6b8e-2864-4d97-8623-667f045430ae>
   PrefabRemaps:
     []
@@ -2045,6 +2061,25 @@
     - !<own> f0cea9eb-dbe2-4b49-99f5-bfb6fd98cdd6
   Components:
     []
+- !<Image/dec0ce25-534a-4a57-a5a2-086c47e5a51d>
+  PrefabRemaps:
+    []
+  Name: Image
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 1879ac8d-370c-4664-9d8d-4de5a771a410
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
 - !<SceneObject/e00cb217-eb56-49f3-bd56-6264e56f686e>
   PrefabRemaps:
     []

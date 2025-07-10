@@ -1,0 +1,12 @@
+These were extracted manually from a package 
+
+texsvg
+
+installed by:
+
+npm install .
+
+from master at this commit: https://github.com/remarkablemark/texsvg/commit/9dc7367a4db19bb4f9964ea48259a5ccc35ee1ff
+
+Extract these manually just pulling out the source directories.
+
