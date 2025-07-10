@@ -1,0 +1,226 @@
+- !<AssetImportMetadata/369b0fa2-a359-463f-9174-3caeac64ff79>
+  ImportedAssetIds:
+    ObjectPrefab: !<reference> 25f50c2f-1ef6-4d07-be23-aa2a7c9f12b5
+  ImporterName: ObjectPrefabImporter
+  PrimaryAsset: !<reference> 25f50c2f-1ef6-4d07-be23-aa2a7c9f12b5
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    ObjectPrefab: !<own> 1e72f573-4f82-4faa-9ffb-a235b0560ca3
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/04b3427a-66bf-4492-aaef-7821edac0052>
+  PrefabRemaps:
+    []
+  Name: Index Gesture
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: -9.780609, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.368184, y: 9.368184, z: 9.368184}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 683e1386-2041-4151-be69-3aa6edbbda68
+- !<ObjectPrefabAssetData/1e72f573-4f82-4faa-9ffb-a235b0560ca3>
+  SourceRemaps:
+    - 1bcfd5a7-6c0d-4d2c-9bc2-f9358f738df2: c3380d2e-fb44-41fa-839b-37fa9e569c16
+    - 23be5c31-786a-48be-9400-65da5432be59: 4a61c2e6-f686-4b78-bc97-f60951ea3ef9
+    - 25f50c2f-1ef6-4d07-be23-aa2a7c9f12b5: eeaa9f59-5fc7-4da4-b6c1-eab0eb743903
+    - 5e535d8a-610b-4897-886b-05407d93ba09: 2f2c9de4-f2d8-4bca-9e63-0b209178b24c
+    - 7d923bc8-2b9f-433e-bde0-e1a2925943cd: d7524e0d-af7e-4f80-ae48-624de0b05585
+    - 9853098b-2632-4af3-a46f-1f924292c34a: 04b3427a-66bf-4492-aaef-7821edac0052
+    - 9c3f5274-2c88-429e-9a07-dfae30a70734: 6cdd86a1-c126-428c-9431-f2ee4f9d726c
+    - abcc242f-551a-421d-b023-2aae68b7be13: 683e1386-2041-4151-be69-3aa6edbbda68
+    - b706827f-c783-49cb-8878-e670e8e475df: 517deec0-3ef9-4d72-960f-bc3a1309fb91
+    - d9164cc6-0d57-4205-9692-4659dcb40b1e: 2200d0af-9448-4b0b-983e-c5208315208c
+    - e50bbbda-f97b-4e69-8e80-fe574dca765b: c013efa0-8f3d-432f-b7ad-07408d6623a0
+    - ea7d8423-0462-40a1-89ff-60d464b60cc2: a38fd0d2-20ad-46c2-a646-50e5dec91e47
+  SourceState: !<own> eeaa9f59-5fc7-4da4-b6c1-eab0eb743903
+- !<SceneObject/2200d0af-9448-4b0b-983e-c5208315208c>
+  PrefabRemaps:
+    []
+  Name: Close Gesture
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.368184, y: 9.368184, z: 9.368184}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> c013efa0-8f3d-432f-b7ad-07408d6623a0
+- !<SceneObject/2f2c9de4-f2d8-4bca-9e63-0b209178b24c>
+  PrefabRemaps:
+    []
+  Name: Victory Gesture
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: -4.900000, y: -9.655014, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.368184, y: 9.368184, z: 9.368184}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 6cdd86a1-c126-428c-9431-f2ee4f9d726c
+- !<Image/4a61c2e6-f686-4b78-bc97-f60951ea3ef9>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 2
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> cb4fb35f-734c-49f9-ae92-e62127353092
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/517deec0-3ef9-4d72-960f-bc3a1309fb91>
+  PrefabRemaps:
+    []
+  Name: HandGesturePack__PLACE_IN_OBJECTS_PANEL
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    - !<own> 2200d0af-9448-4b0b-983e-c5208315208c
+    - !<own> 04b3427a-66bf-4492-aaef-7821edac0052
+    - !<own> d7524e0d-af7e-4f80-ae48-624de0b05585
+    - !<own> 2f2c9de4-f2d8-4bca-9e63-0b209178b24c
+    - !<own> c3380d2e-fb44-41fa-839b-37fa9e569c16
+  Components:
+    []
+- !<Image/683e1386-2041-4151-be69-3aa6edbbda68>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 1
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> c278a105-94b4-451d-903e-e839d2325a9e
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/6cdd86a1-c126-428c-9431-f2ee4f9d726c>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 3
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> a8e01c58-b88a-425f-9fb1-ac15eedcbd1a
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/a38fd0d2-20ad-46c2-a646-50e5dec91e47>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 4
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 3c10f32d-127c-4fd0-acb5-5a0676e7adbe
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/c013efa0-8f3d-432f-b7ad-07408d6623a0>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 7dee0e36-b1b9-4a37-bb5f-43497b2bb7e9
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/c3380d2e-fb44-41fa-839b-37fa9e569c16>
+  PrefabRemaps:
+    []
+  Name: Open Gesture
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 4.900000, y: -9.655014, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.368184, y: 9.368184, z: 9.368184}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> a38fd0d2-20ad-46c2-a646-50e5dec91e47
+- !<SceneObject/d7524e0d-af7e-4f80-ae48-624de0b05585>
+  PrefabRemaps:
+    []
+  Name: Horn Gesture
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 9.780600, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.368184, y: 9.368184, z: 9.368184}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 4a61c2e6-f686-4b78-bc97-f60951ea3ef9
+- !<ObjectPrefab/eeaa9f59-5fc7-4da4-b6c1-eab0eb743903>
+  PackagePath: HandGesturePack__PLACE_IN_OBJECTS_PANEL
+  objects:
+    - !<own> 517deec0-3ef9-4d72-960f-bc3a1309fb91
+  LazyLoading: false
+  RetainAssets: true

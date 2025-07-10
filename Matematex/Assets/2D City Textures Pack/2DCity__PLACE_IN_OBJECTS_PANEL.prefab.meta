@@ -1,0 +1,596 @@
+- !<AssetImportMetadata/11cc7c9a-2d5d-4777-abe4-4facb7c03744>
+  ImportedAssetIds:
+    ObjectPrefab: !<reference> 97908579-aecf-43e2-a857-1e16997d5c6f
+  ImporterName: ObjectPrefabImporter
+  PrimaryAsset: !<reference> 97908579-aecf-43e2-a857-1e16997d5c6f
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    ObjectPrefab: !<own> 274dd6fc-afe6-467a-a53d-38cd9de35ece
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/01197058-63d4-4f66-ba38-b4ec4f0dcf58>
+  PrefabRemaps:
+    []
+  Name: Building 5
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 11.903137, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> dae286b4-2dda-4458-ae0e-20335390f29e
+- !<Image/0f1c0226-4510-4a6b-bb4f-c1c7d8b58943>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 6
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 07ffb2be-f03e-4fd6-9296-b6f371b69677
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/199d2cbf-6fc1-4938-b961-f9870090d024>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 8
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 8c1e6c15-5a06-43d9-85b5-81a009d9377e
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/1fbcf95a-f7fc-4ee0-b8b3-bb3a4f103f56>
+  PrefabRemaps:
+    []
+  Name: Building 2
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 21.890142, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 76da347a-f8dc-4af3-bf14-85d6f0c43af3
+- !<ObjectPrefabAssetData/274dd6fc-afe6-467a-a53d-38cd9de35ece>
+  SourceRemaps:
+    - 036b8f23-4362-4e0e-aca0-73a26a2b7d6b: 318e134a-ca23-4abf-95dd-8fb7b68720fa
+    - 0bb5d5e6-1603-4dde-8196-09a85ed6a95e: ae8367dc-4764-402c-9cec-1134622c8cfe
+    - 0c4a0661-aea4-492b-8323-edff6e7d77b9: d19b5f97-688a-4d44-a456-4807f875c459
+    - 0e42351f-ec6b-4de8-b53d-b57a564ca618: 76da347a-f8dc-4af3-bf14-85d6f0c43af3
+    - 21c6fa84-cf67-409e-a599-92129223de25: e0478605-5196-4901-8db1-0f2bacb7517f
+    - 26b69829-55bb-43e4-a8d5-4f91e5082895: 9e47fbb8-6373-4ddd-9100-181a74f98264
+    - 2a1feb06-f9ec-4931-a5ce-d8ee253d3fac: e8fde2b9-7bab-44e7-b298-a5d56b8e99d1
+    - 35baaed3-a2eb-4480-9f83-f5b0d2242ade: ca74ec38-9c91-49c6-856f-eca22083b727
+    - 37d1b5e4-ca28-4274-847e-b040526eaedb: 7ae88a2b-de63-461f-829c-a88806065add
+    - 38069d01-290e-4958-afdc-ff1bddf88e36: cfcf3d64-2577-440e-a362-4855c174f8b2
+    - 3842eaf9-a30e-4c6b-b686-13e8c4ee3a37: 0f1c0226-4510-4a6b-bb4f-c1c7d8b58943
+    - 54602efe-c02b-4323-a415-9458c9007d17: c41b03a9-31a8-4c54-beec-e6fbc4b3a165
+    - 566fdfe1-8f40-463d-87c9-e110566e3d8a: 7e22271f-42b9-4ec0-8a5e-eef6d439205d
+    - 66cbf0e0-193b-45a4-86d2-327aec7afeb7: 1fbcf95a-f7fc-4ee0-b8b3-bb3a4f103f56
+    - 80ec74a0-6ab4-463a-96cf-80105afebcf1: 199d2cbf-6fc1-4938-b961-f9870090d024
+    - 86363dea-4f02-4386-a1e1-fbd51504cd85: 65a18528-ed47-4cd3-ae76-6fc41a6dd05e
+    - 8b9edc74-1d28-4104-a303-5d72b98a2bb6: 6a431013-35d4-4269-82c6-dc019b98a187
+    - 8d9ff6d0-4c26-493c-ae30-a895375e82b0: 4b98b505-5443-45d3-8e81-f6159902207a
+    - 97908579-aecf-43e2-a857-1e16997d5c6f: a7a69dab-700f-4070-8a26-4d47ce7f3dee
+    - a052fec8-1db0-459d-b831-e6c9a456054a: 9aebc70b-34f4-4531-bbde-72e8fea8ae97
+    - a1e1b39a-eb87-4e30-9e9e-b169174040a6: f511efd5-a2cb-4ad2-b96e-7a1222a2acae
+    - b781bda9-08e3-4567-b6aa-8f8ca0e3f69a: dae286b4-2dda-4458-ae0e-20335390f29e
+    - b98517aa-f400-4b11-890d-ff34ea16be0d: 7b8e43bd-96a7-454a-898a-75a99996ed0c
+    - ba72e25c-e50d-437e-9468-c7b2cf6fd7e8: 6a8a864f-49aa-48f3-9a40-6e64a781d7cf
+    - c7fcc9ae-8a5e-4513-b8dd-7a0e686430ec: d4a3100e-e851-412d-a112-66ff3387a4fb
+    - ca47c091-59dd-461d-adb3-f5987b2efb3e: cde05b40-6793-4ba0-b45c-d35e37929702
+    - d168505e-d6f3-4f3f-b753-80a0aed36390: 85c33e8b-984a-42e8-8352-bfc64abad84b
+    - e01e48f5-60d3-43bf-9fc9-36f23e2f5061: 27cd0451-73c4-4c63-88c4-b0f46ea15f9b
+    - e56956bf-79b9-4730-8012-c53600ebe8de: ffd1796f-c0ba-4083-b7d5-4d06322fddba
+    - e56f5f3f-009f-49db-9d4b-f8d30bf27b9d: 7d4b8a8c-c12b-4e66-9c4b-990f056553c3
+    - e728f123-0e3c-406d-a96a-3f58885ab98d: ab24f3c3-de42-4911-82be-ee0738481cf2
+    - fd0ef178-01aa-4f50-9c59-f722acd5f320: 01197058-63d4-4f66-ba38-b4ec4f0dcf58
+  SourceState: !<own> a7a69dab-700f-4070-8a26-4d47ce7f3dee
+- !<SceneObject/27cd0451-73c4-4c63-88c4-b0f46ea15f9b>
+  PrefabRemaps:
+    []
+  Name: Neon On
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 10.000000, y: -8.153669, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 318e134a-ca23-4abf-95dd-8fb7b68720fa
+- !<Image/318e134a-ca23-4abf-95dd-8fb7b68720fa>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 11
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> afd18cec-9d9d-4850-8dc8-944b2f3be600
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/4b98b505-5443-45d3-8e81-f6159902207a>
+  PrefabRemaps:
+    []
+  Name: Building 1
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: -10.000000, y: 21.890142, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> cde05b40-6793-4ba0-b45c-d35e37929702
+- !<Image/65a18528-ed47-4cd3-ae76-6fc41a6dd05e>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 9
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> d4d1e88e-2313-4a65-8d39-c2b2dc90647a
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/6a431013-35d4-4269-82c6-dc019b98a187>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 14
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 8233e07c-cb94-4a8e-81f0-05a24dbf6b3b
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/6a8a864f-49aa-48f3-9a40-6e64a781d7cf>
+  PrefabRemaps:
+    []
+  Name: Train
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 10.000000, y: -18.173500, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 6a431013-35d4-4269-82c6-dc019b98a187
+- !<Image/76da347a-f8dc-4af3-bf14-85d6f0c43af3>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 1
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 552df398-caba-4246-ab51-7387421e06b8
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/7ae88a2b-de63-461f-829c-a88806065add>
+  PrefabRemaps:
+    []
+  Name: Car with Cat
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 1.833336, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> ae8367dc-4764-402c-9cec-1134622c8cfe
+- !<SceneObject/7b8e43bd-96a7-454a-898a-75a99996ed0c>
+  PrefabRemaps:
+    []
+  Name: Building 6
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 10.000000, y: 11.903137, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> d19b5f97-688a-4d44-a456-4807f875c459
+- !<SceneObject/7d4b8a8c-c12b-4e66-9c4b-990f056553c3>
+  PrefabRemaps:
+    []
+  Name: Sun
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: -18.173500, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> cfcf3d64-2577-440e-a362-4855c174f8b2
+- !<SceneObject/7e22271f-42b9-4ec0-8a5e-eef6d439205d>
+  PrefabRemaps:
+    []
+  Name: Cloud 3
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: -8.153669, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> e8fde2b9-7bab-44e7-b298-a5d56b8e99d1
+- !<SceneObject/85c33e8b-984a-42e8-8352-bfc64abad84b>
+  PrefabRemaps:
+    []
+  Name: Building 4
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: -10.000000, y: 11.903137, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 9aebc70b-34f4-4531-bbde-72e8fea8ae97
+- !<Image/9aebc70b-34f4-4531-bbde-72e8fea8ae97>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 3
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 5bae607b-a20d-4c51-be57-cb385a91eddd
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/9e47fbb8-6373-4ddd-9100-181a74f98264>
+  PrefabRemaps:
+    []
+  Name: Cloud 2
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: -10.000000, y: -8.153669, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 65a18528-ed47-4cd3-ae76-6fc41a6dd05e
+- !<ObjectPrefab/a7a69dab-700f-4070-8a26-4d47ce7f3dee>
+  PackagePath: 2DCity__PLACE_IN_OBJECTS_PANEL
+  objects:
+    - !<own> ffd1796f-c0ba-4083-b7d5-4d06322fddba
+  LazyLoading: false
+  RetainAssets: true
+- !<Image/ab24f3c3-de42-4911-82be-ee0738481cf2>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 12
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 84661023-2b5d-496a-a452-b202aaa6f46a
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/ae8367dc-4764-402c-9cec-1134622c8cfe>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 7
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 45e89045-0159-495f-b85d-0ae05b444ce0
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/c41b03a9-31a8-4c54-beec-e6fbc4b3a165>
+  PrefabRemaps:
+    []
+  Name: Building 3
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 10.000000, y: 21.890142, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> ca74ec38-9c91-49c6-856f-eca22083b727
+- !<Image/ca74ec38-9c91-49c6-856f-eca22083b727>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 2
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> db6c4072-bfc7-4525-9394-e028d5bfb469
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/cde05b40-6793-4ba0-b45c-d35e37929702>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 0d54f580-2867-485d-88ec-d3c8e0397a4b
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/cfcf3d64-2577-440e-a362-4855c174f8b2>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 13
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> cad5b9d9-ddfb-4e00-b25d-111db02242b3
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<Image/d19b5f97-688a-4d44-a456-4807f875c459>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 5
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> f5d0fc9c-dabc-4d1d-9de3-f9134e6a4f86
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/d4a3100e-e851-412d-a112-66ff3387a4fb>
+  PrefabRemaps:
+    []
+  Name: Cloud 1
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 10.000000, y: 1.833336, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 199d2cbf-6fc1-4938-b961-f9870090d024
+- !<Image/dae286b4-2dda-4458-ae0e-20335390f29e>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 4
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> bd49db9c-3991-456e-a9bf-81b7f37979a4
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/e0478605-5196-4901-8db1-0f2bacb7517f>
+  PrefabRemaps:
+    []
+  Name: Subway
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: -10.000000, y: -18.173532, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> ab24f3c3-de42-4911-82be-ee0738481cf2
+- !<Image/e8fde2b9-7bab-44e7-b298-a5d56b8e99d1>
+  PrefabRemaps:
+    []
+  Name: Image 2
+  Enabled: true
+  RenderOrder: 10
+  StretchMode: Fit
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> f054bc9b-8ecb-4c38-9349-0af1aa409419
+  FlipX: false
+  FlipY: false
+  RotationAngle: 0
+  Pivot: {x: 0.000000, y: 0.000000}
+  ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/f511efd5-a2cb-4ad2-b96e-7a1222a2acae>
+  PrefabRemaps:
+    []
+  Name: Building 7
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: -10.000000, y: 1.833336, z: 0.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 0f1c0226-4510-4a6b-bb4f-c1c7d8b58943
+- !<SceneObject/ffd1796f-c0ba-4083-b7d5-4d06322fddba>
+  PrefabRemaps:
+    []
+  Name: 2DCity__PLACE_IN_OBJECTS_PANEL
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    - !<own> 4b98b505-5443-45d3-8e81-f6159902207a
+    - !<own> 1fbcf95a-f7fc-4ee0-b8b3-bb3a4f103f56
+    - !<own> c41b03a9-31a8-4c54-beec-e6fbc4b3a165
+    - !<own> 85c33e8b-984a-42e8-8352-bfc64abad84b
+    - !<own> 01197058-63d4-4f66-ba38-b4ec4f0dcf58
+    - !<own> 7b8e43bd-96a7-454a-898a-75a99996ed0c
+    - !<own> f511efd5-a2cb-4ad2-b96e-7a1222a2acae
+    - !<own> 7ae88a2b-de63-461f-829c-a88806065add
+    - !<own> d4a3100e-e851-412d-a112-66ff3387a4fb
+    - !<own> 9e47fbb8-6373-4ddd-9100-181a74f98264
+    - !<own> 7e22271f-42b9-4ec0-8a5e-eef6d439205d
+    - !<own> 27cd0451-73c4-4c63-88c4-b0f46ea15f9b
+    - !<own> e0478605-5196-4901-8db1-0f2bacb7517f
+    - !<own> 7d4b8a8c-c12b-4e66-9c4b-990f056553c3
+    - !<own> 6a8a864f-49aa-48f3-9a40-6e64a781d7cf
+  Components:
+    []

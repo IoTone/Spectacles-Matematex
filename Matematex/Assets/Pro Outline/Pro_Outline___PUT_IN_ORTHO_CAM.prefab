@@ -1,0 +1,143 @@
+- !<ObjectPrefab/cb32e2b8-cf73-4e3a-8bc1-c5f96a4a8a08>
+  PackagePath: Pro_Outline___PUT_IN_ORTHO_CAM
+  objects:
+    - !<own> a7bb384c-fbef-48b5-a9cd-01c4ace856f4
+  LazyLoading: false
+  RetainAssets: true
+- !<PostEffectVisual/108063d4-b1b3-416d-8004-a7bd2ee1d9d3>
+  PrefabRemaps:
+    []
+  Name: Post Effect
+  Enabled: true
+  RenderOrder: 1
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 7ea45199-23d2-4bb7-a397-bfcd87de0d3c
+- !<ScriptComponent/3484ce4b-75a2-43fc-b044-8c53bd031a6a>
+  PrefabRemaps:
+    []
+  Name: JFA
+  Enabled: true
+  ScriptAsset: !<reference> 848a2d71-d6a1-44f1-81a5-775f8c212d94
+  ScriptInputsDefault:
+    advanced: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      outlineThickness: 64
+      mask: !<reference.Texture> 6e723a51-9c2c-4004-b5ce-99cf092c6606
+      advanced: false
+      isFullScreen: true
+      customRes: !<Vec2> {x: 128.000000, y: 256.000000}
+      firstPass: !<reference.Material> ab72f47c-9352-4515-9849-978bfa7e3ea5
+      JFAStep: !<reference.Material> f8d81b6b-122f-41e4-b00e-a455141c2c8f
+      startingRenderOrder: -50
+  ScriptTypes:
+    "":
+      {}
+- !<SceneObject/7d94a7df-ee35-4738-af05-5edc29084e74>
+  PrefabRemaps:
+    []
+  Name: Pro Outline (Stroke)
+  Enabled: false
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: -40.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> fb5a0fbc-4614-41b3-bf66-294fcdd3a6e4
+    - !<own> 108063d4-b1b3-416d-8004-a7bd2ee1d9d3
+    - !<own> 85d84c3d-1f94-4e18-903a-1a19582d28e4
+- !<PostEffectVisual/85d84c3d-1f94-4e18-903a-1a19582d28e4>
+  PrefabRemaps:
+    []
+  Name: Post Effect
+  Enabled: true
+  RenderOrder: 1
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 1309af59-e7a0-4368-ade1-d1e61357a1bd
+- !<PostEffectVisual/a1988d3f-1dc4-436c-8a39-084e8ef528ca>
+  PrefabRemaps:
+    []
+  Name: Post Effect
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> d3cb6d68-ad9e-4c01-b722-e43c9cb5c568
+- !<SceneObject/a7bb384c-fbef-48b5-a9cd-01c4ace856f4>
+  PrefabRemaps:
+    []
+  Name: Pro_Outline___PUT_IN_ORTHO_CAM
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    - !<own> d6f3943f-e5d8-49a9-bcf5-af8ac374c734
+    - !<own> 7d94a7df-ee35-4738-af05-5edc29084e74
+  Components:
+    []
+- !<SceneObject/d6f3943f-e5d8-49a9-bcf5-af8ac374c734>
+  PrefabRemaps:
+    []
+  Name: Pro Outline (Effects)
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: -40.000000}
+    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> a1988d3f-1dc4-436c-8a39-084e8ef528ca
+    - !<own> 3484ce4b-75a2-43fc-b044-8c53bd031a6a
+- !<ScriptComponent/fb5a0fbc-4614-41b3-bf66-294fcdd3a6e4>
+  PrefabRemaps:
+    []
+  Name: JFA
+  Enabled: true
+  ScriptAsset: !<reference> 848a2d71-d6a1-44f1-81a5-775f8c212d94
+  ScriptInputsDefault:
+    advanced: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      outlineThickness: 64
+      mask: !<reference.Texture> 6e723a51-9c2c-4004-b5ce-99cf092c6606
+      advanced: false
+      isFullScreen: true
+      customRes: !<Vec2> {x: 128.000000, y: 256.000000}
+      firstPass: !<reference.Material> ab72f47c-9352-4515-9849-978bfa7e3ea5
+      JFAStep: !<reference.Material> f8d81b6b-122f-41e4-b00e-a455141c2c8f
+      startingRenderOrder: -50
+  ScriptTypes:
+    "":
+      {}
