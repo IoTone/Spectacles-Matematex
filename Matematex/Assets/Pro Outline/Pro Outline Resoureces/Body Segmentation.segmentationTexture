@@ -1,5 +1,5 @@
 - !<SegmentationTexture/6e723a51-9c2c-4004-b5ce-99cf092c6606>
-  PackagePath: Pro Outline Resoureces/Body Segmentation
+  PackagePath: ""
   SegmentationType: Body
   InvertMask: false
   Feathering: 0.401000

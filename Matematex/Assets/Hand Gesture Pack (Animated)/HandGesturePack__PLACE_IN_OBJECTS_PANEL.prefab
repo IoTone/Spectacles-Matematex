@@ -1,5 +1,5 @@
 - !<ObjectPrefab/25f50c2f-1ef6-4d07-be23-aa2a7c9f12b5>
-  PackagePath: HandGesturePack__PLACE_IN_OBJECTS_PANEL
+  PackagePath: ""
   objects:
     - !<own> b706827f-c783-49cb-8878-e670e8e475df
   LazyLoading: false
@@ -8,7 +8,7 @@
   PrefabRemaps:
     []
   Name: Open Gesture
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform:
     position: {x: 4.900000, y: -9.655014, z: 0.000000}
@@ -57,7 +57,7 @@
   PrefabRemaps:
     []
   Name: Horn Gesture
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform:
     position: {x: 9.780600, y: 0.000000, z: 0.000000}
@@ -72,7 +72,7 @@
   PrefabRemaps:
     []
   Name: Index Gesture
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform:
     position: {x: -9.780609, y: 0.000000, z: 0.000000}
@@ -144,7 +144,7 @@
   PrefabRemaps:
     []
   Name: Close Gesture
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform:
     position: {x: 0.000000, y: 0.000000, z: 0.000000}

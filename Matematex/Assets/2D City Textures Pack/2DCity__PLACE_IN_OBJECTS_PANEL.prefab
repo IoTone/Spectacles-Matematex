@@ -1,5 +1,5 @@
 - !<ObjectPrefab/97908579-aecf-43e2-a857-1e16997d5c6f>
-  PackagePath: 2DCity__PLACE_IN_OBJECTS_PANEL
+  PackagePath: ""
   objects:
     - !<own> e56956bf-79b9-4730-8012-c53600ebe8de
   LazyLoading: false

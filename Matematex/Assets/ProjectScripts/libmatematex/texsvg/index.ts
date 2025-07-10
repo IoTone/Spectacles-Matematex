@@ -1,4 +1,4 @@
-import { optimize } from '../svgo/lib/svgo.d';
+import { optimize } from '../svgo/lib/svgo';
 import mathjax from 'mathjax';
 import { mathjaxInitOptions, svgoOptimizeOptions } from './config';
 

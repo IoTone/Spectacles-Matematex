@@ -7,7 +7,7 @@
   PackageType: LegacyPackage
   PackagePolicy: CannotBeUnpackedTransparent
   ExtraData:
-    {}
+    AssetLibraryId: 74jWaEfe49AAzIZ7CKWsaq
   AssetDataMap:
     AnimatedTexture: !<own> a16bbe1b-695a-48a2-a810-700829896bdd
   DependentFiles:

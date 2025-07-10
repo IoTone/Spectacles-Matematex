@@ -6,7 +6,7 @@
   PackageType: NotAPackage
   PackagePolicy: CannotBeUnpacked
   ExtraData:
-    {}
+    AssetLibraryId: 74jWaEfe49AAzIZ7CKWsaq
   AssetDataMap:
     ObjectPrefab: !<own> 1e72f573-4f82-4faa-9ffb-a235b0560ca3
   DependentFiles:
@@ -18,7 +18,7 @@
   PrefabRemaps:
     []
   Name: Index Gesture
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform:
     position: {x: -9.780609, y: 0.000000, z: 0.000000}
@@ -48,7 +48,7 @@
   PrefabRemaps:
     []
   Name: Close Gesture
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform:
     position: {x: 0.000000, y: 0.000000, z: 0.000000}
@@ -192,7 +192,7 @@
   PrefabRemaps:
     []
   Name: Open Gesture
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform:
     position: {x: 4.900000, y: -9.655014, z: 0.000000}
@@ -207,7 +207,7 @@
   PrefabRemaps:
     []
   Name: Horn Gesture
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform:
     position: {x: 9.780600, y: 0.000000, z: 0.000000}
@@ -219,7 +219,7 @@
   Components:
     - !<own> 4a61c2e6-f686-4b78-bc97-f60951ea3ef9
 - !<ObjectPrefab/eeaa9f59-5fc7-4da4-b6c1-eab0eb743903>
-  PackagePath: HandGesturePack__PLACE_IN_OBJECTS_PANEL
+  PackagePath: ""
   objects:
     - !<own> 517deec0-3ef9-4d72-960f-bc3a1309fb91
   LazyLoading: false
