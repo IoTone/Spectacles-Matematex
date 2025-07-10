@@ -1,0 +1,64 @@
+- !<AssetImportMetadata/e9f909f6-e4d3-4ca9-957c-96be158d3f16>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> e2f15e28-36d3-4534-b246-d1c3a954c266
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> e2f15e28-36d3-4534-b246-d1c3a954c266
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 5c6fdf8c-908f-46db-8912-40e2d7bfc86d
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/5c6fdf8c-908f-46db-8912-40e2d7bfc86d>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  InternalVersion: 0
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 07ad86fa-4789-4f5a-9ed0-556dfd6a691f
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    _color: false
+    closedLoop: false
+    controlPoints: false
+    interpolationPoints: false
+    lineMaterial: false
+    lineStyle: false
+    lineWidth: false
+    tension: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  DefaultScriptInputs:
+    - controlPoints: !<reference.SceneObject[]>
+        []
+      interpolationPoints: !<float> 10.000000
+      tension: 0.500000
+      closedLoop: false
+      lineMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      _color: !<Vec3> {x: 1.000000, y: 1.000000, z: 0.000000}
+      lineWidth: 0.500000
+      lineStyle: !<float> 0.000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input SceneObject[] controlPoints {"hint":"The control points for the spline curve"}'
+    - '// @input float interpolationPoints = 10 {"hint":"Number of interpolation points between each control point (higher = smoother)"}'
+    - '// @input float tension = 0.5 {"hint":"Tension of the curve (0 = straight lines, 1 = tight curve)"}'
+    - '// @input bool closedLoop {"hint":"Whether the spline should be closed (connect last point to first)"}'
+    - // @input Asset.Material lineMaterial
+    - '// @input vec3 _color = "{1, 1, 0}" {"widget":"color"}'
+    - // @input float lineWidth = 0.5
+    - '// @input float lineStyle {"widget":"combobox", "values":[{"label":"Full", "value":0}, {"label":"Split", "value":1}, {"label":"FadedEnd", "value":2}]}'

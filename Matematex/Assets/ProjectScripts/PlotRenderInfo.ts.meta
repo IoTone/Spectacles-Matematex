@@ -1,0 +1,45 @@
+- !<AssetImportMetadata/20beb647-e74b-4a3e-b80f-f742b3d919e1>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 236737e2-e6cf-42aa-9f4d-e71c2ddb0b9c
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 236737e2-e6cf-42aa-9f4d-e71c2ddb0b9c
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> c8619e2a-f011-48e6-a66b-1cf5c2428f07
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/c8619e2a-f011-48e6-a66b-1cf5c2428f07>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  InternalVersion: 0
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 86ac6d2c-8e5d-4cb5-b1d3-c02861ccd9dc
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    functionText: false
+    interactableMesh: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  DefaultScriptInputs:
+    - interactableMesh: !<MappingBased.AssignableType> 00000000-0000-0000-0000-000000000000
+      functionText: !<reference.Text> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input AssignableType interactableMesh {"hint":"Choose an Interactable Mesh"}'
+    - '// @input Component.Text functionText {"hint":"Choose a Text Scene Object"}'

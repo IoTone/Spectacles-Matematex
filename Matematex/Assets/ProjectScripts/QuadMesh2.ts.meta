@@ -1,0 +1,42 @@
+- !<AssetImportMetadata/b3f3183b-1a5d-4b6b-89a9-39006effa16e>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 69b0997c-ce0d-4cfc-ab7e-2dee3062ee00
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 69b0997c-ce0d-4cfc-ab7e-2dee3062ee00
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 72a89bce-c578-4a0f-b4ae-3e61bad77b65
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/72a89bce-c578-4a0f-b4ae-3e61bad77b65>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  InternalVersion: 0
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 312eaaa8-b127-4034-b750-ff4d4d12f510
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    material: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  DefaultScriptInputs:
+    - material: !<reference.Material> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input Asset.Material material {"hint":"Material to apply to the 3D line mesh"}'

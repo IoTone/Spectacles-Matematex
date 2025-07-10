@@ -1,0 +1,56 @@
+- !<AssetImportMetadata/5b10ebcf-4dbb-463f-a45a-e3a8c2a92d89>
+  ImportedAssetIds:
+    JavaScriptAsset: !<reference> e9a0170b-f7cb-4ad5-8731-8f57c166fa62
+  ImporterName: JavaScriptAssetImporter
+  PrimaryAsset: !<reference> e9a0170b-f7cb-4ad5-8731-8f57c166fa62
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    AssetLibraryId: 91uCK9xPusn64PWkS99OY
+  AssetDataMap:
+    JavaScriptAsset: !<own> a68f2c7f-acfe-458d-b970-84f4c93d9e86
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<ScriptAssetData/a68f2c7f-acfe-458d-b970-84f4c93d9e86>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  InternalVersion: 0
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: f403da68-4ae0-4ee6-8e6c-5fa637bb221f
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    audio: false
+    autoStyleSelector: false
+    previewTTS: false
+    previewText: false
+    tts: false
+    voiceName: false
+    voicePace: false
+    voiceStyleSam: false
+    voiceStyleSasha: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  DefaultScriptInputs:
+    - tts: !<reference.TextToSpeechModule> 00000000-0000-0000-0000-000000000000
+      audio: !<reference.AudioComponent> 00000000-0000-0000-0000-000000000000
+      autoStyleSelector: false
+      voiceName: ""
+      voiceStyleSasha: 0
+      voiceStyleSam: 0
+      voicePace: !<float> 0.000000
+      previewTTS: false
+      previewText: ""
+  ScriptTypes:
+    -
+      {}

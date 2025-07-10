@@ -1,0 +1,51 @@
+- !<AssetImportMetadata/7b5fc10e-7601-4fc0-85fa-aa3d9e9486b3>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> f52c1b11-6f0f-44aa-9c5a-41b14f9d01b6
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> f52c1b11-6f0f-44aa-9c5a-41b14f9d01b6
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> a1cd60bf-46b6-43d5-81f6-ab80b1b7fb93
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/a1cd60bf-46b6-43d5-81f6-ab80b1b7fb93>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  InternalVersion: 0
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: fc7ee82b-7dcc-4f84-b2bc-5cf33a91d9a7
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    color: false
+    renderMode: false
+    resolution: false
+    scale: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  DefaultScriptInputs:
+    - renderMode: volume
+      resolution: !<float> 50.000000
+      scale: !<float> 1.000000
+      color: !<Vec4> {x: 0.000000, y: 1.000000, z: 0.000000, w: 1.000000}
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input string renderMode = "volume"'
+    - // @input float resolution = 50
+    - // @input float scale = 1
+    - "// @input vec4 color = {0,1,0,1}"

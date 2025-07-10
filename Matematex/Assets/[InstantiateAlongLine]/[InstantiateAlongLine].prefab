@@ -1,0 +1,220 @@
+- !<ObjectPrefab/fe2c4cf9-d690-47d7-bebb-01a0440d863a>
+  PackagePath: ""
+  objects:
+    - !<own> 7c530de6-acb7-415f-8fa3-e4793c5af924
+  LazyLoading: false
+  RetainAssets: true
+- !<SceneObject/2f18e7a4-fafe-4049-8171-a74ef51b16bb>
+  PrefabRemaps:
+    []
+  Name: LineManager
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> be172d38-1fb5-46b8-ae5a-4ede2dd29385
+- !<SceneObject/461c2f1c-6ca3-47ba-aef0-7d2b2c903d38>
+  PrefabRemaps:
+    []
+  Name: LineStart
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: -10.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 2.000000, y: 2.000000, z: 2.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 8a8e3335-8c7e-449f-bec9-f8fcc56852db
+- !<ScriptComponent/4d31c86a-72f5-436f-ae99-6f7f2afe9fc4>
+  PrefabRemaps:
+    []
+  Name: InstantiateAlongLineJS
+  Enabled: true
+  ScriptAsset: !<reference> d12b2a3e-31cf-47ef-b0e9-2fd352a21f90
+  ScriptInputsDefault:
+    {}
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      prefab: !<reference.ObjectPrefab> 872c2c3d-9c78-48cb-baaf-d5f9bffd652c
+      startPoint: !<reference.SceneObject> 461c2f1c-6ca3-47ba-aef0-7d2b2c903d38
+      endPoint: !<reference.SceneObject> ab37d9e3-28a2-4de0-8b9d-32c048b9325f
+      numberOfObjects: !<float> 3.000000
+  ScriptTypes:
+    "":
+      {}
+- !<SceneObject/6eeb67aa-4579-456b-8e38-e54619835bec>
+  PrefabRemaps:
+    []
+  Name: InstantiateAlongLineTS
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> f71beb7d-3fa7-41f9-addb-35443b8a2ff4
+- !<SceneObject/7c530de6-acb7-415f-8fa3-e4793c5af924>
+  PrefabRemaps:
+    []
+  Name: "[InstantiateAlongLine]"
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    - !<own> 6eeb67aa-4579-456b-8e38-e54619835bec
+    - !<own> ceaef3e1-e5d5-4606-b199-a417577762a3
+    - !<own> ea1abca3-b120-4d5e-b53a-87e263474e40
+  Components:
+    []
+- !<RenderMeshVisual/8a8e3335-8c7e-449f-bec9-f8fcc56852db>
+  PrefabRemaps:
+    []
+  Name: Render Mesh Visual
+  Enabled: false
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 9ee1073b-935e-4720-87ab-0219afccb6f9
+  Mesh: !<reference> aae64b92-ffcd-491d-b110-8fd360abad72
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<RenderMeshVisual/94ccb2fe-ca56-4ff9-b61e-bc0e9a0bbbfd>
+  PrefabRemaps:
+    []
+  Name: Render Mesh Visual
+  Enabled: false
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 9ee1073b-935e-4720-87ab-0219afccb6f9
+  Mesh: !<reference> aae64b92-ffcd-491d-b110-8fd360abad72
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/ab37d9e3-28a2-4de0-8b9d-32c048b9325f>
+  PrefabRemaps:
+    []
+  Name: LineEnds
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 10.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 0.500000, y: 0.500000, z: 0.500000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 94ccb2fe-ca56-4ff9-b61e-bc0e9a0bbbfd
+- !<ScriptComponent/be172d38-1fb5-46b8-ae5a-4ede2dd29385>
+  PrefabRemaps:
+    []
+  Name: Line
+  Enabled: true
+  ScriptAsset: !<reference> e9757e87-ee7c-479b-9454-bc13b9fc6866
+  ScriptInputsDefault:
+    _beginColor: true
+    _endColor: true
+    lineLength: true
+    shouldStick: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      startPointObject: !<reference.SceneObject> 461c2f1c-6ca3-47ba-aef0-7d2b2c903d38
+      endPointObject: !<reference.SceneObject> ab37d9e3-28a2-4de0-8b9d-32c048b9325f
+      lineMaterial: !<reference.Material> 2b58020a-48a7-4294-b644-720a9e37550a
+      _beginColor: !<Vec3> {x: 1.000000, y: 1.000000, z: 0.000000}
+      _endColor: !<Vec3> {x: 0.844663, y: 0.514565, z: 1.000000}
+      lineWidth: 0.300000
+      lineLength: !<float> 220.000000
+      lineStyle: !<float> 0.000000
+      shouldStick: true
+  ScriptTypes:
+    "":
+      {}
+- !<SceneObject/ceaef3e1-e5d5-4606-b199-a417577762a3>
+  PrefabRemaps:
+    []
+  Name: InstantiateAlongLineJS
+  Enabled: false
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 4d31c86a-72f5-436f-ae99-6f7f2afe9fc4
+- !<SceneObject/ea1abca3-b120-4d5e-b53a-87e263474e40>
+  PrefabRemaps:
+    []
+  Name: LineTS Copy
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    - !<own> 2f18e7a4-fafe-4049-8171-a74ef51b16bb
+    - !<own> 461c2f1c-6ca3-47ba-aef0-7d2b2c903d38
+    - !<own> ab37d9e3-28a2-4de0-8b9d-32c048b9325f
+  Components:
+    []
+- !<ScriptComponent/f71beb7d-3fa7-41f9-addb-35443b8a2ff4>
+  PrefabRemaps:
+    []
+  Name: InstantiateAlongLineTS
+  Enabled: true
+  ScriptAsset: !<reference> c2c6a908-1825-4ee5-b341-287eaaadc8fb
+  ScriptInputsDefault:
+    {}
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      prefab: !<reference.ObjectPrefab> 872c2c3d-9c78-48cb-baaf-d5f9bffd652c
+      startPoint: !<reference.SceneObject> 461c2f1c-6ca3-47ba-aef0-7d2b2c903d38
+      endPoint: !<reference.SceneObject> ab37d9e3-28a2-4de0-8b9d-32c048b9325f
+      numberOfObjects: !<float> 3.000000
+  ScriptTypes:
+    "":
+      {}

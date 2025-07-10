@@ -1,0 +1,136 @@
+- !<AssetImportMetadata/3f71e023-e87f-4eff-b128-4d824634dc36>
+  ImportedAssetIds:
+    ObjectPrefab: !<reference> de0d4a21-d507-411c-bf92-a7bbd8c1d676
+  ImporterName: ObjectPrefabImporter
+  PrimaryAsset: !<reference> de0d4a21-d507-411c-bf92-a7bbd8c1d676
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    AssetLibraryId: 91uCK9xPusn64PWkS99OY
+  AssetDataMap:
+    ObjectPrefab: !<own> f2cf6a7d-2942-4b96-90a5-e2c7024a48f5
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<AudioComponent/104efff1-b1c8-423c-89d0-1e0e61e5c5a0>
+  PrefabRemaps:
+    []
+  Name: Audio
+  Enabled: true
+  AudioTrack: !<reference> 00000000-0000-0000-0000-000000000000
+  EnableAutoplayLoop: false
+  Volume: 1.000000
+  EnableMixToSnap: true
+  RecordVolume: 1.000000
+  EnableSpatialAudio: false
+  EnableDistanceEffect: false
+  CurveType: Logarithm
+  MinDistance: 0.000000
+  MaxDistance: 100.000000
+  EnableDirectivityEffect: false
+  EnablePositionEffect: false
+- !<ScriptComponent/23ddde90-ce83-41fb-8729-b8c52f7271e2>
+  PrefabRemaps:
+    []
+  Name: TTSController
+  Enabled: true
+  ScriptAsset: !<reference> e9a0170b-f7cb-4ad5-8731-8f57c166fa62
+  ScriptInputsDefault:
+    previewTTS: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      tts: !<reference.TextToSpeechModule> e9c64543-ac8a-4991-98d6-7c75875f7bf0
+      audio: !<reference.AudioComponent> 104efff1-b1c8-423c-89d0-1e0e61e5c5a0
+      autoStyleSelector: true
+      voiceName: Sasha
+      voiceStyleSasha: 1
+      voiceStyleSam: 1
+      voicePace: !<float> 1.000000
+      previewTTS: false
+      previewText: Show me you love cats without telling me you love cats
+  ScriptTypes:
+    "":
+      {}
+- !<ScriptComponent/79bf8358-ccce-40ea-966a-02937812d713>
+  PrefabRemaps:
+    []
+  Name: "TTSExample[DELETE_ME]"
+  Enabled: true
+  ScriptAsset: !<reference> 413e6cbb-1e8d-40b4-8860-4a5846032365
+  ScriptInputsDefault:
+    {}
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      text: Provide any text input
+  ScriptTypes:
+    "":
+      {}
+- !<SceneObject/9f0a1329-3c51-4c81-97d8-2dcdc2fd307a>
+  PrefabRemaps:
+    []
+  Name: "TTS Example [DELETE_ME]"
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 79bf8358-ccce-40ea-966a-02937812d713
+- !<SceneObject/da02b585-5b16-4b34-ba6f-e218af0cf438>
+  PrefabRemaps:
+    []
+  Name: TextToSpeech__PLACE_IN_OBJECTS_PANEL
+  Enabled: true
+  Layers: 1048576
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    - !<own> da3372ca-33bc-4e48-94cc-04ca3020787f
+    - !<own> 9f0a1329-3c51-4c81-97d8-2dcdc2fd307a
+  Components:
+    []
+- !<SceneObject/da3372ca-33bc-4e48-94cc-04ca3020787f>
+  PrefabRemaps:
+    []
+  Name: "TTS Controller [EDIT_ME]"
+  Enabled: true
+  Layers: 1
+  LocalTransform:
+    position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    hasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 23ddde90-ce83-41fb-8729-b8c52f7271e2
+    - !<own> 104efff1-b1c8-423c-89d0-1e0e61e5c5a0
+- !<ObjectPrefab/db766685-8257-48fe-bbff-9253750a4927>
+  PackagePath: TextToSpeech__PLACE_IN_OBJECTS_PANEL
+  objects:
+    - !<own> da02b585-5b16-4b34-ba6f-e218af0cf438
+  LazyLoading: false
+  RetainAssets: true
+- !<ObjectPrefabAssetData/f2cf6a7d-2942-4b96-90a5-e2c7024a48f5>
+  SourceRemaps:
+    - 20c07b75-3d32-45c8-89c5-df4b0ada693f: 104efff1-b1c8-423c-89d0-1e0e61e5c5a0
+    - 6cb9bb09-536a-43b7-adfe-68fa32ae5e6c: 9f0a1329-3c51-4c81-97d8-2dcdc2fd307a
+    - 7366dfc0-3a46-4e35-a63f-3d3fd3c7135a: da3372ca-33bc-4e48-94cc-04ca3020787f
+    - a5fa2c8e-7069-4e75-ad02-985c94093866: 79bf8358-ccce-40ea-966a-02937812d713
+    - cfddff04-d893-4152-9616-d61989b7ea4d: 23ddde90-ce83-41fb-8729-b8c52f7271e2
+    - de0d4a21-d507-411c-bf92-a7bbd8c1d676: db766685-8257-48fe-bbff-9253750a4927
+    - fd66b15b-0cb2-49ff-8577-29af02854a9f: da02b585-5b16-4b34-ba6f-e218af0cf438
+  SourceState: !<own> db766685-8257-48fe-bbff-9253750a4927

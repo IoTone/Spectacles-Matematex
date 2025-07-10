@@ -1,0 +1,42 @@
+- !<AssetImportMetadata/e14ce83e-a685-4363-bd1a-0070e8841058>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> e54076d8-d2b7-4a8a-8d1c-43550fbd133e
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> e54076d8-d2b7-4a8a-8d1c-43550fbd133e
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 65c3877f-5236-41d8-b66a-12389786c324
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/65c3877f-5236-41d8-b66a-12389786c324>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  InternalVersion: 0
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 47fc526a-e3c3-41b7-b7c0-dd20c91ccd9b
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    mainAudioLoop: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  DefaultScriptInputs:
+    - mainAudioLoop: !<reference.AudioComponent> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input Component.AudioComponent mainAudioLoop {"hint":"Audio Soundtrack"}'

@@ -1,0 +1,66 @@
+- !<AssetImportMetadata/cd76f6d3-d0ce-2023-8f48-197fcf81ba76>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> e9757e87-ee7c-479b-9454-bc13b9fc6866
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> e9757e87-ee7c-479b-9454-bc13b9fc6866
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 09a86225-b501-400c-86bc-f797a85007c3
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/09a86225-b501-400c-86bc-f797a85007c3>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  InternalVersion: 0
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: e0214077-8804-4ad3-a72b-8e826645f2f4
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  CurrentVisibility: Editable
+  MaxVisibility: Editable
+  ScriptInputsHidden:
+    _beginColor: false
+    _endColor: false
+    endPointObject: false
+    lineLength: false
+    lineMaterial: false
+    lineStyle: false
+    lineWidth: false
+    shouldStick: false
+    startPointObject: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  DefaultScriptInputs:
+    - startPointObject: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      endPointObject: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      lineMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      _beginColor: !<Vec3> {x: 1.000000, y: 1.000000, z: 0.000000}
+      _endColor: !<Vec3> {x: 0.844663, y: 0.514565, z: 1.000000}
+      lineWidth: 0.010000
+      lineLength: !<float> 220.000000
+      lineStyle: !<float> 2.000000
+      shouldStick: true
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input SceneObject startPointObject
+    - // @input SceneObject endPointObject
+    - // @input Asset.Material lineMaterial
+    - '// @input vec3 _beginColor = "{1, 1, 0}" {"widget":"color"}'
+    - '// @input vec3 _endColor = "{1, 1, 0}" {"widget":"color"}'
+    - // @input float lineWidth = 0.5
+    - // @input float lineLength = 160
+    - '// @input float lineStyle = 2 {"widget":"combobox", "values":[{"label":"Full", "value":0}, {"label":"Split", "value":1}, {"label":"FadedEnd", "value":2}]}'
+    - // @input bool shouldStick = true
