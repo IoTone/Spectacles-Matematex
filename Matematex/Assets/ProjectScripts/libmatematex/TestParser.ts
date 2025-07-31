@@ -6,6 +6,8 @@
 // Ensure these are available via Lens Studio's TypeScript definitions: https://github.com/huggingface/snapchat-lens-api[](https://support.lensstudio.snapchat.com/hc/en-us/community/posts/360043146692-Type-definitions-for-the-Scripting-API)
 // import { SceneObject, Text, vec3, vec2 } from "./SpectaclesInteractionKit.lspkg"
 // import {ToggleButton} from "SpectaclesInteractionKit.lspkg/Components/UI/ToggleButton/ToggleButton"
+import {findSceneObjectByName} from "SpectaclesInteractionKit.lspkg/Utils/SceneObjectUtils"
+
 // Configuration interface for POD-to-AR conversion
 interface PodLaTeXConfig {
   head1Size: number;
@@ -21,7 +23,6 @@ export class PodLaTeXLens extends BaseScriptComponent {
   // Input properties for Lens Studio
   @input
   private textObject!: Text; // Reference to a Text component in the scene
-
   private config: PodLaTeXConfig = {
     head1Size: 0.05,
     head2Size: 0.04,
@@ -47,7 +48,7 @@ export class PodLaTeXLens extends BaseScriptComponent {
   }
 
   // Process POD-like commands
-  private processCommand(command: string, args: string, scene: SceneObject): SceneObject[] {
+  private processCommand(command: string, args: string, scene: SceneObject, pos: vec3): SceneObject[] {
     const objects: SceneObject[] = [];
     const newTextObj = scene.createComponent("Component.Text");
 
@@ -85,6 +86,22 @@ export class PodLaTeXLens extends BaseScriptComponent {
     }
 
     if (newTextObj.text) {
+      print(newTextObj.text);
+        var textObject = global.scene.createSceneObject("FloatingText");
+        var transform = textObject.createComponent("Component.ScreenTransform");
+        var textComponent = textObject.createComponent("Component.Text");
+        
+        // handle the transform offset
+        textComponent.getTransform().setWorldPosition(pos);
+        //
+        // textComponent.text = "Hello Spectacles!";
+        // 
+        print(pos);
+        textComponent = newTextObj;
+        textComponent.textFill.color = new vec4(0, 0, 0, 1); // this.config.textColor;
+        textComponent.size = 28;
+        textComponent.horizontalAlignment = HorizontalAlignment.Center;
+        textComponent.verticalAlignment = VerticalAlignment.Center;
       // objects.push(newTextObj);
       objects.push(scene);
     }
@@ -105,7 +122,7 @@ export class PodLaTeXLens extends BaseScriptComponent {
   private createTextObject(scene: SceneObject): SceneObject {
     const textComp = scene.createComponent('Component.Text');
     // const textComp = textObj.createComponent<Text>('Text');
-    textComp.textFill.color = new vec4(1, 1, 1, 1); // this.config.textColor;
+    textComp.textFill.color = new vec4(0, 0, 0, 1); // this.config.textColor;
     textComp.horizontalAlignment = HorizontalAlignment.Center;
     textComp.verticalAlignment = VerticalAlignment.Center;
     // textComp.position = new vec2(0, this.currentY);
@@ -116,11 +133,13 @@ export class PodLaTeXLens extends BaseScriptComponent {
   }
 
   // Parse POD-like input and create AR text objects
-  public parsePod(input: string, scene: SceneObject): void {
+  public parsePod(input: string, scene: SceneObject, pos: vec3): void {
     this.currentY = 0; // Reset vertical position
     const lines = input.split('\n');
     let inList = false;
 
+    var yoffset = pos.y;
+    
     for (const line of lines) {
       if (line.trim() === '' && !this.verbatim) {
         continue;
@@ -135,15 +154,17 @@ export class PodLaTeXLens extends BaseScriptComponent {
           } else if (command === 'back') {
             inList = false;
           } else {
-            const objects = this.processCommand(command, args, scene);
+            yoffset = yoffset + 10.0;
+            pos.y = yoffset;
+            const objects = this.processCommand(command, args, scene, pos);
             // objects.forEach(obj => scene.addSceneObject(obj));
-            objects.forEach(obj => obj.setParent(scene));
+            // objects.forEach(obj => obj.setParent(scene));
           }
         }
       } else {
         const objects = this.processText(line, scene);
         // objects.forEach(obj => scene.addSceneObject(obj));
-        objects.forEach(obj => obj.setParent(scene));
+        // objects.forEach(obj => obj.setParent(scene));
       }
     }
   }
@@ -153,10 +174,37 @@ export class PodLaTeXLens extends BaseScriptComponent {
     // Example POD input (in a real project, this could be loaded dynamically)
 
 
-    const podInput =``;
+    const podInput =`
+=head1 AR Documentation
+Welcome to the AR lens documentation.
+
+=head2 Features
+This lens displays POD-like content in AR.
+
+=over
+=item Interactive Text
+Text rendered in 3D space.
+=item Verbatim Support
+=begin verbatim
+Code: x = y + z;
+=end verbatim
+=back
+    `;
     const scene = global.scene.createSceneObject("MyLatex");
+    // var scene = global.scene.getRootObject().getChildByName("CalculatorResults");
+    
+    /*
+    const targetSceneObjectName = "CalculatorResults";
+    const scene = findSceneObjectByName(global.scene.getRootObject(0), targetSceneObjectName);
+    if (scene === null) {
+      throw new Error(
+        `${targetSceneObjectName} could not be found in children of SceneObject: ${global.scene.getRootObject(0).name}`
+      )
+    }
+        */
     // const scene = this.sceneObject.getScene();
-    this.parsePod(podInput, scene);
+    // TODO: use a specific scene object not simply the root object
+    this.parsePod(podInput, scene, new vec3(0.00,3.00,5.00));
   }
 }
 
