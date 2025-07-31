@@ -6,6 +6,7 @@ export class GridOfQuads extends BaseScriptComponent {
   @hint("Material to apply to the 3D line mesh")
   public material!: Material;
   private meshVisual!: RenderMeshVisual;
+    
   onAwake() {
     const M = 50; // Number of quads along each axis
     const S = 2; // Size of each quad

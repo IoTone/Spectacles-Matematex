@@ -1,0 +1,16 @@
+- !<AssetImportMetadata/1351e3b9-4dba-451e-a80e-b67ae4bd9f93>
+  ImportedAssetIds:
+    Font: !<reference> d1a53022-52c1-41a0-976d-5cd8eecf4e6e
+  ImporterName: FontImporter
+  PrimaryAsset: !<reference> d1a53022-52c1-41a0-976d-5cd8eecf4e6e
+  PackageType: NotAPackage
+  PackagePolicy: CannotBeUnpacked
+  ExtraData:
+    {}
+  AssetDataMap:
+    {}
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
