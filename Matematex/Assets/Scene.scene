@@ -225,6 +225,21 @@
   RotationAngle: 0
   Pivot: {x: 0.000000, y: 0.000000}
   ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/03e4e9fa-51a8-4d46-a6e4-eaea83bbbd73>
+  PrefabRemaps:
+    []
+  Name: PukaNakua
+  Enabled: false
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> a5250ddd-0631-4e2b-97db-8e9a19232f72
 - !<ScreenTransform/04008b67-cba5-4835-8e19-8f710e8d945d>
   PrefabRemaps:
     []
@@ -618,7 +633,7 @@
   PrefabRemaps:
     []
   Name: TestParser
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform: !<TransformEntity>
     Position: {x: 0.000000, y: 0.000000, z: 0.000000}
@@ -2176,6 +2191,21 @@
     bottom: 0.000000
     right: 0.000000
     top: 0.000000
+- !<SceneObject/49d13e52-f0a5-41b5-b701-cfd66ac01f04>
+  PrefabRemaps:
+    []
+  Name: DevanteAdamsTest
+  Enabled: false
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 9b8fa03c-19d2-4893-8809-16ba4a4d5efa
 - !<Image/4a4ebdc6-7428-4a4f-8ab5-9d5bc08c4123>
   PrefabRemaps:
     []
@@ -2835,6 +2865,21 @@
     bottom: 0.000000
     right: 0.000000
     top: 0.000000
+- !<SceneObject/63e43087-66a5-4ae3-b876-0a0f53efe0ad>
+  PrefabRemaps:
+    []
+  Name: TestLatex2
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 50.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> dc1b0953-16dc-4c9c-b6b4-cacba536020b
 - !<PostEffectVisual/6465aaac-8e99-4fcf-b2ec-2cad9cd6339d>
   PrefabRemaps:
     []
@@ -3513,7 +3558,7 @@
   PrefabRemaps:
     []
   Name: Image
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform: !<TransformEntity>
     Position: {x: 0.000000, y: 0.000000, z: 0.000000}
@@ -4260,6 +4305,26 @@
   Components:
     - !<own> 76050961-8262-40f9-8363-28141c076c91
     - !<own> e6b50050-9873-4464-9f8a-67efbe49314e
+- !<ScriptComponent/9b8fa03c-19d2-4893-8809-16ba4a4d5efa>
+  PrefabRemaps:
+    []
+  Name: DevanteAdamsTest
+  Enabled: true
+  ScriptAsset: !<reference> 42e96736-8b20-4583-9a15-3a17b5f54595
+  ScriptInputsDefault:
+    amplitude: true
+    baseHeight: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      amplitude: 0.300000
+      speed: !<float> 5.000000
+      baseHeight: !<float> 1.000000
+      size: !<float> 20.000000
+  ScriptTypes:
+    "":
+      {}
 - !<RenderMeshVisual/9cdfa185-c2db-4f78-8a89-cd95da0bed79>
   PrefabRemaps:
     []
@@ -4466,6 +4531,26 @@
   Components:
     - !<own> 58a634c1-0bad-4b8a-9746-bff0ee3e9447
     - !<own> 162269bb-916d-4626-b6c6-7b57e8fdb78d
+- !<ScriptComponent/a5250ddd-0631-4e2b-97db-8e9a19232f72>
+  PrefabRemaps:
+    []
+  Name: PukaNakua
+  Enabled: true
+  ScriptAsset: !<reference> ec338223-f813-466e-b31d-c8d16a4d8a65
+  ScriptInputsDefault:
+    amplitude: true
+    speed: true
+    size: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      amplitude: 0.400000
+      speed: 2.500000
+      size: 0.350000
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/a5bbe48e-a0d5-4aa5-a375-2162871682fd>
   PrefabRemaps:
     []
@@ -5632,6 +5717,9 @@
     - !<own> e193654b-b6c6-4963-b806-9adfbc10fae5
     - !<own> 6c356872-0007-45af-af89-3bddb0cf7679
     - !<own> 0ebbe685-72e0-4fda-b52b-ca48f8c80cd3
+    - !<own> 49d13e52-f0a5-41b5-b701-cfd66ac01f04
+    - !<own> 03e4e9fa-51a8-4d46-a6e4-eaea83bbbd73
+    - !<own> 63e43087-66a5-4ae3-b876-0a0f53efe0ad
   Components:
     []
 - !<SceneObject/d1409deb-91b7-4209-a639-6e98fb088045>
@@ -6048,6 +6136,27 @@
   BlendNormals: false
   BlendShapes:
     {}
+- !<ScriptComponent/dc1b0953-16dc-4c9c-b6b4-cacba536020b>
+  PrefabRemaps:
+    []
+  Name: TestLatex2
+  Enabled: true
+  ScriptAsset: !<reference> a9c3c65a-d7e7-4b07-92bd-e0bb574cdb01
+  ScriptInputsDefault:
+    containerName: true
+    lineSpacing: true
+    textColor: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      containerName: LatexContainer
+      baseSize: !<float> 20.000000
+      lineSpacing: 0.200000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/dcc2d5de-47fb-49ac-b087-f03f3773d7e4>
   PrefabRemaps:
     []
