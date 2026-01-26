@@ -50,11 +50,11 @@
   Name: Target Screen Transform
   Enabled: true
   Layers: 1048576
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: -1.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: -1.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> adadbd7a-3631-490a-a5a1-3091170edc68
   Components:
@@ -154,15 +154,31 @@
     top: 0.000000
 - !<SceneObject/7492e670-7d4e-4fe7-9442-2278a0d92fc5>
   PrefabRemaps:
-    []
+    - 03d25861-1ac7-46c0-bf9b-a2ff099fbbba: 03d25861-1ac7-46c0-4064-5d00f6604445
+    - 272a60ab-dd4e-4ff2-b686-e3fb5c40a5e1: 272a60ab-dd4e-4ff2-4979-1c04a3bf5a1e
+    - 273dde2c-e0fd-416c-8fec-59fc8ed318dd: 273dde2c-e0fd-416c-7013-a603712ce722
+    - 2d3dc7fe-54ff-4e6c-a269-3ba7e6f96e18: 2d3dc7fe-54ff-4e6c-5d96-c458190691e7
+    - 38770b95-128a-4c27-a3eb-01b3f097c750: 38770b95-128a-4c27-5c14-fe4c0f6838af
+    - 3c2bcfef-341a-4af7-90d3-f3e3117e7959: 3c2bcfef-341a-4af7-6f2c-0c1cee8186a6
+    - 44ca51ce-85fc-4192-b4d5-06dfa1838dc3: 44ca51ce-85fc-4192-4b2a-f9205e7c723c
+    - 5794be17-a315-4306-824c-45fc88200efe: 5794be17-a315-4306-7db3-ba0377dff101
+    - 5a5c4fcf-4744-4e21-9d87-d939c8140840: 5a5c4fcf-4744-4e21-6278-26c637ebf7bf
+    - 619bea49-8c8c-4120-a0f8-08a9bdfdeffa: 619bea49-8c8c-4120-5f07-f75642021005
+    - 7492e670-7d4e-4fe7-9442-2278a0d92fc5: 7492e670-7d4e-4fe7-6bbd-dd875f26d03a
+    - 808d9478-80a2-4b05-8950-494d70591c38: 808d9478-80a2-4b05-76af-b6b28fa6e3c7
+    - 8f2fbfaa-a56a-486b-8e65-d85d7e8ecb37: 8f2fbfaa-a56a-486b-719a-27a2817134c8
+    - adadbd7a-3631-490a-a5a1-3091170edc68: adadbd7a-3631-490a-5a5e-cf6ee8f12397
+    - b84bac66-8f62-4ebd-b1d0-2c6b4ffaf8d7: b84bac66-8f62-4ebd-4e2f-d394b0050728
+    - d69f18c6-eddd-46c5-9361-5b453f19a7c5: d69f18c6-eddd-46c5-6c9e-a4bac0e6583a
+    - eae37684-6ee4-4323-8a9a-207063c78bc1: eae37684-6ee4-4323-7565-df8f9c38743e
   Name: ExpandingTextInput__PLACE_IN_ORTO_CAM
   Enabled: true
   Layers: 1048576
-  LocalTransform:
-    position: {x: 120.000000, y: 0.000000, z: -41.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 120.000000, y: 0.000000, z: -41.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> b84bac66-8f62-4ebd-b1d0-2c6b4ffaf8d7
   Components:
@@ -226,11 +242,11 @@
   Name: Background Image
   Enabled: true
   Layers: 1048576
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -242,11 +258,11 @@
   Name: "Screen Text [EDIT ME]"
   Enabled: true
   Layers: 1048576
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: -1.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: -1.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> 38770b95-128a-4c27-a3eb-01b3f097c750
   Components:
@@ -288,15 +304,18 @@
     Mode: Solid
     Color: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
     Texture: !<reference> 00000000-0000-0000-0000-000000000000
+    ColorTint: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
     TileCount: 5.000000
     TileZone: Rect
     TextureStretch: FitWidth
+  BlendMode: PremultipliedAlpha
   Outline: !<OutlineSettings>
     Enabled: false
     Fill: !<TextFill>
       Mode: Solid
       Color: {x: 0.000000, y: 0.000000, z: 0.000000, w: 1.000000}
       Texture: !<reference> 00000000-0000-0000-0000-000000000000
+      ColorTint: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
       TileCount: 5.000000
       TileZone: Rect
       TextureStretch: FitWidth
@@ -307,6 +326,7 @@
       Mode: Solid
       Color: {x: 0.000000, y: 0.000000, z: 0.000000, w: 1.000000}
       Texture: !<reference> 00000000-0000-0000-0000-000000000000
+      ColorTint: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
       TileCount: 5.000000
       TileZone: Rect
       TextureStretch: FitWidth
@@ -318,6 +338,7 @@
       Mode: Solid
       Color: {x: 0.000000, y: 0.000000, z: 0.000000, w: 1.000000}
       Texture: !<reference> 00000000-0000-0000-0000-000000000000
+      ColorTint: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
       TileCount: 5.000000
       TileZone: Rect
       TextureStretch: FitWidth

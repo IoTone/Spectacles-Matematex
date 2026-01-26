@@ -4,7 +4,7 @@
   ImporterName: BinAssetImporter
   PrimaryAsset: !<reference> 8748e887-522b-4b64-90ca-ed43ee15afbc
   PackageType: NotAPackage
-  PackagePolicy: CannotBeUnpacked
+  LegacyPackagePolicy: ~
   ExtraData:
     {}
   AssetDataMap:

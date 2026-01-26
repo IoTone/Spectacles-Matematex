@@ -27,11 +27,11 @@
   Name: "TTS Example [DELETE_ME]"
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -42,11 +42,11 @@
   Name: "TTS Controller [EDIT_ME]"
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -94,15 +94,20 @@
       {}
 - !<SceneObject/fd66b15b-0cb2-49ff-8577-29af02854a9f>
   PrefabRemaps:
-    []
+    - 20c07b75-3d32-45c8-89c5-df4b0ada693f: 20c07b75-3d32-45c8-763a-20b4f52596c0
+    - 6cb9bb09-536a-43b7-adfe-68fa32ae5e6c: 6cb9bb09-536a-43b7-5201-9705cd51a193
+    - 7366dfc0-3a46-4e35-a63f-3d3fd3c7135a: 7366dfc0-3a46-4e35-59c0-c2c02c38eca5
+    - a5fa2c8e-7069-4e75-ad02-985c94093866: a5fa2c8e-7069-4e75-52fd-67a36bf6c799
+    - cfddff04-d893-4152-9616-d61989b7ea4d: cfddff04-d893-4152-69e9-29e6764815b2
+    - fd66b15b-0cb2-49ff-8577-29af02854a9f: fd66b15b-0cb2-49ff-7a88-d650fd7ab560
   Name: TextToSpeech__PLACE_IN_OBJECTS_PANEL
   Enabled: true
   Layers: 1048576
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> 7366dfc0-3a46-4e35-a63f-3d3fd3c7135a
     - !<own> 6cb9bb09-536a-43b7-adfe-68fa32ae5e6c

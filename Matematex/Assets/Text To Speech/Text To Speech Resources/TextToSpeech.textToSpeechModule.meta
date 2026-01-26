@@ -4,7 +4,7 @@
   ImporterName: TextToSpeechModuleImporter
   PrimaryAsset: !<reference> e9c64543-ac8a-4991-98d6-7c75875f7bf0
   PackageType: NotAPackage
-  PackagePolicy: CannotBeUnpacked
+  LegacyPackagePolicy: ~
   ExtraData:
     AssetLibraryId: 91uCK9xPusn64PWkS99OY
   AssetDataMap:

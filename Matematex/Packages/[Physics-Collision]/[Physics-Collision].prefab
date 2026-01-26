@@ -10,11 +10,11 @@
   Name: Collider
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 10.000000, y: 10.000000, z: 10.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -106,11 +106,11 @@
   Name: SoftPressControllerJS
   Enabled: false
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -186,11 +186,11 @@
   Name: "[ClosestPointMarker] Shows when the button is compress - attach here your style"
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 2.000000, y: 2.000000, z: 2.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -201,11 +201,11 @@
   Name: tpV0
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -5.000000, y: 5.000000, z: -5.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -216,11 +216,11 @@
   Name: btV1
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 5.000000, y: -5.000000, z: -5.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -320,11 +320,11 @@
   Name: ButtonParent
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> 4ede2ace-74b6-4d0e-8004-500c6b5564c0
     - !<own> 9fd90bc6-5153-4b03-a95d-9e1b146d0a47
@@ -384,15 +384,48 @@
     {}
 - !<SceneObject/70aaf9bc-47b2-4960-b65e-104d5ea7e914>
   PrefabRemaps:
-    []
+    - 06d25c7e-8f15-47f0-8eae-c2ec4b4dcfda: 06d25c7e-8f15-47f0-7151-3d13b4b23025
+    - 1391ddb2-eb39-4c28-9f6b-58cef21820d1: 1391ddb2-eb39-4c28-6094-a7310de7df2e
+    - 14320ecc-0dd6-46c9-89a1-f68e0a4328d1: 14320ecc-0dd6-46c9-765e-0971f5bcd72e
+    - 209998e7-81ab-4a24-971c-cd2bdc750259: 209998e7-81ab-4a24-68e3-32d4238afda6
+    - 2eda81cc-e1b1-44fd-aff0-6e613145a6d4: 2eda81cc-e1b1-44fd-500f-919eceba592b
+    - 2f85d788-64bf-4d4a-8912-cf0a7518a9fc: 2f85d788-64bf-4d4a-76ed-30f58ae75603
+    - 3d6cfb70-9803-4294-a59c-d102a78efebe: 3d6cfb70-9803-4294-5a63-2efd58710141
+    - 3dd2ccff-b48e-4311-af31-73bcb6216d60: 3dd2ccff-b48e-4311-50ce-8c4349de929f
+    - 44bfb3fd-b4c3-4a14-bb91-3689dafff7ef: 44bfb3fd-b4c3-4a14-446e-c97625000810
+    - 4a2fe599-dcc6-4719-a314-cc81154323fb: 4a2fe599-dcc6-4719-5ceb-337eeabcdc04
+    - 4ede2ace-74b6-4d0e-8004-500c6b5564c0: 4ede2ace-74b6-4d0e-7ffb-aff394aa9b3f
+    - 51837bf0-fc8c-49d3-a48b-00554e742eff: 51837bf0-fc8c-49d3-5b74-ffaab18bd100
+    - 55a13d83-1e78-4b83-bea1-4fdb08b52e23: 55a13d83-1e78-4b83-415e-b024f74ad1dc
+    - 5bc9df31-6cc7-466f-bf06-73994c8a07ad: 5bc9df31-6cc7-466f-40f9-8c66b375f852
+    - 5e8a3694-c244-4652-89f6-eb4d4662b929: 5e8a3694-c244-4652-7609-14b2b99d46d6
+    - 5f653e79-7056-4765-852c-c4dcd3b43171: 5f653e79-7056-4765-7ad3-3b232c4bce8e
+    - 6c40bc07-276e-4d3c-90e2-66f30d87fdbd: 6c40bc07-276e-4d3c-6f1d-990cf2780242
+    - 70aaf9bc-47b2-4960-b65e-104d5ea7e914: 70aaf9bc-47b2-4960-49a1-efb2a15816eb
+    - 82383212-3c5b-44a7-99e2-6370f4265380: 82383212-3c5b-44a7-661d-9c8f0bd9ac7f
+    - 8b7323f8-a673-4cbb-8763-dbaf249b5f63: 8b7323f8-a673-4cbb-789c-2450db64a09c
+    - 8ee60b84-e09f-417a-afc4-bdcf4f5d8879: 8ee60b84-e09f-417a-503b-4230b0a27786
+    - 9d55cb28-00db-4cb9-ab17-0e4caa8299f9: 9d55cb28-00db-4cb9-54e8-f1b3557d6606
+    - 9fd90bc6-5153-4b03-a95d-9e1b146d0a47: 9fd90bc6-5153-4b03-56a2-61e4eb92f5b8
+    - a46e001f-e2bb-47c4-84a5-8f74f080c6c6: a46e001f-e2bb-47c4-7b5a-708b0f7f3939
+    - a5cfd8d0-041b-47d4-93f3-f7699028d6a2: a5cfd8d0-041b-47d4-6c0c-08966fd7295d
+    - b040efd2-0985-4c68-8c51-cbeb3b98276b: b040efd2-0985-4c68-73ae-3414c467d894
+    - b108fa72-36dc-4c7e-95ec-77d0522b4025: b108fa72-36dc-4c7e-6a13-882fadd4bfda
+    - d177f695-d792-494e-a954-473eeeb83e06: d177f695-d792-494e-56ab-b8c11147c1f9
+    - e2bcbb20-4963-4af9-b2de-d6c5c1bc04aa: e2bcbb20-4963-4af9-4d21-293a3e43fb55
+    - e9c86a6e-03d0-44a5-bec8-c95390f8b10f: e9c86a6e-03d0-44a5-4137-36ac6f074ef0
+    - ecd0b71a-6d89-40fc-bfd9-11bef28207af: ecd0b71a-6d89-40fc-4026-ee410d7df850
+    - eda04737-4f19-4f4f-a029-c2174640bafe: eda04737-4f19-4f4f-5fd6-3de8b9bf4501
+    - f3d8f9c5-5e13-4fa4-b57a-3ddffd0638f6: f3d8f9c5-5e13-4fa4-4a85-c22002f9c709
+    - fd12acc9-7e73-499f-a717-5a39c2370026: fd12acc9-7e73-499f-58e8-a5c63dc8ffd9
   Name: "[Physics-Collision]"
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> 06d25c7e-8f15-47f0-8eae-c2ec4b4dcfda
     - !<own> f3d8f9c5-5e13-4fa4-b57a-3ddffd0638f6
@@ -408,11 +441,11 @@
   Name: btV0
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -5.000000, y: -5.000000, z: -5.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -423,11 +456,11 @@
   Name: btV2
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 5.000000, y: -5.000000, z: 5.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -488,11 +521,11 @@
   Name: tpV1
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 5.000000, y: 5.000000, z: -5.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -523,11 +556,11 @@
   Name: tpV3
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -5.000000, y: 5.000000, z: 5.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -538,11 +571,11 @@
   Name: SoftPressControllerTS
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -591,11 +624,11 @@
   Name: tpV2
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 5.000000, y: 5.000000, z: 5.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -676,11 +709,11 @@
   Name: "[Manipulate Example] Drag and enter the box from the top face"
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: -6.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 2.000000, y: 2.000000, z: 2.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -696,11 +729,11 @@
   Name: btV3
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -5.000000, y: -5.000000, z: 5.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:

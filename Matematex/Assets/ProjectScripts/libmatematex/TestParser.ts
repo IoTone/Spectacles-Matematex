@@ -86,7 +86,8 @@ export class PodLaTeXLens extends BaseScriptComponent {
     }
 
     if (newTextObj.text) {
-      print(newTextObj.text);
+        print("==============");
+        print(newTextObj.text);
         var textObject = global.scene.createSceneObject("FloatingText");
         var transform = textObject.createComponent("Component.ScreenTransform");
         var textComponent = textObject.createComponent("Component.Text");
@@ -110,15 +111,27 @@ export class PodLaTeXLens extends BaseScriptComponent {
 
   // Process plain text
   private processText(text: string, scene: SceneObject): SceneObject[] {
+    print('processText: ' + text);
     if (!text.trim() && !this.verbatim) return [];
     const newTextObj = scene.createComponent("Component.Text");
     
-    newTextObj.size = this.config.itemSize;
+    newTextObj.size = 10.0; //  this.config.itemSize;
     newTextObj.text = this.verbatim ? text : this.escapeText(text);
+    newTextObj.depthTest = true;
+
+    var t1 = newTextObj.getTransform();
+    var v1 = t1.getLocalPosition();
+    this.currentY = this.currentY + 1;
+    v1.y = this.currentY;
+    t1.setLocalPosition(v1);
+    print(v1);
+   
+    
     return [scene];
   }
 
   // Create a new Text SceneObject
+  /*
   private createTextObject(scene: SceneObject): SceneObject {
     const textComp = scene.createComponent('Component.Text');
     // const textComp = textObj.createComponent<Text>('Text');
@@ -128,9 +141,9 @@ export class PodLaTeXLens extends BaseScriptComponent {
     // textComp.position = new vec2(0, this.currentY);
     this.currentY -= this.config.spacing; // Move down for next text
     // return textObj;
-    // return textObj;
+    // return textObj;s
     return scene;
-  }
+  } */
 
   // Parse POD-like input and create AR text objects
   public parsePod(input: string, scene: SceneObject, pos: vec3): void {
@@ -175,20 +188,10 @@ export class PodLaTeXLens extends BaseScriptComponent {
 
 
     const podInput =`
-=head1 AR Documentation
-Welcome to the AR lens documentation.
-
-=head2 Features
-This lens displays POD-like content in AR.
-
-=over
-=item Interactive Text
-Text rendered in 3D space.
-=item Verbatim Support
-=begin verbatim
-Code: x = y + z;
-=end verbatim
-=back
+\begin{align*}
+x^2 + y^2 &= 1 \\
+y &= \sqrt{1 - x^2}
+\end{align*}
     `;
     const scene = global.scene.createSceneObject("MyLatex");
     // var scene = global.scene.getRootObject().getChildByName("CalculatorResults");

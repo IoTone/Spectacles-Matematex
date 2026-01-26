@@ -10,11 +10,11 @@
   Name: LineManager
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -25,11 +25,11 @@
   Name: LineStart
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -10.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 2.000000, y: 2.000000, z: 2.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: -10.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 2.000000, y: 2.000000, z: 2.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -59,26 +59,37 @@
   Name: InstantiateAlongLineTS
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
     - !<own> f71beb7d-3fa7-41f9-addb-35443b8a2ff4
 - !<SceneObject/7c530de6-acb7-415f-8fa3-e4793c5af924>
   PrefabRemaps:
-    []
+    - 2f18e7a4-fafe-4049-8171-a74ef51b16bb: 2f18e7a4-fafe-4049-7e8e-58b10ae4e944
+    - 461c2f1c-6ca3-47ba-aef0-7d2b2c903d38: 461c2f1c-6ca3-47ba-510f-82d4d36fc2c7
+    - 4d31c86a-72f5-436f-ae99-6f7f2afe9fc4: 4d31c86a-72f5-436f-5166-9080d501603b
+    - 6eeb67aa-4579-456b-8e38-e54619835bec: 6eeb67aa-4579-456b-71c7-1ab9e67ca413
+    - 7c530de6-acb7-415f-8fa3-e4793c5af924: 7c530de6-acb7-415f-705c-1b86c3a506db
+    - 8a8e3335-8c7e-449f-bec9-f8fcc56852db: 8a8e3335-8c7e-449f-4136-07033a97ad24
+    - 94ccb2fe-ca56-4ff9-b61e-bc0e9a0bbbfd: 94ccb2fe-ca56-4ff9-49e1-43f165f44402
+    - ab37d9e3-28a2-4de0-8b9d-32c048b9325f: ab37d9e3-28a2-4de0-7462-cd3fb746cda0
+    - be172d38-1fb5-46b8-ae5a-4ede2dd29385: be172d38-1fb5-46b8-51a5-b121d22d6c7a
+    - ceaef3e1-e5d5-4606-b199-a417577762a3: ceaef3e1-e5d5-4606-4e66-5be8a8889d5c
+    - ea1abca3-b120-4d5e-b53a-87e263474e40: ea1abca3-b120-4d5e-4ac5-781d9cb8b1bf
+    - f71beb7d-3fa7-41f9-addb-35443b8a2ff4: f71beb7d-3fa7-41f9-5224-cabbc475d00b
   Name: "[InstantiateAlongLine]"
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> 6eeb67aa-4579-456b-8e38-e54619835bec
     - !<own> ceaef3e1-e5d5-4606-b199-a417577762a3
@@ -131,11 +142,11 @@
   Name: LineEnds
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 10.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 0.500000, y: 0.500000, z: 0.500000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 10.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 0.500000, y: 0.500000, z: 0.500000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -173,11 +184,11 @@
   Name: InstantiateAlongLineJS
   Enabled: false
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -188,11 +199,11 @@
   Name: LineTS Copy
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> 2f18e7a4-fafe-4049-8171-a74ef51b16bb
     - !<own> 461c2f1c-6ca3-47ba-aef0-7d2b2c903d38

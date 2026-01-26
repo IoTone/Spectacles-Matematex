@@ -1,31 +1,19 @@
 studioVersion:
   major: 5
-  minor: 10
+  minor: 15
   patch: 1
-  build: 25061003
+  build: 25102815
   type: Public
-coreVersion: 313
-clientVersion: 13.420000
-updateCheckpoint: 61
+coreVersion: 330
+clientVersion: 13.60
+updateCheckpoint: 76
 sceneId: 0a1ccb1a-fe88-4fbb-9883-e3af3c75fd99
-viewConfig:
-  simulation:
-    device: No Simulation
-    cameraFov: 66.519997
-    fullFrameAspect: nan
-    resolutionScale: 1.000000
-    viewport: Maximized
-    output: Live
-    stereoOutputEye: Center
-    deviceTypeOverride: Unknown
-    tint: true
-  cameraType: Front
 metaInfo:
   hints:
     []
   tags:
     []
-  lensName: BaseSpecsExample
+  lensName: Matematex
   lensDescriptors:
     []
   lensApplicability:
@@ -51,3 +39,5 @@ metaInfo:
     minor: 0
     patch: 0
     build: 0
+  documentId: 18e6443e-13a4-4f1e-90d5-5ca0ff86e677
+  originalDocumentId: 18e6443e-13a4-4f1e-90d5-5ca0ff86e677

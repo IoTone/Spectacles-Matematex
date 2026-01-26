@@ -4,7 +4,7 @@
   ImporterName: MarkdownAssetImporter
   PrimaryAsset: !<reference> 0c0837d7-6ac1-49ad-adf6-c0ad02ed0e62
   PackageType: NotAPackage
-  PackagePolicy: CannotBeUnpacked
+  LegacyPackagePolicy: ~
   ExtraData:
     {}
   AssetDataMap:

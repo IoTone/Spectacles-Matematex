@@ -5,7 +5,7 @@
   ImporterName: LensAnimationImporter
   PrimaryAsset: !<reference> 5c265b84-7dfd-499c-8bc1-cb15035d71b3
   PackageType: LegacyPackage
-  PackagePolicy: CannotBeUnpackedTransparent
+  LegacyPackagePolicy: CannotBeUnpackedTransparent
   ExtraData:
     AssetLibraryId: 74jWaEfe49AAzIZ7CKWsaq
   AssetDataMap:

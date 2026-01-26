@@ -86,11 +86,11 @@
   Name: Subway
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -10.000000, y: -18.173532, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: -10.000000, y: -18.173532, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -101,11 +101,11 @@
   Name: Cloud 2
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -10.000000, y: -8.153669, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: -10.000000, y: -8.153669, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -154,11 +154,11 @@
   Name: Car with Cat
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 1.833336, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 1.833336, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -207,11 +207,11 @@
   Name: Building 3
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 10.000000, y: 21.890142, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 10.000000, y: 21.890142, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -222,11 +222,11 @@
   Name: Cloud 3
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: -8.153669, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: -8.153669, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -237,11 +237,11 @@
   Name: Building 2
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 21.890142, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 21.890142, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -309,11 +309,11 @@
   Name: Building 1
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -10.000000, y: 21.890142, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: -10.000000, y: 21.890142, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -343,11 +343,11 @@
   Name: Building 7
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -10.000000, y: 1.833336, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: -10.000000, y: 1.833336, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -377,11 +377,11 @@
   Name: Building 6
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 10.000000, y: 11.903137, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 10.000000, y: 11.903137, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -392,11 +392,11 @@
   Name: Train
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 10.000000, y: -18.173500, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 10.000000, y: -18.173500, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -407,11 +407,11 @@
   Name: Cloud 1
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 10.000000, y: 1.833336, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 10.000000, y: 1.833336, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -441,11 +441,11 @@
   Name: Building 4
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: -10.000000, y: 11.903137, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: -10.000000, y: 11.903137, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -456,26 +456,56 @@
   Name: Neon On
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 10.000000, y: -8.153669, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 10.000000, y: -8.153669, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
     - !<own> 036b8f23-4362-4e0e-aca0-73a26a2b7d6b
 - !<SceneObject/e56956bf-79b9-4730-8012-c53600ebe8de>
   PrefabRemaps:
-    []
+    - 036b8f23-4362-4e0e-aca0-73a26a2b7d6b: 036b8f23-4362-4e0e-535f-8c5d95d48294
+    - 0bb5d5e6-1603-4dde-8196-09a85ed6a95e: 0bb5d5e6-1603-4dde-7e69-f657a12956a1
+    - 0c4a0661-aea4-492b-8323-edff6e7d77b9: 0c4a0661-aea4-492b-7cdc-120091828846
+    - 0e42351f-ec6b-4de8-b53d-b57a564ca618: 0e42351f-ec6b-4de8-4ac2-4a85a9b359e7
+    - 21c6fa84-cf67-409e-a599-92129223de25: 21c6fa84-cf67-409e-5a66-6ded6ddc21da
+    - 26b69829-55bb-43e4-a8d5-4f91e5082895: 26b69829-55bb-43e4-572a-b06e1af7d76a
+    - 2a1feb06-f9ec-4931-a5ce-d8ee253d3fac: 2a1feb06-f9ec-4931-5a31-2711dac2c053
+    - 35baaed3-a2eb-4480-9f83-f5b0d2242ade: 35baaed3-a2eb-4480-607c-0a4f2ddbd521
+    - 37d1b5e4-ca28-4274-847e-b040526eaedb: 37d1b5e4-ca28-4274-7b81-4fbfad915124
+    - 38069d01-290e-4958-afdc-ff1bddf88e36: 38069d01-290e-4958-5023-00e4220771c9
+    - 3842eaf9-a30e-4c6b-b686-13e8c4ee3a37: 3842eaf9-a30e-4c6b-4979-ec173b11c5c8
+    - 54602efe-c02b-4323-a415-9458c9007d17: 54602efe-c02b-4323-5bea-6ba736ff82e8
+    - 566fdfe1-8f40-463d-87c9-e110566e3d8a: 566fdfe1-8f40-463d-7836-1eefa991c275
+    - 66cbf0e0-193b-45a4-86d2-327aec7afeb7: 66cbf0e0-193b-45a4-792d-cd8513850148
+    - 80ec74a0-6ab4-463a-96cf-80105afebcf1: 80ec74a0-6ab4-463a-6930-7fefa501430e
+    - 86363dea-4f02-4386-a1e1-fbd51504cd85: 86363dea-4f02-4386-5e1e-042aeafb327a
+    - 8b9edc74-1d28-4104-a303-5d72b98a2bb6: 8b9edc74-1d28-4104-5cfc-a28d4675d449
+    - 8d9ff6d0-4c26-493c-ae30-a895375e82b0: 8d9ff6d0-4c26-493c-51cf-576ac8a17d4f
+    - a052fec8-1db0-459d-b831-e6c9a456054a: a052fec8-1db0-459d-47ce-19365ba9fab5
+    - a1e1b39a-eb87-4e30-9e9e-b169174040a6: a1e1b39a-eb87-4e30-6161-4e96e8bfbf59
+    - b781bda9-08e3-4567-b6aa-8f8ca0e3f69a: b781bda9-08e3-4567-4955-70735f1c0965
+    - b98517aa-f400-4b11-890d-ff34ea16be0d: b98517aa-f400-4b11-76f2-00cb15e941f2
+    - ba72e25c-e50d-437e-9468-c7b2cf6fd7e8: ba72e25c-e50d-437e-6b97-384d30902817
+    - c7fcc9ae-8a5e-4513-b8dd-7a0e686430ec: c7fcc9ae-8a5e-4513-4722-85f1979bcf13
+    - ca47c091-59dd-461d-adb3-f5987b2efb3e: ca47c091-59dd-461d-524c-0a6784d104c1
+    - d168505e-d6f3-4f3f-b753-80a0aed36390: d168505e-d6f3-4f3f-48ac-7f5f512c9c6f
+    - e01e48f5-60d3-43bf-9fc9-36f23e2f5061: e01e48f5-60d3-43bf-6036-c90dc1d0af9e
+    - e56956bf-79b9-4730-8012-c53600ebe8de: e56956bf-79b9-4730-7fed-3ac9ff141721
+    - e56f5f3f-009f-49db-9d4b-f8d30bf27b9d: e56f5f3f-009f-49db-62b4-072cf40d8462
+    - e728f123-0e3c-406d-a96a-3f58885ab98d: e728f123-0e3c-406d-5695-c0a777a54672
+    - fd0ef178-01aa-4f50-9c59-f722acd5f320: fd0ef178-01aa-4f50-63a6-08dd532a0cdf
   Name: 2DCity__PLACE_IN_OBJECTS_PANEL
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
   Children:
     - !<own> 8d9ff6d0-4c26-493c-ae30-a895375e82b0
     - !<own> 66cbf0e0-193b-45a4-86d2-327aec7afeb7
@@ -500,11 +530,11 @@
   Name: Sun
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: -18.173500, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: -18.173500, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:
@@ -534,11 +564,11 @@
   Name: Building 5
   Enabled: true
   Layers: 1
-  LocalTransform:
-    position: {x: 0.000000, y: 11.903137, z: 0.000000}
-    rotation: {x: 0.000000, y: -0.000000, z: 0.000000}
-    scale: {x: 9.531898, y: 9.531898, z: 9.531898}
-    hasSegmentScaleCompensation: false
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 11.903137, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 9.531898, y: 9.531898, z: 9.531898}
+    HasSegmentScaleCompensation: false
   Children:
     []
   Components:

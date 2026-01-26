@@ -1,9 +1,9 @@
-declare var console: {
+/* declare var console: {
   log(...args: any[]): void;
   warn(...args: any[]): void;
   error(...args: any[]): void;
   // add more methods if you like
-};
+}; */
 
 interface Element {
     

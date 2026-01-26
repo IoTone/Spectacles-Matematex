@@ -4,7 +4,7 @@
   ImporterName: ShaderGraphPassImporter
   PrimaryAsset: !<reference> de81d12d-9f06-48ff-8073-4c0d94538d0b
   PackageType: NotAPackage
-  PackagePolicy: CannotBeUnpacked
+  LegacyPackagePolicy: ~
   ExtraData:
     AssetLibraryId: 16XTm2HqMmLxxCJ5jA5Y1n
   AssetDataMap:

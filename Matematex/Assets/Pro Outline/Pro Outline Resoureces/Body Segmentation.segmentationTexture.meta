@@ -4,7 +4,7 @@
   ImporterName: SegmentationTextureImporter
   PrimaryAsset: !<reference> 6e723a51-9c2c-4004-b5ce-99cf092c6606
   PackageType: NotAPackage
-  PackagePolicy: CannotBeUnpacked
+  LegacyPackagePolicy: ~
   ExtraData:
     AssetLibraryId: 5qM7aIR1ZhlL8nK3dPlxXu
   AssetDataMap:
