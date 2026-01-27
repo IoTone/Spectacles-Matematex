@@ -1612,6 +1612,21 @@
   RotationAngle: 0
   Pivot: {x: 0.000000, y: 0.000000}
   ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/31b30b55-ff39-4905-a667-648661748691>
+  PrefabRemaps:
+    []
+  Name: TestLatex4
+  Enabled: false
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 50.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> d69bfa7c-83ec-42eb-909c-bdb2060ea4b8
 - !<SceneObject/3236f304-5aab-46d3-8b2d-6ef914fff52e>
   PrefabRemaps:
     []
@@ -2869,7 +2884,7 @@
   PrefabRemaps:
     []
   Name: TestLatex2
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform: !<TransformEntity>
     Position: {x: 0.000000, y: 0.000000, z: 50.000000}
@@ -3521,6 +3536,21 @@
     - !<own> a7ddcb1d-f19b-48c7-ae71-dca88bac0752
   Components:
     []
+- !<SceneObject/77e69368-3f34-45ce-9233-025e3375e57d>
+  PrefabRemaps:
+    []
+  Name: TestLatex3
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 9ec41b5d-9315-4795-991c-2deb7c35e0e8
 - !<ScreenTransform/77e7c37d-69c8-4524-8e5f-6b2869e8d661>
   PrefabRemaps:
     []
@@ -4397,6 +4427,39 @@
   RotationAngle: 0
   Pivot: {x: 0.000000, y: 0.000000}
   ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<ScriptComponent/9ec41b5d-9315-4795-991c-2deb7c35e0e8>
+  PrefabRemaps:
+    []
+  Name: TestLatex3
+  Enabled: true
+  ScriptAsset: !<reference> c09a85b9-9690-4959-ae07-b5a519ac13fd
+  ScriptInputsDefault:
+    containerName: true
+    lineSpacing: true
+    textColor: true
+    sqrtRadicalScale: true
+    sqrtContentScale: true
+    sqrtBarThickness: true
+    sqrtDashMultiplier: true
+    sqrtLeftOffset: true
+    sqrtGroupOffset: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      containerName: LatexContainer
+      baseSize: !<float> 20.000000
+      lineSpacing: 0.250000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      sqrtRadicalScale: 1.600000
+      sqrtContentScale: 0.900000
+      sqrtBarThickness: 0.150000
+      sqrtDashMultiplier: 2.200000
+      sqrtLeftOffset: -0.600000
+      sqrtGroupOffset: 0.100000
+  ScriptTypes:
+    "":
+      {}
 - !<ScriptComponent/9f1ffe02-eb24-4327-a66a-1fbdeb9e373c>
   PrefabRemaps:
     []
@@ -5720,6 +5783,8 @@
     - !<own> 49d13e52-f0a5-41b5-b701-cfd66ac01f04
     - !<own> 03e4e9fa-51a8-4d46-a6e4-eaea83bbbd73
     - !<own> 63e43087-66a5-4ae3-b876-0a0f53efe0ad
+    - !<own> 77e69368-3f34-45ce-9233-025e3375e57d
+    - !<own> 31b30b55-ff39-4905-a667-648661748691
   Components:
     []
 - !<SceneObject/d1409deb-91b7-4209-a639-6e98fb088045>
@@ -5986,6 +6051,47 @@
     - !<own> e3a3b207-b4d7-418c-b5c6-8d97a1824674
   Components:
     []
+- !<ScriptComponent/d69bfa7c-83ec-42eb-909c-bdb2060ea4b8>
+  PrefabRemaps:
+    []
+  Name: TestLatex4
+  Enabled: true
+  ScriptAsset: !<reference> 7ea9d842-5a4d-4ee7-98d3-cd443caf4926
+  ScriptInputsDefault:
+    containerName: true
+    baseSize: true
+    lineSpacing: true
+    textColor: true
+    sqrtThickness: true
+    sqrtHeightMultiplier: true
+    sqrtSlantMultiplier: true
+    sqrtBarOverhang: true
+    sqrtContentScale: true
+    sqrtContentXOffset: true
+    sqrtContentYOffset: true
+    sqrtLeftOffset: true
+    sqrtGroupOffset: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      containerName: LatexContainer
+      baseSize: 0.150000
+      lineSpacing: 0.280000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      lineTexture: !<reference.Texture> 666e1033-8e48-480b-a889-55da9f097058
+      sqrtThickness: 0.180000
+      sqrtHeightMultiplier: 3.200000
+      sqrtSlantMultiplier: 1.800000
+      sqrtBarOverhang: 0.400000
+      sqrtContentScale: 0.850000
+      sqrtContentXOffset: 0.400000
+      sqrtContentYOffset: 0.150000
+      sqrtLeftOffset: -0.600000
+      sqrtGroupOffset: 0.100000
+  ScriptTypes:
+    "":
+      {}
 - !<Image/d7021127-66b9-46dc-aa54-111813e4e999>
   PrefabRemaps:
     []

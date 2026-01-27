@@ -1,5 +1,5 @@
 @component
-export default class PodLaTeXLens4 extends BaseScriptComponent {
+export default class PodLaTeXLens2 extends BaseScriptComponent {
 
     @input
     private containerName: string = "LatexContainer";
@@ -13,7 +13,11 @@ export default class PodLaTeXLens4 extends BaseScriptComponent {
     @input
     private textColor: vec4 = new vec4(1, 1, 1, 1);
 
-    @input lineTexture : Texture;
+    // Drag a small solid white texture here (highly recommended for clean tinting)
+    @input
+    private lineTexture: Texture;
+    @input 
+    private unlitMaterial: Material;
 
     @input
     private sqrtThickness: number = 0.18;
@@ -45,11 +49,6 @@ export default class PodLaTeXLens4 extends BaseScriptComponent {
     private container: SceneObject | null = null;
 
     onAwake(): void {
-        if (!this.lineTexture) {
-            print("ERROR: Assign a solid-color Texture to 'lineTexture' in the Inspector!");
-            return;
-        }
-
         this.container = global.scene.createSceneObject(this.containerName);
 
         const latexInput = `
@@ -151,10 +150,6 @@ y &= \\sqrt{1 - x^2}
         group.setParent(parent);
         group.getTransform().setLocalPosition(basePos);
 
-        // Fixed: Use @ts-ignore to bypass strict TypeScript checking for Billboard (it's a valid runtime component)
-        // @ts-ignore
-        group.createComponent("Component.Canvas");
-
         const s = this.baseSize;
         const thickness = s * this.sqrtThickness;
         const height = s * this.sqrtHeightMultiplier;
@@ -210,8 +205,20 @@ y &= \\sqrt{1 - x^2}
         lineObj.setParent(parent);
 
         const imageComp: any = lineObj.createComponent("Component.Image");
-        imageComp.mainPass.baseTex = this.lineTexture;
-        imageComp.mainPass.baseColor = color;
+
+        // Create a new Unlit material for each line (avoids null mainMaterial/mainPass)
+        const material =  this.unlitMaterial.clone(); // global.scene.createMaterial("Unlit");
+
+        // Set solid color tint
+        material.mainPass.baseColor = color;
+
+        // Optional texture (white pixel recommended for clean results)
+        if (this.lineTexture) {
+            material.mainPass.baseTexture = this.lineTexture;
+        }
+
+        // Assign the material to the image component
+        imageComp.mainMaterial = material;
 
         const direction = end.sub(start);
         const length = direction.length;

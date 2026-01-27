@@ -50,6 +50,7 @@ export class GridOfQuads extends BaseScriptComponent {
     if(meshBuilder.isValid()){
         this.meshVisual.mesh = meshBuilder.getMesh();
         meshBuilder.updateMesh();
+        print("Update of mesh");
     } else{
         print("Mesh data invalid!");
     }
