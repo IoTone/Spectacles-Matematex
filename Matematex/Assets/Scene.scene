@@ -1616,10 +1616,10 @@
   PrefabRemaps:
     []
   Name: TestLatex4
-  Enabled: false
+  Enabled: true
   Layers: 1
   LocalTransform: !<TransformEntity>
-    Position: {x: 0.000000, y: 0.000000, z: 50.000000}
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
     Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
     Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
     HasSegmentScaleCompensation: false
@@ -3540,7 +3540,7 @@
   PrefabRemaps:
     []
   Name: TestLatex3
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform: !<TransformEntity>
     Position: {x: 0.000000, y: 0.000000, z: 0.000000}
@@ -6060,35 +6060,36 @@
   ScriptInputsDefault:
     containerName: true
     baseSize: true
-    lineSpacing: true
     textColor: true
-    sqrtThickness: true
+    lineTexture: true
     sqrtHeightMultiplier: true
     sqrtSlantMultiplier: true
     sqrtBarOverhang: true
-    sqrtContentScale: true
     sqrtContentXOffset: true
     sqrtContentYOffset: true
     sqrtLeftOffset: true
-    sqrtGroupOffset: true
   ScriptTypesDefault:
     {}
   ScriptInputs:
     "":
       containerName: LatexContainer
-      baseSize: 0.150000
-      lineSpacing: 0.280000
+      baseSize: !<float> 4.000000
+      regularTextScale: !<float> 20.000000
+      lineSpacing: !<float> 2.000000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      defaultZOffset: !<float> -30.000000
+      symbolZLayer: !<float> -32.000000
+      unlitMaterial: !<reference.Material> 70d394f4-9333-40dc-a724-ccf256cdd8c9
       lineTexture: !<reference.Texture> 666e1033-8e48-480b-a889-55da9f097058
-      sqrtThickness: 0.180000
+      sqrtThickness: 0.100000
       sqrtHeightMultiplier: 3.200000
       sqrtSlantMultiplier: 1.800000
       sqrtBarOverhang: 0.400000
-      sqrtContentScale: 0.850000
+      sqrtContentScale: !<float> 20.000000
       sqrtContentXOffset: 0.400000
       sqrtContentYOffset: 0.150000
       sqrtLeftOffset: -0.600000
-      sqrtGroupOffset: 0.100000
+      sqrtGroupOffset: !<float> 10.000000
   ScriptTypes:
     "":
       {}

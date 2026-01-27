@@ -5,25 +5,36 @@ export default class PodLaTeXLens2 extends BaseScriptComponent {
     private containerName: string = "LatexContainer";
 
     @input
-    private baseSize: number = 0.15;
+    private baseSize: number = 0.20;
 
     @input
-    private lineSpacing: number = 0.28;
+    private regularTextScale: number = 1.4;
+
+    @input
+    private lineSpacing: number = 0.40;
 
     @input
     private textColor: vec4 = new vec4(1, 1, 1, 1);
 
-    // Drag a small solid white texture here (highly recommended for clean tinting)
+    @input
+    @hint("Default Z position for all text (negative = in front of camera)")
+    private defaultZOffset: number = -1.5;
+
+    @input
+    @hint("Z offset for radical lines relative to text (e.g., -0.005 = lines in front)")
+    private symbolZLayer: number = -0.005;
+
+    @input
+    private unlitMaterial: Material;
+
     @input
     private lineTexture: Texture;
-    @input 
-    private unlitMaterial: Material;
 
     @input
     private sqrtThickness: number = 0.18;
 
     @input
-    private sqrtHeightMultiplier: number = 3.2;
+    private sqrtHeightMultiplier: number = 3.0;
 
     @input
     private sqrtSlantMultiplier: number = 1.8;
@@ -32,13 +43,13 @@ export default class PodLaTeXLens2 extends BaseScriptComponent {
     private sqrtBarOverhang: number = 0.4;
 
     @input
-    private sqrtContentScale: number = 0.85;
+    private sqrtContentScale: number = 1.15;
 
     @input
-    private sqrtContentXOffset: number = 0.4;
+    private sqrtContentXOffset: number = 0.55;
 
     @input
-    private sqrtContentYOffset: number = 0.15;
+    private sqrtContentYOffset: number = 0.25;
 
     @input
     private sqrtLeftOffset: number = -0.6;
@@ -49,6 +60,11 @@ export default class PodLaTeXLens2 extends BaseScriptComponent {
     private container: SceneObject | null = null;
 
     onAwake(): void {
+        if (!this.unlitMaterial) {
+            print("ERROR: Assign an Unlit Material to 'unlitMaterial' in the Inspector!");
+            return;
+        }
+
         this.container = global.scene.createSceneObject(this.containerName);
 
         const latexInput = `
@@ -63,7 +79,7 @@ y &= \\sqrt{1 - x^2}
 \\end{align*}
         `.trim();
 
-        const startPos = new vec3(0, 1.8, -1.5);
+        const startPos = new vec3(0, 2.0, this.defaultZOffset);
 
         this.renderLatexLines(latexInput, startPos);
     }
@@ -72,14 +88,19 @@ y &= \\sqrt{1 - x^2}
         if (!this.container) return;
 
         const rawLines = input
-            .replace(/\\begin{align\*}|\\end{align\*}|\\begin{align}|\\end{align}/g, '')
-            .split('\\\\\\\\')
+            .replace(/\\begin\{align[^}]*\}|\\end\{align[^}]*\}/g, '')
+            .replace(/\\\\/g, '\n')
+            .split('\n')
             .map(l => l.trim())
             .filter(l => l.length > 0);
 
         let currentY = startPos.y;
 
         for (let line of rawLines) {
+            // Interpret &= as plain = (alignment marker in LaTeX align*)
+            line = line.replace(/&=/g, '=');
+
+            // Unicode fixes
             line = line
                 .replace(/\^2/g, '²')
                 .replace(/\^3/g, '³')
@@ -90,18 +111,20 @@ y &= \\sqrt{1 - x^2}
                 .replace(/v\^2/g, 'v²')
                 .replace(/c\^2/g, 'c²');
 
-            const sqrtRegex = /(.*)&=\s*\\sqrt\{([^}]*)\}/;
+            // Updated regex: matches lines like "y = \sqrt{...}" after &= replacement
+            const sqrtRegex = /(.*)=\s*\\sqrt\{([^}]*)\}/;
             const match = line.match(sqrtRegex);
 
             if (match) {
-                const leftText = match[1].trim() + " =";
+                // match[1] is everything before the = (may have trailing space)
+                let leftText = match[1].trimEnd() + " ="; // Removes trailing space, adds clean " ="
                 const sqrtContent = match[2].trim();
 
                 this.createTextBlock(
                     this.container,
                     leftText,
                     new vec3(startPos.x + this.sqrtLeftOffset, currentY, startPos.z),
-                    1.0,
+                    this.regularTextScale,
                     HorizontalAlignment.Right
                 );
 
@@ -115,7 +138,7 @@ y &= \\sqrt{1 - x^2}
                     this.container,
                     line,
                     new vec3(startPos.x, currentY, startPos.z),
-                    1.0,
+                    this.regularTextScale,
                     HorizontalAlignment.Center
                 );
             }
@@ -154,37 +177,18 @@ y &= \\sqrt{1 - x^2}
         const thickness = s * this.sqrtThickness;
         const height = s * this.sqrtHeightMultiplier;
 
-        const charWidthApprox = s * 0.6;
+        const charWidthApprox = s * 0.65;
         const contentWidth = content.length * charWidthApprox * this.sqrtContentScale;
 
-        // 1. Short vertical tick
+        this.createLineSegment(group, new vec3(0, height * 0.15, this.symbolZLayer), new vec3(0, 0, this.symbolZLayer), thickness);
+        this.createLineSegment(group, new vec3(0, 0, this.symbolZLayer), new vec3(s * this.sqrtSlantMultiplier, height, this.symbolZLayer), thickness);
         this.createLineSegment(
             group,
-            new vec3(0, height * 0.15, 0),
-            new vec3(0, 0, 0),
-            thickness,
-            this.textColor
+            new vec3(s * (this.sqrtSlantMultiplier - 0.3), height, this.symbolZLayer),
+            new vec3(s * (this.sqrtSlantMultiplier - 0.3) + contentWidth + s * this.sqrtBarOverhang, height, this.symbolZLayer),
+            thickness
         );
 
-        // 2. Diagonal slant
-        this.createLineSegment(
-            group,
-            new vec3(0, 0, 0),
-            new vec3(s * this.sqrtSlantMultiplier, height, 0),
-            thickness,
-            this.textColor
-        );
-
-        // 3. Horizontal overbar
-        this.createLineSegment(
-            group,
-            new vec3(s * (this.sqrtSlantMultiplier - 0.3), height, 0),
-            new vec3(s * (this.sqrtSlantMultiplier - 0.3) + contentWidth + s * this.sqrtBarOverhang, height, 0),
-            thickness,
-            this.textColor
-        );
-
-        // 4. Content
         this.createTextBlock(
             group,
             content,
@@ -198,26 +202,18 @@ y &= \\sqrt{1 - x^2}
         parent: SceneObject,
         start: vec3,
         end: vec3,
-        thickness: number,
-        color: vec4
+        thickness: number
     ): void {
         const lineObj = global.scene.createSceneObject("LineSegment");
         lineObj.setParent(parent);
 
         const imageComp: any = lineObj.createComponent("Component.Image");
 
-        // Create a new Unlit material for each line (avoids null mainMaterial/mainPass)
-        const material =  this.unlitMaterial.clone(); // global.scene.createMaterial("Unlit");
-
-        // Set solid color tint
-        material.mainPass.baseColor = color;
-
-        // Optional texture (white pixel recommended for clean results)
+        const material = this.unlitMaterial.clone();
+        material.mainPass.baseColor = this.textColor;
         if (this.lineTexture) {
             material.mainPass.baseTexture = this.lineTexture;
         }
-
-        // Assign the material to the image component
         imageComp.mainMaterial = material;
 
         const direction = end.sub(start);
