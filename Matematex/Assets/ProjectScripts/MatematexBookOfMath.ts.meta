@@ -1,0 +1,83 @@
+- !<AssetImportMetadata/0cf4e1fc-29cf-4dc4-8c5f-1c094d8a0ab2>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> bbc6d1b7-39ac-4507-9457-b992789480c3
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> bbc6d1b7-39ac-4507-9457-b992789480c3
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 2e6190f6-4233-4f57-b327-9c0b6175d509
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/2e6190f6-4233-4f57-b327-9c0b6175d509>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 6d759369-21da-4f25-bb7e-04367d892bb2
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    autoAdvanceSec: false
+    containerWorldY: false
+    containerWorldZ: false
+    emToWorld: false
+    hideTemplate: false
+    italicFont: false
+    italicScaleAdjust: false
+    layoutWidthMargin: false
+    lineMaterial: false
+    nextButton: false
+    prevButton: false
+    templateText: false
+    textColor: false
+    textScaleMultiplier: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - lineMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      italicFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
+      emToWorld: !<float> 5.000000
+      textScaleMultiplier: !<float> 5.000000
+      layoutWidthMargin: 1.180000
+      italicScaleAdjust: !<float> 1.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      containerWorldZ: !<float> 39.000000
+      containerWorldY: !<float> 0.000000
+      prevButton: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      nextButton: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      hideTemplate: true
+      autoAdvanceSec: !<float> 0.000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input Asset.Material lineMaterial
+    - // @input SceneObject templateText
+    - // @input Asset.Font italicFont
+    - // @input float emToWorld = 5
+    - // @input float textScaleMultiplier = 5
+    - // @input float layoutWidthMargin = 1.18
+    - // @input float italicScaleAdjust = 1
+    - "// @input vec4 textColor = {1,1,1,1}"
+    - // @input float containerWorldZ = 39
+    - // @input float containerWorldY
+    - '// @input SceneObject prevButton {"hint":"SceneObject with Interactable — pinch to go to previous formula"}'
+    - '// @input SceneObject nextButton {"hint":"SceneObject with Interactable — pinch to go to next formula"}'
+    - '// @input bool hideTemplate = true {"hint":"Hide template after cloning"}'
+    - '// @input float autoAdvanceSec {"hint":"Auto-advance interval in seconds (0 = disabled). Useful for testing without buttons."}'

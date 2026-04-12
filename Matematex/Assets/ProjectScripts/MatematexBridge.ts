@@ -282,6 +282,19 @@ export class MatematexLayoutWalker {
             return;
         }
 
+        // Named operators (\sin, \cos, \lim, etc.) use class "mop".
+        // These must render as UPRIGHT text, never italic.
+        if (hasClass(el, 'mop')) {
+            const savedItalic = ctx.italic;
+            ctx.italic = false;
+            this.walkChildren(el, ctx);
+            ctx.italic = savedItalic;
+            if (marginRight) {
+                ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
+            }
+            return;
+        }
+
         // Track italic state: KaTeX uses class "mathnormal" for italic
         // math variables (x, y, z, etc.) and "mathit" for explicit italic.
         const isItalicContainer = hasClass(el, 'mathnormal') || hasClass(el, 'mathit');
@@ -318,15 +331,16 @@ export class MatematexLayoutWalker {
         // Convention: x and y are the VISUAL CENTER of the rendered text.
         //
         // X: use KaTeX's real font metrics for per-glyph widths.
-        // Y: use real character height for baseline-to-center correction.
+        // Y: use a FIXED baseline-to-center offset based on x-height (0.43em),
+        //    NOT per-character height. Per-character height varies (e.g., "i" is
+        //    taller than "s" due to its dot) which causes characters on the same
+        //    line to render at different y positions. Using x-height keeps them aligned.
         const widthEm = getTextWidthEm(text, ctx.italic);
         const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
         const centerX = ctx.cursorX + widthWorld / 2;
 
-        // Use real character height for baseline-to-center conversion.
-        // Height is distance from baseline to top of glyph.
-        const heightEm = getCharHeightEm(text.charAt(0), ctx.italic);
-        const baselineToCenterWorld = (heightEm / 2) * ctx.emToWorld * ctx.scale;
+        const xHeightEm = 0.43; // standard x-height for KaTeX fonts
+        const baselineToCenterWorld = (xHeightEm / 2) * ctx.emToWorld * ctx.scale;
         const centerY = ctx.baselineY + baselineToCenterWorld;
 
         this.items.push({

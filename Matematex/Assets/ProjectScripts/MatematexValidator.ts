@@ -92,6 +92,12 @@ const TEST_CORPUS: LaTeXTestCase[] = [
     { id: 'T27', name: 'GreekHeavy',        latex: '\\alpha\\beta\\gamma\\delta',    tier: 2, expectedMinItems: 4 },
     { id: 'T28', name: 'CubeRoot',          latex: '\\sqrt[3]{x+1}',                 tier: 2, expectedMinItems: 1 },
     { id: 'T29', name: 'InvalidLatex',      latex: '\\frac{1}',                      tier: 2, expectedMinItems: 0, expectParseError: true },
+
+    // Phase 5: Named operators (should render upright, not italic)
+    { id: 'T30', name: 'SinFunction',       latex: '\\sin x',                        tier: 1, expectedMinItems: 2 },
+    { id: 'T31', name: 'LimitWithSub',      latex: '\\lim_{x \\to 0} x',            tier: 2, expectedMinItems: 3 },
+    { id: 'T32', name: 'LogBase',           latex: '\\log_2 n',                      tier: 2, expectedMinItems: 3 },
+    { id: 'T33', name: 'SinSquared',        latex: '\\sin^2 x',                      tier: 2, expectedMinItems: 3 },
 ];
 
 // ─── @component ──────────────────────────────────────────────
