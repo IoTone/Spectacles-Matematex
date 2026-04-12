@@ -45,6 +45,13 @@ import {
     SpaceSVGMeshBackend,
 } from './SpaceSVG';
 
+import {
+    getCharWidthEm,
+    getTextWidthEm,
+    getCharHeightEm,
+    getCharItalicEm,
+} from './KaTeXFontMetrics';
+
 // ─── LayoutItem types ────────────────────────────────────────
 
 interface LayoutBase {
@@ -172,8 +179,8 @@ class MatematexLayoutWalker {
     private items: LayoutItem[] = [];
     private warnings: string[] = [];
     private seenUnhandledTags: { [key: string]: boolean } = {};
-    // Deferred SVG: stored during vlist walk, emitted after content width is known
     private _pendingSVG: { el: SpaceElement; ctx: WalkContext } | null = null;
+    _layoutWidthMargin: number = 1.18;
 
     layout(katexHtmlRoot: SpaceElement, emToWorld: number): WalkResult {
         this.items = [];
@@ -309,18 +316,17 @@ class MatematexLayoutWalker {
 
     private emitText(text: string, ctx: WalkContext): void {
         // Convention: x and y are the VISUAL CENTER of the rendered text.
-        // Text 3D with HorizontalAlignment.Center + VerticalAlignment.Center
-        // places the visual center of glyphs at the SceneObject's position.
         //
-        // X: cursor advances by full text width; visual center = cursor + width/2.
-        // Y: KaTeX gives us baselines; convert to center by shifting up by
-        //    half the character body height (~0.25 em at the current scale).
-        const widthEm = approxTextWidthEm(text);
+        // X: use KaTeX's real font metrics for per-glyph widths.
+        // Y: use real character height for baseline-to-center correction.
+        const widthEm = getTextWidthEm(text, ctx.italic);
         const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
         const centerX = ctx.cursorX + widthWorld / 2;
 
-        const baselineToCenterEm = 0.25;
-        const baselineToCenterWorld = baselineToCenterEm * ctx.emToWorld * ctx.scale;
+        // Use real character height for baseline-to-center conversion.
+        // Height is distance from baseline to top of glyph.
+        const heightEm = getCharHeightEm(text.charAt(0), ctx.italic);
+        const baselineToCenterWorld = (heightEm / 2) * ctx.emToWorld * ctx.scale;
         const centerY = ctx.baselineY + baselineToCenterWorld;
 
         this.items.push({
@@ -334,11 +340,16 @@ class MatematexLayoutWalker {
 
         ctx.cursorX += widthWorld;
 
-        // Add italic inter-character spacing. KaTeX applies italic correction
-        // (marginRight) on some characters but not between consecutive italic
-        // letters like "mc". This small gap prevents overlapping.
-        if (ctx.italic) {
-            ctx.cursorX += 0.08 * ctx.emToWorld * ctx.scale;
+        // Add italic inter-character spacing using real italic correction
+        // from font metrics. Many math-italic characters have correction=0,
+        // so we enforce a minimum gap to prevent visual overlapping (the
+        // rendered text at textScaleMultiplier may be wider than metrics predict).
+        if (ctx.italic && text.length > 0) {
+            const lastChar = text.charAt(text.length - 1);
+            const italicCorrectionEm = getCharItalicEm(lastChar);
+            const minGapEm = 0.12; // minimum gap between consecutive italic chars
+            const gapEm = Math.max(italicCorrectionEm, minGapEm);
+            ctx.cursorX += gapEm * ctx.emToWorld * ctx.scale;
         }
     }
 
@@ -477,6 +488,8 @@ class MatematexLayoutWalker {
         }
 
         // Process any deferred SVG (sqrt radical) and update maxX.
+        // The SVG width is computed from the content width and should be
+        // at least as wide as the content it covers.
         if (this._pendingSVG) {
             const svg = this._pendingSVG;
             this._pendingSVG = null;
@@ -487,11 +500,15 @@ class MatematexLayoutWalker {
             }
         }
 
-        // Final total width across all children (including SVG).
-        const totalWidth = maxX - startX;
+        // Final total width across all children (including SVG + margin).
+        // The margin compensates for textScaleMultiplier making rendered
+        // glyphs wider than their font-metric widths predict. The margin
+        // is proportional to textScaleMultiplier — larger scale = larger mismatch.
+        const rawWidth = maxX - startX;
+        const totalWidth = rawWidth * this._layoutWidthMargin;
         const totalCenterX = startX + totalWidth / 2;
 
-        // Debug: print per-child widths and total
+        // Debug
         if (childRanges.length > 1 || lineItemIndices.length > 0) {
             print(`[MatematexBridge] vlist: totalWidth=${totalWidth.toFixed(2)}, children=${childRanges.length}, lines=${lineItemIndices.length}`);
             for (let ci = 0; ci < childRanges.length; ci++) {
@@ -501,7 +518,6 @@ class MatematexLayoutWalker {
         }
 
         // CENTER each child's items within the total width.
-        // In LaTeX, numerator and denominator are centered under the fraction bar.
         for (const range of childRanges) {
             if (range.width < totalWidth && range.endIdx > range.startIdx) {
                 const shift = (totalWidth - range.width) / 2;
@@ -518,8 +534,9 @@ class MatematexLayoutWalker {
             lineItem.x = totalCenterX;
         }
 
-        // Advance the parent cursor past the vlist content
-        ctx.cursorX = maxX;
+        // Advance the parent cursor using the FULL width (including margin)
+        // so parent vlists (e.g., an outer fraction) see the complete extent.
+        ctx.cursorX = startX + totalWidth;
     }
 
     private findChildByClass(parent: SpaceElement, cls: string): SpaceElement | null {
@@ -897,6 +914,10 @@ export class MatematexBridge extends BaseScriptComponent {
     private textScaleMultiplier: number = 1.0;
 
     @input
+    @hint("Width margin for fraction bars and radicals (compensates for text rendering scale mismatch). 1.0 = exact, 1.18 = 18% wider.")
+    private layoutWidthMargin: number = 1.18;
+
+    @input
     private textColor: vec4 = new vec4(1, 1, 1, 1);
 
     @input
@@ -977,6 +998,7 @@ export class MatematexBridge extends BaseScriptComponent {
         // These are independent — tune emToWorld for tight/wide spacing,
         // tune textScaleMultiplier for text legibility.
         const walker = new MatematexLayoutWalker();
+        walker._layoutWidthMargin = this.layoutWidthMargin;
         const result = walker.layout(katexHtml, this.emToWorld);
 
         if (this.dumpLayout) {

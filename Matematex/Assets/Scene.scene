@@ -2653,6 +2653,7 @@
   ScriptAsset: !<reference> 9236ae27-8978-4696-9148-7d14c116662d
   ScriptInputsDefault:
     hideTemplate: true
+    layoutWidthMargin: true
     textColor: true
     dumpLayout: true
     containerWorldY: true
@@ -2670,6 +2671,7 @@
       emToWorld: !<float> 5.000000
       baseTextSize: !<float> 10.000000
       textScaleMultiplier: !<float> 5.000000
+      layoutWidthMargin: 1.180000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
       dumpLayout: true
       containerWorldZ: !<float> 39.000000

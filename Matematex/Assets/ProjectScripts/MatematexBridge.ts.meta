@@ -37,6 +37,7 @@
     italicFont: false
     italicScaleAdjust: false
     latex: false
+    layoutWidthMargin: false
     lineMaterial: false
     templateText: false
     textColor: false
@@ -60,6 +61,7 @@
       emToWorld: 0.500000
       baseTextSize: 0.500000
       textScaleMultiplier: !<float> 1.000000
+      layoutWidthMargin: 1.180000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
       dumpLayout: true
       containerWorldZ: !<float> 35.000000
@@ -79,6 +81,7 @@
     - '// @input float emToWorld = 2 {"hint":"World units per em — controls layout spacing between characters. Start at 2, increase if chars overlap, decrease if too spread out."}'
     - '// @input float baseTextSize = 2 {"hint":"Lens Studio Text component size for 1.0x scale (em → text size)"}'
     - '// @input float textScaleMultiplier = 1 {"hint":"Multiplier for text SceneObject scale (cranks up cloned text size). Try 5 if text is small."}'
+    - '// @input float layoutWidthMargin = 1.18 {"hint":"Width margin for fraction bars and radicals (compensates for text rendering scale mismatch). 1.0 = exact, 1.18 = 18% wider."}'
     - "// @input vec4 textColor = {1,1,1,1}"
     - '// @input bool dumpLayout = true {"hint":"Print layout items to console for debugging"}'
     - '// @input float containerWorldZ = 35 {"hint":"Container world Z (camera at z=40 looks toward -Z; 35 = 5 units in front)"}'
