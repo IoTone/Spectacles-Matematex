@@ -1,0 +1,44 @@
+- !<AssetImportMetadata/9107cf8b-ac52-4703-81c9-1a2c390af16b>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 508dde10-936a-45ee-8a88-2a1e59f8d149
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 508dde10-936a-45ee-8a88-2a1e59f8d149
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 3c395996-be25-4a39-a8c1-4ed73e591709
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/3c395996-be25-4a39-a8c1-4ed73e591709>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 8099cdd0-41ce-46bf-aa3d-13d0a58f7934
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    verbose: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - verbose: false
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input bool verbose {"hint":"Print full HTML output for each test (verbose)"}'

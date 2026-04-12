@@ -1,0 +1,50 @@
+- !<AssetImportMetadata/332c5314-ea78-4991-bd02-9a268749554e>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> ec338223-f813-466e-b31d-c8d16a4d8a65
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> ec338223-f813-466e-b31d-c8d16a4d8a65
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 6b1063a5-b3a4-4481-9dc6-3c65bf412db3
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/6b1063a5-b3a4-4481-9dc6-3c65bf412db3>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: adfd3cb9-7602-4930-a639-5988a96505f8
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    amplitude: false
+    size: false
+    speed: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - amplitude: 0.400000
+      speed: 2.500000
+      size: 0.350000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input float amplitude = 0.4
+    - // @input float speed = 2.5
+    - // @input float size = 0.35

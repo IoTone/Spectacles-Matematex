@@ -1,0 +1,53 @@
+- !<AssetImportMetadata/d87c4ad5-02c0-4cf1-9604-7c1153135e8a>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 32c63c64-4c67-436d-9b60-21ddde4b1d9a
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 32c63c64-4c67-436d-9b60-21ddde4b1d9a
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 4f6c04fd-e9fb-429a-a352-f5e2b648dc97
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/4f6c04fd-e9fb-429a-a352-f5e2b648dc97>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 4395ca74-0bf2-4ac2-bdf6-80612b2b1757
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    autoRunAll: false
+    material: false
+    worldHeight: false
+    worldWidth: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - material: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      worldWidth: !<float> 20.000000
+      worldHeight: !<float> 20.000000
+      autoRunAll: true
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input Asset.Material material {"hint":"Unlit material for mesh rendering (e.g., LegitUnlit)"}'
+    - // @input float worldWidth = 20
+    - // @input float worldHeight = 20
+    - '// @input bool autoRunAll = true {"hint":"Run all tests automatically on start"}'

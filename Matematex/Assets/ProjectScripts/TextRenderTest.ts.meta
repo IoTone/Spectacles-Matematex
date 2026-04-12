@@ -1,0 +1,47 @@
+- !<AssetImportMetadata/2d7da24b-f448-4075-a204-f5ad73d2715e>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> ecb5ceee-8182-4586-b0c7-76b348230582
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> ecb5ceee-8182-4586-b0c7-76b348230582
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 58305632-1f6f-435a-ab2f-7e7bdfe610e3
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/58305632-1f6f-435a-ab2f-7e7bdfe610e3>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: f871f2d8-fb61-464b-b2ba-c325adfdee33
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    templateText: false
+    worldZ: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      worldZ: !<float> 35.000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input SceneObject templateText {"hint":"The editor-created Text 3D SceneObject (the one you can see)"}'
+    - '// @input float worldZ = 35 {"hint":"World z to place test texts"}'

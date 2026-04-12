@@ -1,0 +1,71 @@
+- !<AssetImportMetadata/1d0cf837-c95e-41b7-93f0-e06f261dc707>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> c09a85b9-9690-4959-ae07-b5a519ac13fd
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> c09a85b9-9690-4959-ae07-b5a519ac13fd
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> b8d5f85b-e290-46af-b1de-395763760661
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/b8d5f85b-e290-46af-b1de-395763760661>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 60438c34-4d38-4b5a-af64-da7e90e1266a
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    baseSize: false
+    containerName: false
+    lineSpacing: false
+    sqrtBarThickness: false
+    sqrtContentScale: false
+    sqrtDashMultiplier: false
+    sqrtGroupOffset: false
+    sqrtLeftOffset: false
+    sqrtRadicalScale: false
+    textColor: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - containerName: LatexContainer
+      baseSize: 0.150000
+      lineSpacing: 0.250000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      sqrtRadicalScale: 1.600000
+      sqrtContentScale: 0.900000
+      sqrtBarThickness: 0.150000
+      sqrtDashMultiplier: 2.200000
+      sqrtLeftOffset: -0.600000
+      sqrtGroupOffset: 0.100000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input string containerName = "LatexContainer"'
+    - // @input float baseSize = 0.15
+    - // @input float lineSpacing = 0.25
+    - "// @input vec4 textColor = {1,1,1,1}"
+    - // @input float sqrtRadicalScale = 1.6
+    - // @input float sqrtContentScale = 0.9
+    - // @input float sqrtBarThickness = 0.15
+    - // @input float sqrtDashMultiplier = 2.2
+    - // @input float sqrtLeftOffset = -0.6
+    - // @input float sqrtGroupOffset = 0.1

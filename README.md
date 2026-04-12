@@ -15,10 +15,12 @@ Spectacles-Matematex brings LaTeX to Snap Spectacles as a spatially rendered exp
 - R4: The library supports a full LaTeX compliant renderer into png
 - R5: The library suppoirts a conversion of 3D style plotting into spatial rendering: ( TikZ style: https://en.wikibooks.org/wiki/LaTeX/PGF/TikZ )
 - R6: The design should be efficient in memory and cpu use with regards to Snap Spectacles and known limitations
+- R7: No external online services should be used, this should be 100% local.
 
 ## Existing Libraries
 
 - We should utilize SpaceSVG for SVG Rendering : https://github.com/IoTone/Spectacles-polynode/blob/main/PolynodeSpecsDemo/Assets/ProjectScripts/SpaceSVG.ts 
+- If we need off screen DOM library support, for portiing, we should use our own library called SpaceDOM: https://github.com/IoTone/Spectacles-polynode/blob/main/PolynodeSpecsDemo/Assets/ProjectScripts/SpaceDOM.ts
 - Katex or MathJAX are the best libraries, but porting may be complicated.  
 
 ## Prototypes

@@ -1,0 +1,50 @@
+- !<AssetImportMetadata/d0902608-32f7-43be-8148-46f4158e7b2f>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> ed2d1cfd-6362-4ad4-8387-e7796a1f5c86
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> ed2d1cfd-6362-4ad4-8387-e7796a1f5c86
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 480eac91-599b-431c-a135-b378f1abcd53
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/480eac91-599b-431c-a135-b378f1abcd53>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 035dbaa5-c353-4ad6-b83b-c4c747fb598b
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    maxDepth: false
+    skipWrappers: false
+    terseAttrs: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - maxDepth: !<float> 0.000000
+      skipWrappers: true
+      terseAttrs: true
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input float maxDepth {"hint":"Maximum depth to dump (0 = unlimited)"}'
+    - '// @input bool skipWrappers = true {"hint":"Skip the outer .katex / .katex-html wrappers (drill into .base)"}'
+    - '// @input bool terseAttrs = true {"hint":"Show only structural attrs (class, style); hide aria-* and data-*"}'

@@ -1,0 +1,95 @@
+- !<AssetImportMetadata/0fc4b051-bd6c-4324-b38a-f2cec7cc5bee>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 7ea9d842-5a4d-4ee7-98d3-cd443caf4926
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 7ea9d842-5a4d-4ee7-98d3-cd443caf4926
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> f2b4cbea-480f-4608-89aa-9493070a47fd
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/f2b4cbea-480f-4608-89aa-9493070a47fd>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 52348b04-2818-47e9-a76d-2e83afc37230
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    baseSize: false
+    containerName: false
+    defaultZOffset: false
+    lineSpacing: false
+    lineTexture: false
+    regularTextScale: false
+    sqrtBarOverhang: false
+    sqrtContentScale: false
+    sqrtContentXOffset: false
+    sqrtContentYOffset: false
+    sqrtGroupOffset: false
+    sqrtHeightMultiplier: false
+    sqrtLeftOffset: false
+    sqrtSlantMultiplier: false
+    sqrtThickness: false
+    symbolZLayer: false
+    textColor: false
+    unlitMaterial: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - containerName: LatexContainer
+      baseSize: !<float> 4.000000
+      regularTextScale: 1.300000
+      lineSpacing: 0.280000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      defaultZOffset: -1.500000
+      symbolZLayer: -0.005000
+      unlitMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      lineTexture: !<reference.Texture> 666e1033-8e48-480b-a889-55da9f097058
+      sqrtThickness: 0.180000
+      sqrtHeightMultiplier: 3.200000
+      sqrtSlantMultiplier: 1.800000
+      sqrtBarOverhang: 0.400000
+      sqrtContentScale: 0.850000
+      sqrtContentXOffset: 0.400000
+      sqrtContentYOffset: 0.150000
+      sqrtLeftOffset: -0.600000
+      sqrtGroupOffset: 0.100000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input string containerName = "LatexContainer"'
+    - // @input float baseSize = 0.2
+    - // @input float regularTextScale = 1.4
+    - // @input float lineSpacing = 0.4
+    - "// @input vec4 textColor = {1,1,1,1}"
+    - '// @input float defaultZOffset = -1.5 {"hint":"Default Z position for all text (negative = in front of camera)"}'
+    - '// @input float symbolZLayer = -0.005 {"hint":"Z offset for radical lines relative to text (e.g., -0.005 = lines in front)"}'
+    - // @input Asset.Material unlitMaterial
+    - // @input Asset.Texture lineTexture
+    - // @input float sqrtThickness = 0.18
+    - // @input float sqrtHeightMultiplier = 3
+    - // @input float sqrtSlantMultiplier = 1.8
+    - // @input float sqrtBarOverhang = 0.4
+    - // @input float sqrtContentScale = 1.15
+    - // @input float sqrtContentXOffset = 0.55
+    - // @input float sqrtContentYOffset = 0.25
+    - // @input float sqrtLeftOffset = -0.6
+    - // @input float sqrtGroupOffset = 0.1

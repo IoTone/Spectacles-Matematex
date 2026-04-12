@@ -1,0 +1,914 @@
+// MatematexBridge.ts — Phase 2 KaTeX-to-Scene bridge
+//
+// Walks the SpaceDOM tree that KaTeX produces and creates Lens Studio scene
+// objects. Hybrid rendering:
+//   - Lens Studio Text components for characters (KaTeX outputs Unicode directly)
+//   - Image quads for fraction bars
+//   - SpaceSVG meshes for radicals and other <svg> blocks (Phase 2.5)
+//
+// The walker maintains a cursor (x, y, scale) and emits LayoutItems. The
+// renderer takes those items and creates scene objects. Layout is one-pass
+// with a small width-fixup for fraction bars.
+//
+// Phase 2 MVP supported constructs:
+//   - mord text (single characters and Unicode)
+//   - mord container (passthrough)
+//   - mspace (horizontal spacing via marginRight)
+//   - mrel (relation operators)
+//   - mfrac (fractions, including the frac-line bar)
+//   - msupsub (superscripts and subscripts via vlist)
+//   - sizing (font scale via reset-sizeN sizeN classes)
+//   - Multi-base sequences (E = mc^2)
+//
+// Not yet supported (will throw warnings):
+//   - sqrt (Phase 2.5 — needs SVG path rendering via SpaceSVG)
+//   - matrices (mtable)
+//   - delimsizing (\left, \right)
+
+import { installSpaceDOMAdapter, getSpaceDocument } from './SpaceDOMAdapter';
+installSpaceDOMAdapter();
+
+// @ts-ignore — katex_bundle has @ts-nocheck
+import katex from './katex_bundle';
+
+import {
+    SpaceElement,
+    SpaceText,
+    SpaceNode,
+    ELEMENT_NODE,
+    TEXT_NODE,
+    serializeNode,
+} from './SpaceDOM';
+
+import {
+    SVGXMLParser,
+    SpaceSVGMeshBackend,
+} from './SpaceSVG';
+
+// ─── LayoutItem types ────────────────────────────────────────
+
+interface LayoutBase {
+    x: number;     // world units, visual center
+    y: number;     // world units, visual center
+    scale: number; // multiplier (1.0 = base size)
+}
+
+interface TextLayoutItem extends LayoutBase {
+    kind: 'text';
+    text: string;
+}
+
+interface LineLayoutItem extends LayoutBase {
+    kind: 'line';
+    width: number;     // world units
+    thickness: number; // world units
+}
+
+interface SVGLayoutItem extends LayoutBase {
+    kind: 'svg';
+    svgString: string; // serialized SVG markup
+    width: number;     // world units
+    height: number;    // world units
+}
+
+type LayoutItem = TextLayoutItem | LineLayoutItem | SVGLayoutItem;
+
+// ─── Helpers ─────────────────────────────────────────────────
+
+function getClasses(el: SpaceElement): string[] {
+    const c = el.getAttribute('class');
+    return c ? c.split(/\s+/).filter(s => s.length > 0) : [];
+}
+
+function hasClass(el: SpaceElement, cls: string): boolean {
+    return getClasses(el).indexOf(cls) >= 0;
+}
+
+function getStyle(el: SpaceElement, prop: string): string | null {
+    const styleObj = (el as any)._style;
+    if (!styleObj) return null;
+    const val = styleObj[prop];
+    return val == null ? null : String(val);
+}
+
+function parseEm(value: string | null): number {
+    if (!value) return 0;
+    const m = value.match(/(-?[\d.]+)em/);
+    if (!m) return 0;
+    return parseFloat(m[1]);
+}
+
+// KaTeX size classes — multiplier relative to size6 (= 1.0)
+const SIZE_FACTORS: { [key: string]: number } = {
+    size1: 0.5,
+    size2: 0.7,
+    size3: 0.8,
+    size4: 0.9,
+    size5: 1.0,
+    size6: 1.0,
+    size7: 1.2,
+    size8: 1.44,
+    size9: 1.728,
+    size10: 2.074,
+    size11: 2.488,
+};
+
+function sizingMultiplier(classes: string[]): number {
+    let resetSize = 1.0;
+    let newSize = 1.0;
+    for (const c of classes) {
+        if (c.indexOf('reset-size') === 0) {
+            const key = c.substring('reset-'.length);
+            if (SIZE_FACTORS[key] !== undefined) {
+                resetSize = SIZE_FACTORS[key];
+            }
+        } else if (SIZE_FACTORS[c] !== undefined) {
+            newSize = SIZE_FACTORS[c];
+        }
+    }
+    return newSize / resetSize;
+}
+
+// Approximate text width in em units. Without a font measurement API we use
+// rough per-character widths; close enough for layout. Refine with KaTeX
+// font metrics in a later phase.
+function approxTextWidthEm(text: string): number {
+    let width = 0;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text.charAt(i);
+        if (/[ilj.,;:'!()\[\]\-]/.test(ch)) {
+            width += 0.30;
+        } else if (/[mwM]/.test(ch)) {
+            width += 0.85;
+        } else if (/[A-Z]/.test(ch)) {
+            width += 0.70;
+        } else if (/[=+\-*\/<>]/.test(ch)) {
+            width += 0.65;
+        } else {
+            width += 0.55;
+        }
+    }
+    return width;
+}
+
+// ─── Walker ──────────────────────────────────────────────────
+
+interface WalkContext {
+    cursorX: number;
+    baselineY: number;
+    scale: number;
+    emToWorld: number;
+}
+
+interface WalkResult {
+    items: LayoutItem[];
+    width: number;
+    warnings: string[];
+}
+
+class MatematexLayoutWalker {
+    private items: LayoutItem[] = [];
+    private warnings: string[] = [];
+    private seenUnhandledTags: { [key: string]: boolean } = {};
+
+    layout(katexHtmlRoot: SpaceElement, emToWorld: number): WalkResult {
+        this.items = [];
+        this.warnings = [];
+        this.seenUnhandledTags = {};
+
+        const ctx: WalkContext = {
+            cursorX: 0,
+            baselineY: 0,
+            scale: 1.0,
+            emToWorld,
+        };
+
+        this.walk(katexHtmlRoot, ctx);
+
+        return {
+            items: this.items,
+            width: ctx.cursorX,
+            warnings: this.warnings,
+        };
+    }
+
+    private warn(msg: string): void {
+        if (!this.seenUnhandledTags[msg]) {
+            this.seenUnhandledTags[msg] = true;
+            this.warnings.push(msg);
+        }
+    }
+
+    private walk(node: SpaceNode, ctx: WalkContext): void {
+        if (node.nodeType === TEXT_NODE) {
+            const text = (node as SpaceText).data;
+            // Skip empty and zero-width-space text
+            if (text && text.length > 0 && text !== '\u200B') {
+                this.emitText(text, ctx);
+            }
+            return;
+        }
+
+        if (node.nodeType !== ELEMENT_NODE) return;
+
+        const el = node as SpaceElement;
+        const tag = el.localName;
+        const classes = getClasses(el);
+
+        // Skip invisible structural elements entirely.
+        if (this.shouldSkip(tag, classes)) return;
+
+        // SVG blocks (e.g., sqrt radical) — serialize back to SVG string
+        // and emit as SVGLayoutItem for the renderer to feed to SpaceSVG.
+        if (tag === 'svg') {
+            this.emitSVG(el, ctx);
+            return;
+        }
+
+        // Apply marginLeft before walking children
+        const marginLeft = parseEm(getStyle(el, 'marginLeft'));
+        if (marginLeft) {
+            ctx.cursorX += marginLeft * ctx.emToWorld * ctx.scale;
+        }
+        const marginRight = parseEm(getStyle(el, 'marginRight'));
+
+        // mspace: explicit horizontal space, no children to walk
+        if (hasClass(el, 'mspace')) {
+            ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
+            return;
+        }
+
+        // sizing: scale all descendants, then restore
+        if (hasClass(el, 'sizing')) {
+            const mult = sizingMultiplier(classes);
+            const savedScale = ctx.scale;
+            ctx.scale = ctx.scale * mult;
+            this.walkChildren(el, ctx);
+            ctx.scale = savedScale;
+            if (marginRight) {
+                ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
+            }
+            return;
+        }
+
+        // vlist-t: vertical stacking primitive (used by mfrac, msupsub)
+        if (hasClass(el, 'vlist-t')) {
+            this.walkVlistGroup(el, ctx);
+            if (marginRight) {
+                ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
+            }
+            return;
+        }
+
+        // Default: passthrough container
+        this.walkChildren(el, ctx);
+
+        if (marginRight) {
+            ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
+        }
+    }
+
+    private walkChildren(el: SpaceElement, ctx: WalkContext): void {
+        for (const child of el._childNodes) {
+            this.walk(child, ctx);
+        }
+    }
+
+    private shouldSkip(tag: string, classes: string[]): boolean {
+        if (classes.indexOf('strut') >= 0) return true;
+        if (classes.indexOf('pstrut') >= 0) return true;
+        if (classes.indexOf('vlist-s') >= 0) return true;
+        if (classes.indexOf('nulldelimiter') >= 0) return true;
+        return false;
+    }
+
+    private emitText(text: string, ctx: WalkContext): void {
+        // Convention: x and y are the VISUAL CENTER of the rendered text.
+        // Text 3D with HorizontalAlignment.Center + VerticalAlignment.Center
+        // places the visual center of glyphs at the SceneObject's position.
+        //
+        // X: cursor advances by full text width; visual center = cursor + width/2.
+        // Y: KaTeX gives us baselines; convert to center by shifting up by
+        //    half the character body height (~0.25 em at the current scale).
+        const widthEm = approxTextWidthEm(text);
+        const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
+        const centerX = ctx.cursorX + widthWorld / 2;
+
+        const baselineToCenterEm = 0.25;
+        const baselineToCenterWorld = baselineToCenterEm * ctx.emToWorld * ctx.scale;
+        const centerY = ctx.baselineY + baselineToCenterWorld;
+
+        this.items.push({
+            kind: 'text',
+            text,
+            x: centerX,
+            y: centerY,
+            scale: ctx.scale,
+        });
+
+        ctx.cursorX += widthWorld;
+    }
+
+    private walkVlistGroup(vlistT: SpaceElement, ctx: WalkContext): void {
+        // Structure: vlist-t > vlist-r > vlist > [children with top:-Xem]
+        // (vlist-t2 has 2 vlist-r — second is depth strut, usually empty)
+        const startX = ctx.cursorX;
+        let maxX = startX;
+        const lineItemIndices: number[] = [];
+
+        for (const vlistR of vlistT._childNodes) {
+            if (vlistR.nodeType !== ELEMENT_NODE) continue;
+            const vlistREl = vlistR as SpaceElement;
+            if (!hasClass(vlistREl, 'vlist-r')) continue;
+
+            for (const vlist of vlistREl._childNodes) {
+                if (vlist.nodeType !== ELEMENT_NODE) continue;
+                const vlistEl = vlist as SpaceElement;
+                if (!hasClass(vlistEl, 'vlist')) continue;
+
+                for (const child of vlistEl._childNodes) {
+                    if (child.nodeType !== ELEMENT_NODE) continue;
+                    const childEl = child as SpaceElement;
+
+                    // A vlist child must have a top style; otherwise skip
+                    // (e.g., the empty depth strut at the end of vlist-t2).
+                    const topStyle = getStyle(childEl, 'top');
+                    if (topStyle === null) continue;
+                    const topEm = parseEm(topStyle);
+
+                    // Find the pstrut to determine the offset reference
+                    const pstrut = this.findChildByClass(childEl, 'pstrut');
+                    const pstrutHeight = pstrut ? parseEm(getStyle(pstrut, 'height')) : 0;
+
+                    // Empirically: y_offset_em = -top - pstrut_height
+                    const yOffsetEm = -topEm - pstrutHeight;
+                    const yOffsetWorld = yOffsetEm * ctx.emToWorld * ctx.scale;
+
+                    // Save cursor; reset X and shift baseline for this vlist child
+                    const savedX = ctx.cursorX;
+                    const savedY = ctx.baselineY;
+                    ctx.cursorX = startX;
+                    ctx.baselineY = savedY + yOffsetWorld;
+
+                    // Special: if this child is a fraction line wrapper, emit a line item
+                    const fracLineEl = this.findDescendantByClass(childEl, 'frac-line');
+                    if (fracLineEl) {
+                        const thicknessEm =
+                            parseEm(getStyle(fracLineEl, 'borderBottomWidth')) || 0.04;
+                        lineItemIndices.push(this.items.length);
+                        this.items.push({
+                            kind: 'line',
+                            x: startX,
+                            y: ctx.baselineY,
+                            width: 0, // placeholder, fixed up below
+                            thickness: thicknessEm * ctx.emToWorld * ctx.scale,
+                            scale: ctx.scale,
+                        });
+                    } else {
+                        this.walkChildren(childEl, ctx);
+                        if (ctx.cursorX > maxX) maxX = ctx.cursorX;
+                    }
+
+                    ctx.cursorX = savedX;
+                    ctx.baselineY = savedY;
+                }
+            }
+        }
+
+        // Fix up frac-line widths: each line spans the widest content.
+        // Also set the line's x to its VISUAL CENTER (consistency with text items).
+        const fracLineWidth = maxX - startX;
+        const fracLineCenterX = startX + fracLineWidth / 2;
+        for (const idx of lineItemIndices) {
+            const lineItem = this.items[idx] as LineLayoutItem;
+            lineItem.width = fracLineWidth;
+            lineItem.x = fracLineCenterX;
+        }
+
+        // Advance the parent cursor past the vlist content
+        ctx.cursorX = maxX;
+    }
+
+    private findChildByClass(parent: SpaceElement, cls: string): SpaceElement | null {
+        for (const child of parent._childNodes) {
+            if (child.nodeType === ELEMENT_NODE) {
+                const el = child as SpaceElement;
+                if (hasClass(el, cls)) return el;
+            }
+        }
+        return null;
+    }
+
+    private findDescendantByClass(parent: SpaceElement, cls: string): SpaceElement | null {
+        for (const child of parent._childNodes) {
+            if (child.nodeType === ELEMENT_NODE) {
+                const el = child as SpaceElement;
+                if (hasClass(el, cls)) return el;
+                const found = this.findDescendantByClass(el, cls);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+}
+
+// ─── Renderer ────────────────────────────────────────────────
+
+class MatematexSceneRenderer {
+    private created: SceneObject[] = [];
+
+    render(
+        items: LayoutItem[],
+        parent: SceneObject,
+        baseTextSize: number,
+        color: vec4,
+        lineMaterial: Material,
+        templateTextComp: any,
+        templateScale: vec3,
+    ): SceneObject[] {
+        this.clear();
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.kind === 'text') {
+                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale);
+            } else if (item.kind === 'line') {
+                this.createLine(item, parent, color, lineMaterial);
+            }
+        }
+
+        return this.created;
+    }
+
+    clear(): void {
+        for (const obj of this.created) obj.destroy();
+        this.created = [];
+    }
+
+    private createText(
+        item: TextLayoutItem,
+        parent: SceneObject,
+        baseTextSize: number,
+        color: vec4,
+        templateTextComp: any,
+        templateScale: vec3,
+    ): void {
+        if (!templateTextComp) {
+            if (this.created.length === 0) {
+                print('[MatematexBridge] WARNING: no templateText assigned, skipping text characters');
+            }
+            return;
+        }
+
+        const obj = global.scene.createSceneObject('MtxText');
+        obj.setParent(parent);
+
+        // Clone the template's Text component. The clone inherits font,
+        // material, FontSize, layout rect, alignment, etc. — everything
+        // needed for proper rendering. We override only text and color.
+        const comp: any = (obj as any).copyComponent(templateTextComp);
+        if (!comp) {
+            print('[MatematexBridge] ERROR: copyComponent returned null');
+            return;
+        }
+
+        // Override text content. We deliberately do NOT override `size` —
+        // Text 3D's actual property is `FontSize` (with capital F), and
+        // setting `size` to a small em value silently shrinks the text.
+        // The clone keeps the template's FontSize via copyComponent.
+        comp.text = item.text;
+
+        // Try color override (template color is used as fallback)
+        try { (comp.textFill as any).mappingType = 0; } catch (e) { /* ignore */ }
+        try { comp.textFill.color = color; } catch (e) { /* ignore */ }
+
+        // Apply the template's local scale to the clone, multiplied by the
+        // per-item scale factor (e.g. 0.8x for super/subscripts). This makes
+        // the cloned text the same visual size as the template.
+        obj.getTransform().setLocalScale(new vec3(
+            templateScale.x * item.scale,
+            templateScale.y * item.scale,
+            templateScale.z * item.scale,
+        ));
+
+        // Position. We use the layout walker's coordinates directly. The
+        // layout uses em-based units scaled by emToWorld, so positions are
+        // in the same world-unit space as the container.
+        const baselineOffset = 0; // omitted for now — the rect-based Text 3D handles its own baseline
+        const zNudge = 0.01;
+        obj.getTransform().setLocalPosition(
+            new vec3(item.x, item.y + baselineOffset, zNudge)
+        );
+
+        // Diagnostic for the first text only
+        if (this.created.length === 0) {
+            const wpos = obj.getTransform().getWorldPosition();
+            const wscale = obj.getTransform().getWorldScale();
+            print(`[MatematexBridge] First text "${item.text}" worldPos=(${wpos.x.toFixed(2)},${wpos.y.toFixed(2)},${wpos.z.toFixed(2)}) worldScale=(${wscale.x.toFixed(2)},${wscale.y.toFixed(2)},${wscale.z.toFixed(2)})`);
+
+            // Dump every property we can find on the comp to look for fontSize, scale, etc.
+            const ca = comp as any;
+            const propsToCheck = ['size', 'fontSize', 'FontSize', 'extrusionDepth', 'sizeToFit', 'letterSpacing'];
+            for (const p of propsToCheck) {
+                try {
+                    if (ca[p] !== undefined) {
+                        print(`[MatematexBridge]   comp.${p}=${ca[p]}`);
+                    }
+                } catch (e) { /* ignore */ }
+            }
+
+            // Read the world AABB to see how big the text actually is.
+            // Lens Studio versions vary on AABB property/method names.
+            try {
+                let minA: any = null, maxA: any = null;
+                // Variant 1: getter properties returning vec3
+                try { minA = ca.worldAabbMin; maxA = ca.worldAabbMax; } catch (e) {}
+                // Variant 2: function calls
+                if (!minA || minA.x === undefined) {
+                    try { minA = ca.getWorldAabbMin?.(); maxA = ca.getWorldAabbMax?.(); } catch (e) {}
+                }
+                // Variant 3: try local AABB instead
+                if (!minA || minA.x === undefined) {
+                    try { minA = ca.localAabbMin; maxA = ca.localAabbMax; } catch (e) {}
+                }
+                // Variant 4: try sceneObject's getWorldAabb...
+                if (!minA || minA.x === undefined) {
+                    try {
+                        const aabb = (obj as any).getWorldAabb?.();
+                        if (aabb) { minA = aabb.min; maxA = aabb.max; }
+                    } catch (e) {}
+                }
+
+                if (minA && maxA && minA.x !== undefined && maxA.x !== undefined) {
+                    const w = maxA.x - minA.x;
+                    const h = maxA.y - minA.y;
+                    const d = maxA.z - minA.z;
+                    print(`[MatematexBridge]   AABB size: ${w.toFixed(2)} x ${h.toFixed(2)} x ${d.toFixed(2)} (W x H x D)`);
+                } else {
+                    print(`[MatematexBridge]   AABB: no readable property (min=${typeof minA} max=${typeof maxA})`);
+                }
+            } catch (e) {
+                print(`[MatematexBridge]   AABB readback failed: ${e}`);
+            }
+        }
+
+        this.created.push(obj);
+    }
+
+    private createLine(
+        item: LineLayoutItem,
+        parent: SceneObject,
+        color: vec4,
+        material: Material,
+    ): void {
+        if (item.width <= 0 || item.thickness <= 0) return;
+
+        // Build a quad mesh via MeshBuilder + RenderMeshVisual.
+        // RenderMeshVisual + mainPassOverrides is the same pattern SpaceSVG uses.
+        // Convention: item.x and item.y are the VISUAL CENTER of the line.
+        const hw = item.width / 2;
+        const ht = item.thickness / 2;
+        const cx = item.x;
+        const cy = item.y;
+
+        const builder = new MeshBuilder([
+            { name: 'position', components: 3 },
+        ]);
+        builder.topology = MeshTopology.Triangles;
+        builder.indexType = MeshIndexType.UInt16;
+
+        // Quad centered at local origin (positioned via transform)
+        builder.appendVerticesInterleaved([
+            -hw, -ht, 0,
+             hw, -ht, 0,
+             hw,  ht, 0,
+            -hw,  ht, 0,
+        ]);
+        builder.appendIndices([0, 1, 2, 0, 2, 3]);
+
+        if (!builder.isValid()) {
+            print('[MatematexBridge] Invalid line mesh, skipping');
+            return;
+        }
+        builder.updateMesh();
+        const mesh = builder.getMesh();
+
+        const obj = global.scene.createSceneObject('MtxLine');
+        obj.setParent(parent);
+
+        const visual = obj.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+        visual.mesh = mesh;
+        visual.mainMaterial = material;
+
+        // Try multiple color paths — different shaders expose color via
+        // different parameters. baseColor works on Unlit; emissiveColor
+        // makes PBR materials self-illuminate without scene lights.
+        this.applyColorOverrides(visual, color);
+
+        obj.getTransform().setLocalPosition(new vec3(cx, cy, 0));
+
+        this.created.push(obj);
+    }
+
+    applyColorOverrides(visual: RenderMeshVisual, color: vec4): void {
+        const tries = [
+            () => (visual.mainPassOverrides as any).baseColor = color,
+            () => (visual.mainPass as any).baseColor = color,
+            () => (visual.mainPassOverrides as any).emissiveColor = color,
+            () => (visual.mainPass as any).emissiveColor = color,
+            () => (visual.mainPassOverrides as any).emissiveIntensity = 1.0,
+            () => (visual.mainPass as any).emissiveIntensity = 1.0,
+        ];
+        for (const t of tries) {
+            try { t(); } catch (e) { /* ignore */ }
+        }
+    }
+}
+
+// ─── @component ──────────────────────────────────────────────
+
+@component
+export class MatematexBridge extends BaseScriptComponent {
+
+    @input
+    @hint("LaTeX expression to render")
+    private latex: string = "\\frac{1}{2}";
+
+    @input
+    @hint("Unlit material for fraction bars and lines")
+    private lineMaterial: Material;
+
+    @input
+    @hint("Template Text 3D SceneObject — create one in editor, drag here. We clone its Text component for each character (inherits font + material).")
+    private templateText: SceneObject;
+
+    @input
+    @hint("Hide the template SceneObject after using it as a clone source")
+    private hideTemplate: boolean = true;
+
+    @input
+    @hint("Debug: draw a colored outline at each text item position so you can see layout placement")
+    private debugTextBounds: boolean = false;
+
+    @input
+    @hint("(Unused — kept for backwards compat. Font is inherited from templateText.)")
+    private font: Font;
+
+    @input
+    @hint("World units per em (KaTeX uses em-based layout)")
+    private emToWorld: number = 2.0;
+
+    @input
+    @hint("Lens Studio Text component size for 1.0x scale (em → text size)")
+    private baseTextSize: number = 2.0;
+
+    @input
+    @hint("Multiplier for text SceneObject scale (cranks up cloned text size). Try 5 if text is small.")
+    private textScaleMultiplier: number = 1.0;
+
+    @input
+    private textColor: vec4 = new vec4(1, 1, 1, 1);
+
+    @input
+    @hint("Print layout items to console for debugging")
+    private dumpLayout: boolean = true;
+
+    @input
+    @hint("Container world Z (camera at z=40 looks toward -Z; 35 = 5 units in front)")
+    private containerWorldZ: number = 35.0;
+
+    @input
+    @hint("Container world Y (height)")
+    private containerWorldY: number = 0.0;
+
+    @input
+    @hint("Render a bright debug anchor quad at the container origin (sanity check)")
+    private debugAnchor: boolean = true;
+
+    private container: SceneObject | null = null;
+
+    onAwake(): void {
+        if (!this.lineMaterial) {
+            print("[MatematexBridge] ERROR: Assign an unlit Material to lineMaterial!");
+            return;
+        }
+
+        const doc = getSpaceDocument();
+        if (!doc) {
+            print("[MatematexBridge] FATAL: SpaceDOM not installed");
+            return;
+        }
+
+        print(`[MatematexBridge] Rendering: ${this.latex}`);
+        print(`[MatematexBridge] emToWorld=${this.emToWorld} baseTextSize=${this.baseTextSize} containerWorldZ=${this.containerWorldZ}`);
+        print(`[MatematexBridge] textColor=(${this.textColor.r},${this.textColor.g},${this.textColor.b},${this.textColor.a})`);
+
+        // Create the container, parent it (required — unparented SceneObjects
+        // are not in the scene graph and won't render), then set its WORLD
+        // position. setWorldPosition() correctly computes the local transform
+        // regardless of the parent's transform, so we can place the container
+        // exactly where we want in world space even if the script's parent is
+        // at world origin while the camera is at z=+40.
+        this.container = global.scene.createSceneObject('MatematexContainer');
+        this.container.setParent(this.getSceneObject());
+        this.container.getTransform().setWorldPosition(
+            new vec3(0, this.containerWorldY, this.containerWorldZ)
+        );
+
+        const parentWorld = this.getSceneObject().getTransform().getWorldPosition();
+        print(`[MatematexBridge] parent world pos = (${parentWorld.x.toFixed(2)}, ${parentWorld.y.toFixed(2)}, ${parentWorld.z.toFixed(2)})`);
+        const containerWorld = this.container.getTransform().getWorldPosition();
+        print(`[MatematexBridge] container world pos = (${containerWorld.x.toFixed(2)}, ${containerWorld.y.toFixed(2)}, ${containerWorld.z.toFixed(2)})`);
+
+        if (this.debugAnchor) {
+            this.createDebugAnchor();
+        }
+
+        // Step 1: KaTeX renders LaTeX to a SpaceDOM tree
+        const wrapper = doc.createElement('div');
+        try {
+            // @ts-ignore
+            katex.render(this.latex, wrapper, { throwOnError: true });
+        } catch (e: any) {
+            print(`[MatematexBridge] KaTeX render failed: ${e.message || e}`);
+            return;
+        }
+
+        // Step 2: locate the .katex-html root
+        const katexHtml = this.findFirstWithClass(wrapper, 'katex-html');
+        if (!katexHtml) {
+            print("[MatematexBridge] ERROR: could not find .katex-html in KaTeX output");
+            return;
+        }
+
+        // Step 3: walk the tree and produce LayoutItems.
+        // Fold textScaleMultiplier into emToWorld so the layout positions
+        // and widths match the actual rendered text scale (the renderer
+        // multiplies character SceneObject scale by textScaleMultiplier).
+        const effectiveEmToWorld = this.emToWorld * (this.textScaleMultiplier > 0 ? this.textScaleMultiplier : 1.0);
+        const walker = new MatematexLayoutWalker();
+        const result = walker.layout(katexHtml, effectiveEmToWorld);
+        print(`[MatematexBridge] effectiveEmToWorld=${effectiveEmToWorld} (emToWorld=${this.emToWorld} × textScaleMultiplier=${this.textScaleMultiplier})`);
+
+        if (this.dumpLayout) {
+            this.dumpLayoutItems(result);
+        }
+
+        // Look up the template's Text component (once). Try multiple type
+        // names since the actual class varies by Lens Studio version.
+        let templateTextComp: any = null;
+        let templateScale: vec3 = new vec3(1, 1, 1);
+        if (this.templateText) {
+            const candidates = [
+                'Component.Text',
+                'Component.Text 3D',
+                'Component.Text3D',
+                'Text',
+            ];
+            for (const t of candidates) {
+                try {
+                    const c = this.templateText.getComponent(t as any);
+                    if (c) {
+                        templateTextComp = c;
+                        print(`[MatematexBridge] Template Text component found via "${t}"`);
+                        // Read template's interesting properties for diagnostics
+                        try {
+                            const ca = c as any;
+                            const sz = ca.size !== undefined ? ca.size : '(no size prop)';
+                            print(`[MatematexBridge]   template.size=${sz}`);
+                        } catch (e) { /* ignore */ }
+                        break;
+                    }
+                } catch (e) { /* ignore */ }
+            }
+
+            if (templateTextComp) {
+                // Capture the template's local scale so we can match it on clones
+                templateScale = this.templateText.getTransform().getLocalScale();
+                print(`[MatematexBridge] Template localScale=(${templateScale.x.toFixed(2)},${templateScale.y.toFixed(2)},${templateScale.z.toFixed(2)})`);
+
+                // Apply user-controlled multiplier
+                if (this.textScaleMultiplier !== 1.0 && this.textScaleMultiplier > 0) {
+                    templateScale = new vec3(
+                        templateScale.x * this.textScaleMultiplier,
+                        templateScale.y * this.textScaleMultiplier,
+                        templateScale.z * this.textScaleMultiplier,
+                    );
+                    print(`[MatematexBridge] Applied textScaleMultiplier=${this.textScaleMultiplier}, effective scale=(${templateScale.x.toFixed(2)},${templateScale.y.toFixed(2)},${templateScale.z.toFixed(2)})`);
+                }
+
+                if (this.hideTemplate) {
+                    this.templateText.enabled = false;
+                }
+            } else {
+                print('[MatematexBridge] WARNING: templateText assigned but no Text component found on it');
+            }
+        } else {
+            print('[MatematexBridge] WARNING: templateText not assigned — text characters will be skipped');
+        }
+
+        // Step 4: render the layout items to scene objects
+        const renderer = new MatematexSceneRenderer();
+        const created = renderer.render(
+            result.items,
+            this.container,
+            this.baseTextSize,
+            this.textColor,
+            this.lineMaterial,
+            templateTextComp,
+            templateScale,
+        );
+
+        // Optional: draw debug markers at each text-item position
+        if (this.debugTextBounds) {
+            for (const item of result.items) {
+                if (item.kind === 'text') {
+                    // Cyan dot at the layout-item position
+                    this.makeQuad(item.x, item.y, 0.3, 0.3, new vec4(0, 1, 1, 1));
+                }
+            }
+        }
+
+        print(`[MatematexBridge] Rendered ${created.length} scene objects (width ≈ ${result.width.toFixed(3)})`);
+    }
+
+    private dumpLayoutItems(result: WalkResult): void {
+        print(`[MatematexBridge] === Layout: ${result.items.length} items, width=${result.width.toFixed(3)} ===`);
+        for (let i = 0; i < result.items.length; i++) {
+            const item = result.items[i];
+            if (item.kind === 'text') {
+                print(`  [${i}] text "${item.text}" at (${item.x.toFixed(3)}, ${item.y.toFixed(3)}) scale=${item.scale.toFixed(2)}`);
+            } else if (item.kind === 'line') {
+                print(`  [${i}] line  at (${item.x.toFixed(3)}, ${item.y.toFixed(3)}) w=${item.width.toFixed(3)} t=${item.thickness.toFixed(4)}`);
+            }
+        }
+        for (const w of result.warnings) {
+            print(`  WARN: ${w}`);
+        }
+    }
+
+    private createDebugAnchor(): void {
+        if (!this.container) return;
+        // Big visible cross: 2-unit red center, 4x0.5 green +X arm, 0.5x4 blue +Y arm.
+        // At ~5 units from the camera (containerWorldZ=35, camera z=40), a 2-unit
+        // square subtends ~22°, easy to see.
+        this.makeQuad(0, 0, 2.0, 2.0, new vec4(1, 0, 0, 1));      // red center
+        this.makeQuad(3.0, 0, 4.0, 0.5, new vec4(0, 1, 0, 1));    // green +X
+        this.makeQuad(0, 3.0, 0.5, 4.0, new vec4(0, 0, 1, 1));    // blue +Y
+        print('[MatematexBridge] Debug anchor: red center, green +X, blue +Y (each 2-4 units)');
+    }
+
+    private makeQuad(cx: number, cy: number, w: number, h: number, color: vec4): void {
+        if (!this.container || !this.lineMaterial) return;
+        const hw = w / 2;
+        const hh = h / 2;
+
+        const builder = new MeshBuilder([
+            { name: 'position', components: 3 },
+        ]);
+        builder.topology = MeshTopology.Triangles;
+        builder.indexType = MeshIndexType.UInt16;
+        builder.appendVerticesInterleaved([
+            -hw, -hh, 0,
+             hw, -hh, 0,
+             hw,  hh, 0,
+            -hw,  hh, 0,
+        ]);
+        builder.appendIndices([0, 1, 2, 0, 2, 3]);
+        if (!builder.isValid()) return;
+        builder.updateMesh();
+
+        const obj = global.scene.createSceneObject('MtxDebug');
+        obj.setParent(this.container);
+        const visual = obj.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+        visual.mesh = builder.getMesh();
+        visual.mainMaterial = this.lineMaterial;
+
+        // Same multi-path color override used for line meshes — works for
+        // both Unlit (baseColor) and PBR (emissiveColor) materials.
+        const tries = [
+            () => (visual.mainPassOverrides as any).baseColor = color,
+            () => (visual.mainPass as any).baseColor = color,
+            () => (visual.mainPassOverrides as any).emissiveColor = color,
+            () => (visual.mainPass as any).emissiveColor = color,
+            () => (visual.mainPassOverrides as any).emissiveIntensity = 1.0,
+            () => (visual.mainPass as any).emissiveIntensity = 1.0,
+        ];
+        for (const t of tries) { try { t(); } catch (e) { /* ignore */ } }
+
+        obj.getTransform().setLocalPosition(new vec3(cx, cy, -0.002));
+    }
+
+    private findFirstWithClass(node: SpaceNode, cls: string): SpaceElement | null {
+        for (const child of node._childNodes) {
+            if (child.nodeType === ELEMENT_NODE) {
+                const el = child as SpaceElement;
+                const elClass = el.getAttribute('class') ?? '';
+                if (elClass.split(/\s+/).indexOf(cls) >= 0) return el;
+                const found = this.findFirstWithClass(el, cls);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+}

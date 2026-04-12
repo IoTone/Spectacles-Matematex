@@ -1,0 +1,83 @@
+- !<AssetImportMetadata/feb34b76-7a2c-4939-b059-ac8f8a008499>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 9236ae27-8978-4696-9148-7d14c116662d
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 9236ae27-8978-4696-9148-7d14c116662d
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 3ea3e946-84a0-45fd-b563-d459f27a8da2
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/3ea3e946-84a0-45fd-b563-d459f27a8da2>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: ac7c02f4-a87b-4599-9f5b-b75441b14855
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    baseTextSize: false
+    containerWorldY: false
+    containerWorldZ: false
+    debugAnchor: false
+    debugTextBounds: false
+    dumpLayout: false
+    emToWorld: false
+    font: false
+    hideTemplate: false
+    latex: false
+    lineMaterial: false
+    templateText: false
+    textColor: false
+    textScaleMultiplier: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - latex: "\\frac{1}{2}"
+      lineMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      hideTemplate: true
+      debugTextBounds: false
+      font: !<reference.Font> 00000000-0000-0000-0000-000000000000
+      emToWorld: 0.500000
+      baseTextSize: 0.500000
+      textScaleMultiplier: !<float> 1.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      dumpLayout: true
+      containerWorldZ: !<float> 35.000000
+      containerWorldY: !<float> 0.000000
+      debugAnchor: true
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input string latex = "\\frac{1}{2}" {"hint":"LaTeX expression to render"}'
+    - '// @input Asset.Material lineMaterial {"hint":"Unlit material for fraction bars and lines"}'
+    - '// @input SceneObject templateText {"hint":"Template Text 3D SceneObject — create one in editor, drag here. We clone its Text component for each character (inherits font + material)."}'
+    - '// @input bool hideTemplate = true {"hint":"Hide the template SceneObject after using it as a clone source"}'
+    - '// @input bool debugTextBounds {"hint":"Debug: draw a colored outline at each text item position so you can see layout placement"}'
+    - '// @input Asset.Font font {"hint":"(Unused — kept for backwards compat. Font is inherited from templateText.)"}'
+    - '// @input float emToWorld = 2 {"hint":"World units per em (KaTeX uses em-based layout)"}'
+    - '// @input float baseTextSize = 2 {"hint":"Lens Studio Text component size for 1.0x scale (em → text size)"}'
+    - '// @input float textScaleMultiplier = 1 {"hint":"Multiplier for text SceneObject scale (cranks up cloned text size). Try 5 if text is small."}'
+    - "// @input vec4 textColor = {1,1,1,1}"
+    - '// @input bool dumpLayout = true {"hint":"Print layout items to console for debugging"}'
+    - '// @input float containerWorldZ = 35 {"hint":"Container world Z (camera at z=40 looks toward -Z; 35 = 5 units in front)"}'
+    - '// @input float containerWorldY {"hint":"Container world Y (height)"}'
+    - '// @input bool debugAnchor = true {"hint":"Render a bright debug anchor quad at the container origin (sanity check)"}'
