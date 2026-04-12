@@ -56,6 +56,7 @@ interface LayoutBase {
 interface TextLayoutItem extends LayoutBase {
     kind: 'text';
     text: string;
+    italic: boolean;
 }
 
 interface LineLayoutItem extends LayoutBase {
@@ -158,6 +159,7 @@ interface WalkContext {
     baselineY: number;
     scale: number;
     emToWorld: number;
+    italic: boolean;
 }
 
 interface WalkResult {
@@ -181,6 +183,7 @@ class MatematexLayoutWalker {
             baselineY: 0,
             scale: 1.0,
             emToWorld,
+            italic: false,
         };
 
         this.walk(katexHtmlRoot, ctx);
@@ -225,10 +228,16 @@ class MatematexLayoutWalker {
             return;
         }
 
-        // Apply marginLeft before walking children
+        // Apply marginLeft and paddingLeft before walking children.
+        // KaTeX uses marginLeft for spacing and paddingLeft inside sqrt
+        // to offset content past the radical stem.
         const marginLeft = parseEm(getStyle(el, 'marginLeft'));
+        const paddingLeft = parseEm(getStyle(el, 'paddingLeft'));
         if (marginLeft) {
             ctx.cursorX += marginLeft * ctx.emToWorld * ctx.scale;
+        }
+        if (paddingLeft) {
+            ctx.cursorX += paddingLeft * ctx.emToWorld * ctx.scale;
         }
         const marginRight = parseEm(getStyle(el, 'marginRight'));
 
@@ -260,8 +269,18 @@ class MatematexLayoutWalker {
             return;
         }
 
-        // Default: passthrough container
-        this.walkChildren(el, ctx);
+        // Track italic state: KaTeX uses class "mathnormal" for italic
+        // math variables (x, y, z, etc.) and "mathit" for explicit italic.
+        const isItalicContainer = hasClass(el, 'mathnormal') || hasClass(el, 'mathit');
+        if (isItalicContainer) {
+            const savedItalic = ctx.italic;
+            ctx.italic = true;
+            this.walkChildren(el, ctx);
+            ctx.italic = savedItalic;
+        } else {
+            // Default: passthrough container
+            this.walkChildren(el, ctx);
+        }
 
         if (marginRight) {
             ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
@@ -303,6 +322,75 @@ class MatematexLayoutWalker {
             text,
             x: centerX,
             y: centerY,
+            scale: ctx.scale,
+            italic: ctx.italic,
+        });
+
+        ctx.cursorX += widthWorld;
+    }
+
+    private emitSVG(svgEl: SpaceElement, ctx: WalkContext): void {
+        // KaTeX's sqrt SVG uses viewBox="0 0 400000 1080" with width="400em".
+        // The radical checkmark sits at x≈0-850 in viewBox coords, and the
+        // overbar starts at x≈834 extending to 400000.
+        //
+        // We clip the viewBox to a reasonable width. The radical stem needs
+        // ~850 vb units, plus the overbar should cover the content width.
+        // In KaTeX's coordinate system: 1em ≈ 1000 viewBox units.
+        //
+        // The parent hide-tail span has minWidth and height in em that
+        // define the clipping area. We'll try to read those from the parent,
+        // or fall back to a reasonable default.
+        const heightAttr = svgEl.getAttribute('height') || '1em';
+        const heightEm = parseEm(heightAttr) || 1.0;
+        const heightWorld = heightEm * ctx.emToWorld * ctx.scale;
+
+        // Try to read the hide-tail parent's minWidth for the clip width.
+        // The radical stem occupies ~0.85em in viewBox space. The remaining
+        // width is the overbar covering the content. A small overhang (~0.15em)
+        // past the content is typical for proper radical rendering.
+        let widthEm = 1.5; // fallback
+        const parent = svgEl._parentNode;
+        if (parent && parent.nodeType === ELEMENT_NODE) {
+            const parentEl = parent as SpaceElement;
+            const minW = parseEm(getStyle(parentEl, 'minWidth'));
+            if (minW > 0) {
+                widthEm = minW + 0.3; // small overhang beyond the content
+            }
+        }
+
+        const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
+
+        // Clip the SVG viewBox. 1em ≈ 1000 viewBox units.
+        const clippedVBWidth = Math.round(widthEm * 1000);
+
+        // Serialize and patch the SVG
+        let svgString = serializeNode(svgEl);
+
+        // 1. Clip the viewBox
+        svgString = svgString
+            .replace(/viewBox="[^"]*"/, `viewBox="0 0 ${clippedVBWidth} 1080"`)
+            .replace(/width="[^"]*"/, `width="${clippedVBWidth}"`)
+            .replace(/preserveAspectRatio="[^"]*"/, '');
+
+        // 2. Clip the path data: KaTeX's radical path uses "h400000" and
+        //    "H400000" for the overbar, extending 400,000 units right.
+        //    Replace with our clipped width so the overbar stops at the edge.
+        const overbarlength = clippedVBWidth;
+        svgString = svgString.replace(/h400000/g, `h${overbarlength}`);
+        svgString = svgString.replace(/H400000/g, `H${overbarlength}`);
+        svgString = svgString.replace(/h-400000/g, `h-${overbarlength}`);
+
+        const centerX = ctx.cursorX + widthWorld / 2;
+        const centerY = ctx.baselineY + heightWorld / 2;
+
+        this.items.push({
+            kind: 'svg',
+            svgString,
+            x: centerX,
+            y: centerY,
+            width: widthWorld,
+            height: heightWorld,
             scale: ctx.scale,
         });
 
@@ -416,6 +504,7 @@ class MatematexLayoutWalker {
 
 class MatematexSceneRenderer {
     private created: SceneObject[] = [];
+    _italicScaleAdjust: number = 0.5;
 
     render(
         items: LayoutItem[],
@@ -425,15 +514,19 @@ class MatematexSceneRenderer {
         lineMaterial: Material,
         templateTextComp: any,
         templateScale: vec3,
+        textScaleMultiplier: number,
+        italicFont: Font | null,
     ): SceneObject[] {
         this.clear();
 
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (item.kind === 'text') {
-                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale);
+                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale, italicFont);
             } else if (item.kind === 'line') {
                 this.createLine(item, parent, color, lineMaterial);
+            } else if (item.kind === 'svg') {
+                this.createSVG(item, parent, color, lineMaterial, textScaleMultiplier);
             }
         }
 
@@ -452,6 +545,7 @@ class MatematexSceneRenderer {
         color: vec4,
         templateTextComp: any,
         templateScale: vec3,
+        italicFont: Font | null = null,
     ): void {
         if (!templateTextComp) {
             if (this.created.length === 0) {
@@ -478,6 +572,11 @@ class MatematexSceneRenderer {
         // The clone keeps the template's FontSize via copyComponent.
         comp.text = item.text;
 
+        // Apply italic font for math variables (KaTeX class "mathnormal")
+        if (item.italic && italicFont) {
+            try { comp.font = italicFont; } catch (e) { /* ignore */ }
+        }
+
         // Try color override (template color is used as fallback)
         try { (comp.textFill as any).mappingType = 0; } catch (e) { /* ignore */ }
         try { comp.textFill.color = color; } catch (e) { /* ignore */ }
@@ -485,10 +584,13 @@ class MatematexSceneRenderer {
         // Apply the template's local scale to the clone, multiplied by the
         // per-item scale factor (e.g. 0.8x for super/subscripts). This makes
         // the cloned text the same visual size as the template.
+        // For italic text, apply an additional scale adjustment since the
+        // italic font often has larger glyph metrics than the regular font.
+        const sizeAdjust = (item.italic && italicFont) ? this._italicScaleAdjust : 1.0;
         obj.getTransform().setLocalScale(new vec3(
-            templateScale.x * item.scale,
-            templateScale.y * item.scale,
-            templateScale.z * item.scale,
+            templateScale.x * item.scale * sizeAdjust,
+            templateScale.y * item.scale * sizeAdjust,
+            templateScale.z * item.scale * sizeAdjust,
         ));
 
         // Position. We use the layout walker's coordinates directly. The
@@ -623,6 +725,85 @@ class MatematexSceneRenderer {
             try { t(); } catch (e) { /* ignore */ }
         }
     }
+
+    private svgXmlParser = new SVGXMLParser();
+    private svgMeshBackend = new SpaceSVGMeshBackend();
+
+    private createSVG(
+        item: SVGLayoutItem,
+        parent: SceneObject,
+        color: vec4,
+        material: Material,
+        textScaleMultiplier: number = 1.0,
+    ): void {
+        if (!item.svgString || item.width <= 0 || item.height <= 0) return;
+
+        try {
+            // Parse the SVG string via SpaceSVG's XML parser
+            const tree = this.svgXmlParser.parse(item.svgString);
+
+            // SVG dimensions come from the layout walker in emToWorld units.
+            // Do NOT multiply by textScaleMultiplier — the text characters
+            // are independently enlarged via SceneObject transform, but the
+            // SVG should match the LAYOUT coordinate space so it covers the
+            // content positions correctly.
+            const groups = this.svgMeshBackend.buildMeshes(
+                tree,
+                item.width,
+                item.height,
+            );
+
+            if (groups.length === 0) {
+                print(`[MatematexBridge] SVG produced 0 mesh groups`);
+                return;
+            }
+
+            // Create a container for the SVG meshes
+            const container = global.scene.createSceneObject('MtxSVG');
+            container.setParent(parent);
+            container.getTransform().setLocalPosition(
+                new vec3(item.x, item.y, 0.005) // slight z nudge
+            );
+
+            for (let i = 0; i < groups.length; i++) {
+                const g = groups[i];
+                if (g.vertices.length === 0 || g.indices.length === 0) continue;
+
+                const builder = new MeshBuilder([
+                    { name: 'position', components: 3 },
+                ]);
+                builder.topology = MeshTopology.Triangles;
+                builder.indexType = MeshIndexType.UInt16;
+                builder.appendVerticesInterleaved(g.vertices);
+                builder.appendIndices(g.indices);
+
+                if (!builder.isValid()) continue;
+                builder.updateMesh();
+
+                const obj = global.scene.createSceneObject(`MtxSVG_${i}`);
+                obj.setParent(container);
+
+                const visual = obj.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+                visual.mesh = builder.getMesh();
+                visual.mainMaterial = material;
+
+                // Use the SVG's own color if it has one, otherwise use our text color
+                const svgColor = new vec4(g.color[0], g.color[1], g.color[2], g.color[3]);
+                // If SVG color is black (KaTeX default), override with our text color
+                if (svgColor.r < 0.1 && svgColor.g < 0.1 && svgColor.b < 0.1) {
+                    this.applyColorOverrides(visual, color);
+                } else {
+                    this.applyColorOverrides(visual, svgColor);
+                }
+            }
+
+            this.created.push(container);
+            print(`[MatematexBridge] SVG rendered: ${groups.length} mesh groups`);
+
+        } catch (e: any) {
+            print(`[MatematexBridge] SVG render failed: ${e.message || e}`);
+        }
+    }
 }
 
 // ─── @component ──────────────────────────────────────────────
@@ -651,11 +832,15 @@ export class MatematexBridge extends BaseScriptComponent {
     private debugTextBounds: boolean = false;
 
     @input
-    @hint("(Unused — kept for backwards compat. Font is inherited from templateText.)")
-    private font: Font;
+    @hint("Font for italic math variables (e.g. KaTeX_Math-Italic). If not set, uses template font for everything.")
+    private italicFont: Font;
 
     @input
-    @hint("World units per em (KaTeX uses em-based layout)")
+    @hint("Scale adjustment for italic font (KaTeX_Math-Italic renders larger than Main-Regular at same FontSize). Try 0.5 if italic text is 2x too big.")
+    private italicScaleAdjust: number = 0.5;
+
+    @input
+    @hint("World units per em — controls layout spacing between characters. Start at 2, increase if chars overlap, decrease if too spread out.")
     private emToWorld: number = 2.0;
 
     @input
@@ -742,13 +927,12 @@ export class MatematexBridge extends BaseScriptComponent {
         }
 
         // Step 3: walk the tree and produce LayoutItems.
-        // Fold textScaleMultiplier into emToWorld so the layout positions
-        // and widths match the actual rendered text scale (the renderer
-        // multiplies character SceneObject scale by textScaleMultiplier).
-        const effectiveEmToWorld = this.emToWorld * (this.textScaleMultiplier > 0 ? this.textScaleMultiplier : 1.0);
+        // emToWorld controls LAYOUT SPACING (how many world units per em).
+        // textScaleMultiplier controls TEXT RENDERING SIZE (SceneObject scale).
+        // These are independent — tune emToWorld for tight/wide spacing,
+        // tune textScaleMultiplier for text legibility.
         const walker = new MatematexLayoutWalker();
-        const result = walker.layout(katexHtml, effectiveEmToWorld);
-        print(`[MatematexBridge] effectiveEmToWorld=${effectiveEmToWorld} (emToWorld=${this.emToWorld} × textScaleMultiplier=${this.textScaleMultiplier})`);
+        const result = walker.layout(katexHtml, this.emToWorld);
 
         if (this.dumpLayout) {
             this.dumpLayoutItems(result);
@@ -809,6 +993,7 @@ export class MatematexBridge extends BaseScriptComponent {
 
         // Step 4: render the layout items to scene objects
         const renderer = new MatematexSceneRenderer();
+        renderer._italicScaleAdjust = this.italicScaleAdjust;
         const created = renderer.render(
             result.items,
             this.container,
@@ -817,6 +1002,8 @@ export class MatematexBridge extends BaseScriptComponent {
             this.lineMaterial,
             templateTextComp,
             templateScale,
+            this.textScaleMultiplier,
+            this.italicFont || null,
         );
 
         // Optional: draw debug markers at each text-item position

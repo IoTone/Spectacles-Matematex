@@ -1,0 +1,62 @@
+- !<AssetImportMetadata/0be0de0a-f1a6-4e54-b46f-328db8b1a313>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 7a38c467-7370-4494-89c4-d965b6c6044d
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 7a38c467-7370-4494-89c4-d965b6c6044d
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 02c9668a-08a2-47fe-be35-e66bae4d7edb
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/02c9668a-08a2-47fe-be35-e66bae4d7edb>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 4ed90707-acc8-4ea6-94b0-993d038e1e8e
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    containerWorldZ: false
+    emToWorld: false
+    expressionSpacing: false
+    lineMaterial: false
+    templateText: false
+    textColor: false
+    textScaleMultiplier: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - lineMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      emToWorld: !<float> 10.000000
+      textScaleMultiplier: !<float> 5.000000
+      containerWorldZ: !<float> 39.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      expressionSpacing: !<float> 50.000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input Asset.Material lineMaterial {"hint":"Unlit material for fraction bars and lines"}'
+    - '// @input SceneObject templateText {"hint":"Template Text 3D SceneObject (same one used for MatematexBridge)"}'
+    - '// @input float emToWorld = 10 {"hint":"World units per em"}'
+    - '// @input float textScaleMultiplier = 5 {"hint":"Text SceneObject scale multiplier"}'
+    - '// @input float containerWorldZ = 39 {"hint":"Container world Z (camera at z=40)"}'
+    - "// @input vec4 textColor = {1,1,1,1}"
+    - '// @input float expressionSpacing = 50 {"hint":"Vertical spacing between expressions in world units"}'

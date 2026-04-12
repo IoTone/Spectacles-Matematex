@@ -2653,6 +2653,7 @@
   ScriptAsset: !<reference> 9236ae27-8978-4696-9148-7d14c116662d
   ScriptInputsDefault:
     hideTemplate: true
+    italicScaleAdjust: true
     textColor: true
     dumpLayout: true
     containerWorldY: true
@@ -2660,13 +2661,14 @@
     {}
   ScriptInputs:
     "":
-      latex: E=mc^2
+      latex: x^2
       lineMaterial: !<reference.Material> d8596ebf-e771-4a92-9430-31cc2a994424
       templateText: !<reference.SceneObject> 2fa0cfd2-76d0-49f6-99da-91e2386f5b1e
       hideTemplate: true
       debugTextBounds: true
-      font: !<reference.Font> 1156773e-5d2a-4140-89a9-d1160f9f3c6e
-      emToWorld: !<float> 10.000000
+      italicFont: !<reference.Font> 0b51787e-7320-4143-8277-bedeb78dd015
+      italicScaleAdjust: 0.500000
+      emToWorld: !<float> 5.000000
       baseTextSize: !<float> 10.000000
       textScaleMultiplier: !<float> 5.000000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
