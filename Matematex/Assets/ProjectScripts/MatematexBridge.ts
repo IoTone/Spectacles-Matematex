@@ -172,6 +172,8 @@ class MatematexLayoutWalker {
     private items: LayoutItem[] = [];
     private warnings: string[] = [];
     private seenUnhandledTags: { [key: string]: boolean } = {};
+    // Deferred SVG: stored during vlist walk, emitted after content width is known
+    private _pendingSVG: { el: SpaceElement; ctx: WalkContext } | null = null;
 
     layout(katexHtmlRoot: SpaceElement, emToWorld: number): WalkResult {
         this.items = [];
@@ -221,10 +223,14 @@ class MatematexLayoutWalker {
         // Skip invisible structural elements entirely.
         if (this.shouldSkip(tag, classes)) return;
 
-        // SVG blocks (e.g., sqrt radical) — serialize back to SVG string
-        // and emit as SVGLayoutItem for the renderer to feed to SpaceSVG.
+        // SVG blocks (e.g., sqrt radical) — defer emission until the parent
+        // vlist finishes walking so we know the actual content width. The
+        // radical overbar must span ALL content, not just a fixed estimate.
         if (tag === 'svg') {
-            this.emitSVG(el, ctx);
+            this._pendingSVG = {
+                el,
+                ctx: { ...ctx }, // snapshot the context
+            };
             return;
         }
 
@@ -327,38 +333,37 @@ class MatematexLayoutWalker {
         });
 
         ctx.cursorX += widthWorld;
+
+        // Add italic inter-character spacing. KaTeX applies italic correction
+        // (marginRight) on some characters but not between consecutive italic
+        // letters like "mc". This small gap prevents overlapping.
+        if (ctx.italic) {
+            ctx.cursorX += 0.08 * ctx.emToWorld * ctx.scale;
+        }
     }
 
-    private emitSVG(svgEl: SpaceElement, ctx: WalkContext): void {
+    private emitSVGWithContentWidth(
+        svgEl: SpaceElement,
+        ctx: WalkContext,
+        contentWidthWorld: number,
+    ): number {
         // KaTeX's sqrt SVG uses viewBox="0 0 400000 1080" with width="400em".
         // The radical checkmark sits at x≈0-850 in viewBox coords, and the
         // overbar starts at x≈834 extending to 400000.
         //
-        // We clip the viewBox to a reasonable width. The radical stem needs
-        // ~850 vb units, plus the overbar should cover the content width.
-        // In KaTeX's coordinate system: 1em ≈ 1000 viewBox units.
-        //
-        // The parent hide-tail span has minWidth and height in em that
-        // define the clipping area. We'll try to read those from the parent,
-        // or fall back to a reasonable default.
+        // We clip the overbar to match the actual content width. The radical
+        // stem is ~0.85em (850 vb units). The content width is now KNOWN
+        // from the vlist walk. We add a small overhang (0.1em).
         const heightAttr = svgEl.getAttribute('height') || '1em';
         const heightEm = parseEm(heightAttr) || 1.0;
         const heightWorld = heightEm * ctx.emToWorld * ctx.scale;
 
-        // Try to read the hide-tail parent's minWidth for the clip width.
-        // The radical stem occupies ~0.85em in viewBox space. The remaining
-        // width is the overbar covering the content. A small overhang (~0.15em)
-        // past the content is typical for proper radical rendering.
-        let widthEm = 1.5; // fallback
-        const parent = svgEl._parentNode;
-        if (parent && parent.nodeType === ELEMENT_NODE) {
-            const parentEl = parent as SpaceElement;
-            const minW = parseEm(getStyle(parentEl, 'minWidth'));
-            if (minW > 0) {
-                widthEm = minW + 0.3; // small overhang beyond the content
-            }
-        }
-
+        // Convert content width from world units back to em, then to viewBox units.
+        // contentWidthWorld already includes paddingLeft (~0.833em) which is the
+        // space reserved for the radical stem. So we DON'T add radicalStemEm again.
+        const overhangEm = 0.05;
+        const contentWidthEm = contentWidthWorld / (ctx.emToWorld * ctx.scale);
+        const widthEm = contentWidthEm + overhangEm;
         const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
 
         // Clip the SVG viewBox. 1em ≈ 1000 viewBox units.
@@ -373,16 +378,17 @@ class MatematexLayoutWalker {
             .replace(/width="[^"]*"/, `width="${clippedVBWidth}"`)
             .replace(/preserveAspectRatio="[^"]*"/, '');
 
-        // 2. Clip the path data: KaTeX's radical path uses "h400000" and
-        //    "H400000" for the overbar, extending 400,000 units right.
-        //    Replace with our clipped width so the overbar stops at the edge.
+        // 2. Clip the path data: replace "h400000" / "H400000" with our width.
         const overbarlength = clippedVBWidth;
         svgString = svgString.replace(/h400000/g, `h${overbarlength}`);
         svgString = svgString.replace(/H400000/g, `H${overbarlength}`);
         svgString = svgString.replace(/h-400000/g, `h-${overbarlength}`);
 
         const centerX = ctx.cursorX + widthWorld / 2;
-        const centerY = ctx.baselineY + heightWorld / 2;
+        // Shift the SVG down slightly so the radical checkmark doesn't
+        // extend into the fraction bar when sqrt is in a denominator.
+        const svgYShift = -0.15 * ctx.emToWorld * ctx.scale;
+        const centerY = ctx.baselineY + heightWorld / 2 + svgYShift;
 
         this.items.push({
             kind: 'svg',
@@ -394,7 +400,9 @@ class MatematexLayoutWalker {
             scale: ctx.scale,
         });
 
-        ctx.cursorX += widthWorld;
+        // Don't advance cursor — the SVG overlays the content that was
+        // already walked and positioned. Return the width for parent tracking.
+        return widthWorld;
     }
 
     private walkVlistGroup(vlistT: SpaceElement, ctx: WalkContext): void {
@@ -403,6 +411,10 @@ class MatematexLayoutWalker {
         const startX = ctx.cursorX;
         let maxX = startX;
         const lineItemIndices: number[] = [];
+
+        // Track per-child item ranges so we can CENTER narrower children
+        // within the widest child's width (LaTeX centers numerator/denominator).
+        const childRanges: { startIdx: number; endIdx: number; width: number }[] = [];
 
         for (const vlistR of vlistT._childNodes) {
             if (vlistR.nodeType !== ELEMENT_NODE) continue;
@@ -418,27 +430,21 @@ class MatematexLayoutWalker {
                     if (child.nodeType !== ELEMENT_NODE) continue;
                     const childEl = child as SpaceElement;
 
-                    // A vlist child must have a top style; otherwise skip
-                    // (e.g., the empty depth strut at the end of vlist-t2).
                     const topStyle = getStyle(childEl, 'top');
                     if (topStyle === null) continue;
                     const topEm = parseEm(topStyle);
 
-                    // Find the pstrut to determine the offset reference
                     const pstrut = this.findChildByClass(childEl, 'pstrut');
                     const pstrutHeight = pstrut ? parseEm(getStyle(pstrut, 'height')) : 0;
 
-                    // Empirically: y_offset_em = -top - pstrut_height
                     const yOffsetEm = -topEm - pstrutHeight;
                     const yOffsetWorld = yOffsetEm * ctx.emToWorld * ctx.scale;
 
-                    // Save cursor; reset X and shift baseline for this vlist child
                     const savedX = ctx.cursorX;
                     const savedY = ctx.baselineY;
                     ctx.cursorX = startX;
                     ctx.baselineY = savedY + yOffsetWorld;
 
-                    // Special: if this child is a fraction line wrapper, emit a line item
                     const fracLineEl = this.findDescendantByClass(childEl, 'frac-line');
                     if (fracLineEl) {
                         const thicknessEm =
@@ -448,12 +454,19 @@ class MatematexLayoutWalker {
                             kind: 'line',
                             x: startX,
                             y: ctx.baselineY,
-                            width: 0, // placeholder, fixed up below
+                            width: 0,
                             thickness: thicknessEm * ctx.emToWorld * ctx.scale,
                             scale: ctx.scale,
                         });
                     } else {
+                        const childStartIdx = this.items.length;
                         this.walkChildren(childEl, ctx);
+                        const childWidth = ctx.cursorX - startX;
+                        childRanges.push({
+                            startIdx: childStartIdx,
+                            endIdx: this.items.length,
+                            width: childWidth,
+                        });
                         if (ctx.cursorX > maxX) maxX = ctx.cursorX;
                     }
 
@@ -463,14 +476,46 @@ class MatematexLayoutWalker {
             }
         }
 
-        // Fix up frac-line widths: each line spans the widest content.
-        // Also set the line's x to its VISUAL CENTER (consistency with text items).
-        const fracLineWidth = maxX - startX;
-        const fracLineCenterX = startX + fracLineWidth / 2;
+        // Process any deferred SVG (sqrt radical) and update maxX.
+        if (this._pendingSVG) {
+            const svg = this._pendingSVG;
+            this._pendingSVG = null;
+            const contentWidth = maxX - startX;
+            const svgWidthWorld = this.emitSVGWithContentWidth(svg.el, svg.ctx, contentWidth);
+            if (startX + svgWidthWorld > maxX) {
+                maxX = startX + svgWidthWorld;
+            }
+        }
+
+        // Final total width across all children (including SVG).
+        const totalWidth = maxX - startX;
+        const totalCenterX = startX + totalWidth / 2;
+
+        // Debug: print per-child widths and total
+        if (childRanges.length > 1 || lineItemIndices.length > 0) {
+            print(`[MatematexBridge] vlist: totalWidth=${totalWidth.toFixed(2)}, children=${childRanges.length}, lines=${lineItemIndices.length}`);
+            for (let ci = 0; ci < childRanges.length; ci++) {
+                const r = childRanges[ci];
+                print(`[MatematexBridge]   child[${ci}]: width=${r.width.toFixed(2)}, items=${r.startIdx}-${r.endIdx}`);
+            }
+        }
+
+        // CENTER each child's items within the total width.
+        // In LaTeX, numerator and denominator are centered under the fraction bar.
+        for (const range of childRanges) {
+            if (range.width < totalWidth && range.endIdx > range.startIdx) {
+                const shift = (totalWidth - range.width) / 2;
+                for (let i = range.startIdx; i < range.endIdx; i++) {
+                    this.items[i].x += shift;
+                }
+            }
+        }
+
+        // Set fraction bar to span the full width, centered.
         for (const idx of lineItemIndices) {
             const lineItem = this.items[idx] as LineLayoutItem;
-            lineItem.width = fracLineWidth;
-            lineItem.x = fracLineCenterX;
+            lineItem.width = totalWidth;
+            lineItem.x = totalCenterX;
         }
 
         // Advance the parent cursor past the vlist content
