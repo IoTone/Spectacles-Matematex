@@ -1,0 +1,86 @@
+- !<AssetImportMetadata/cab64a45-0152-4cf9-a3b4-8c1c1bf68607>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 98a092e0-a6f7-4fa0-86de-7104ade93506
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 98a092e0-a6f7-4fa0-86de-7104ade93506
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 9e1757a1-889e-4068-9e51-d0fc8df5f2fb
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/9e1757a1-889e-4068-9e51-d0fc8df5f2fb>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: f0b3ad93-dc3d-4675-bfc3-cec22794e6c8
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    containerWorldY: false
+    containerWorldZ: false
+    count: false
+    emToWorld: false
+    expressionSpacing: false
+    hideTemplate: false
+    italicFont: false
+    italicScaleAdjust: false
+    layoutWidthMargin: false
+    lineMaterial: false
+    renderVisual: false
+    startIndex: false
+    templateText: false
+    textColor: false
+    textScaleMultiplier: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - lineMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      italicFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
+      emToWorld: !<float> 5.000000
+      textScaleMultiplier: !<float> 5.000000
+      layoutWidthMargin: 1.180000
+      italicScaleAdjust: !<float> 1.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      containerWorldZ: !<float> 39.000000
+      containerWorldY: !<float> 0.000000
+      startIndex: !<float> 0.000000
+      count: !<float> -1.000000
+      expressionSpacing: !<float> 15.000000
+      renderVisual: true
+      hideTemplate: true
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input Asset.Material lineMaterial
+    - // @input SceneObject templateText
+    - // @input Asset.Font italicFont
+    - // @input float emToWorld = 5
+    - // @input float textScaleMultiplier = 5
+    - // @input float layoutWidthMargin = 1.18
+    - // @input float italicScaleAdjust = 1
+    - "// @input vec4 textColor = {1,1,1,1}"
+    - // @input float containerWorldZ = 39
+    - // @input float containerWorldY
+    - '// @input float startIndex {"hint":"First test index to run (0-based)"}'
+    - '// @input float count = -1 {"hint":"Number of tests to run (-1 = all)"}'
+    - '// @input float expressionSpacing = 15 {"hint":"Vertical spacing between expressions in world units"}'
+    - '// @input bool renderVisual = true {"hint":"Render visual output (disable for console-only testing)"}'
+    - '// @input bool hideTemplate = true {"hint":"Hide the template Text3D after using it"}'

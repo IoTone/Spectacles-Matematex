@@ -54,32 +54,32 @@ import {
 
 // ─── LayoutItem types ────────────────────────────────────────
 
-interface LayoutBase {
+export interface LayoutBase {
     x: number;     // world units, visual center
     y: number;     // world units, visual center
     scale: number; // multiplier (1.0 = base size)
 }
 
-interface TextLayoutItem extends LayoutBase {
+export interface TextLayoutItem extends LayoutBase {
     kind: 'text';
     text: string;
     italic: boolean;
 }
 
-interface LineLayoutItem extends LayoutBase {
+export interface LineLayoutItem extends LayoutBase {
     kind: 'line';
     width: number;     // world units
     thickness: number; // world units
 }
 
-interface SVGLayoutItem extends LayoutBase {
+export interface SVGLayoutItem extends LayoutBase {
     kind: 'svg';
     svgString: string; // serialized SVG markup
     width: number;     // world units
     height: number;    // world units
 }
 
-type LayoutItem = TextLayoutItem | LineLayoutItem | SVGLayoutItem;
+export type LayoutItem = TextLayoutItem | LineLayoutItem | SVGLayoutItem;
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -175,7 +175,7 @@ interface WalkResult {
     warnings: string[];
 }
 
-class MatematexLayoutWalker {
+export class MatematexLayoutWalker {
     private items: LayoutItem[] = [];
     private warnings: string[] = [];
     private seenUnhandledTags: { [key: string]: boolean } = {};
@@ -564,7 +564,7 @@ class MatematexLayoutWalker {
 
 // ─── Renderer ────────────────────────────────────────────────
 
-class MatematexSceneRenderer {
+export class MatematexSceneRenderer {
     private created: SceneObject[] = [];
     _italicScaleAdjust: number = 0.5;
 

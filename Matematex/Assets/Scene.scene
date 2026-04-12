@@ -8,6 +8,7 @@
     - !<own> 88c061db-903f-4398-b073-6112693de726
     - !<own> 0f084243-d0db-41d1-a6d0-1aa566d36acb
     - !<own> eccd1fcc-ba4d-47c7-b89b-cf43a71a254e
+    - !<own> 68e2af4a-9e89-48d7-9c42-588f6f62cd1e
     - !<own> 1b687d50-2ce6-4669-b012-b1077efbf32f
   layers: !<Layers/267ee9a7-aff2-4f9d-9a49-f71214747d03>
     userLayers:
@@ -242,7 +243,7 @@
   PrefabRemaps:
     []
   Name: MatematexBridgePhase2
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform: !<TransformEntity>
     Position: {x: 0.000000, y: 0.000000, z: 0.000000}
@@ -268,6 +269,21 @@
     []
   Components:
     - !<own> ea7f5cfc-8b4a-424e-ba38-b4f9b40612e4
+- !<SceneObject/138cffe0-289d-4fd8-9f87-d85b56703e5d>
+  PrefabRemaps:
+    []
+  Name: Text3D
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 20.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 445b045d-4955-4b65-a5ba-1b0b9270690c
 - !<SceneObject/13ada67a-1db2-4596-a470-5f83a5143952>
   PrefabRemaps:
     []
@@ -764,6 +780,42 @@
     - !<own> 9f8fbf1c-e955-47e3-9ccd-085329aa842d
   Components:
     []
+- !<Text3D/445b045d-4955-4b65-a5ba-1b0b9270690c>
+  PrefabRemaps:
+    []
+  Name: Text3D
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 5bbeaf84-9b4c-4152-812a-d5a694cc6ea3
+  Text: TEMPLATE VALIDATOR
+  Editable: false
+  ShowEditingPreview: true
+  TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
+  SizeToFit: false
+  FontSize: 48
+  ExtrusionDepth: 0.400000
+  ExtrudeDirection: Both
+  Font: !<reference> 00000000-0000-0000-0000-000000000000
+  LayoutRect:
+    left: -7.500000
+    bottom: -2.250000
+    right: 7.500000
+    top: 2.250000
+  OverflowVertical: Overflow
+  OverflowHorizontal: Overflow
+  AdvancedLayout: !<TextAdvancedLayout>
+    ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+    LetterSpacing: 0.000000
+    LineSpacing: 1.000000
+    CapitalizationOverride: None
+  EnableBatching: false
 - !<SceneObject/4a601180-fcf2-4ea0-a95c-8d2071582701>
   PrefabRemaps:
     []
@@ -1014,6 +1066,21 @@
     HasSegmentScaleCompensation: false
   Children:
     - !<own> cb304dbb-d942-4c6d-90bc-4fb9d9b2f339
+  Components:
+    []
+- !<SceneObject/68e2af4a-9e89-48d7-9c42-588f6f62cd1e>
+  PrefabRemaps:
+    []
+  Name: MatematexValidatorScenePhase3
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> eebe7e3c-9317-45ec-bf2d-5553b574f722
   Components:
     []
 - !<SceneObject/6e18a357-c810-4de9-ae9e-d09b9e2e65b5>
@@ -2104,6 +2171,47 @@
     []
   Components:
     []
+- !<ScriptComponent/c70e5335-954e-43b1-8ae5-85d87954807c>
+  PrefabRemaps:
+    []
+  Name: MatematexValidator
+  Enabled: true
+  ScriptAsset: !<reference> 98a092e0-a6f7-4fa0-86de-7104ade93506
+  ScriptInputsDefault:
+    emToWorld: true
+    textScaleMultiplier: true
+    layoutWidthMargin: true
+    italicScaleAdjust: true
+    textColor: true
+    containerWorldZ: true
+    containerWorldY: true
+    startIndex: true
+    count: true
+    expressionSpacing: true
+    renderVisual: true
+    hideTemplate: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      lineMaterial: !<reference.Material> d8596ebf-e771-4a92-9430-31cc2a994424
+      templateText: !<reference.SceneObject> 138cffe0-289d-4fd8-9f87-d85b56703e5d
+      italicFont: !<reference.Font> 0b51787e-7320-4143-8277-bedeb78dd015
+      emToWorld: !<float> 5.000000
+      textScaleMultiplier: !<float> 5.000000
+      layoutWidthMargin: 1.180000
+      italicScaleAdjust: !<float> 1.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      containerWorldZ: !<float> 39.000000
+      containerWorldY: !<float> 0.000000
+      startIndex: !<float> 0.000000
+      count: !<float> -1.000000
+      expressionSpacing: !<float> 15.000000
+      renderVisual: true
+      hideTemplate: true
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/caf171a4-d7d4-4d15-bae4-722a44e14885>
   PrefabRemaps:
     []
@@ -2733,6 +2841,21 @@
     - !<own> e70105a0-37a3-4138-9aac-20bb34e28ac6
   Components:
     []
+- !<SceneObject/eebe7e3c-9317-45ec-bf2d-5553b574f722>
+  PrefabRemaps:
+    []
+  Name: MatematexValidator
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 138cffe0-289d-4fd8-9f87-d85b56703e5d
+  Components:
+    - !<own> c70e5335-954e-43b1-8ae5-85d87954807c
 - !<SceneObject/f0cea9eb-dbe2-4b49-99f5-bfb6fd98cdd6>
   PrefabRemaps:
     []
