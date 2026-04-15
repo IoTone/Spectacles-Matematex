@@ -27,6 +27,9 @@
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
     autoAdvanceSec: false
+    chapter1Button: false
+    chapter2Button: false
+    chapter3Button: false
     containerWorldY: false
     containerWorldZ: false
     emToWorld: false
@@ -37,9 +40,11 @@
     lineMaterial: false
     nextButton: false
     prevButton: false
+    sqrtWidthScale: false
     templateText: false
     textColor: false
     textScaleMultiplier: false
+    useWorldSpace: false
   ScriptTypesHidden:
     {}
   ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
@@ -49,18 +54,23 @@
   Attachments:
     []
   DefaultScriptInputs:
-    - lineMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+    - lineMaterial: !<reference.Material> d8596ebf-e771-4a92-9430-31cc2a994424
       templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
-      italicFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
+      italicFont: !<reference.Font> 0b51787e-7320-4143-8277-bedeb78dd015
       emToWorld: !<float> 5.000000
       textScaleMultiplier: !<float> 5.000000
       layoutWidthMargin: 1.180000
+      sqrtWidthScale: 0.850000
       italicScaleAdjust: !<float> 1.000000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
       containerWorldZ: !<float> 39.000000
       containerWorldY: !<float> 0.000000
-      prevButton: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
-      nextButton: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      useWorldSpace: false
+      prevButton: !<MappingBased.AssignableType> 00000000-0000-0000-0000-000000000000
+      nextButton: !<MappingBased.AssignableType_1> 00000000-0000-0000-0000-000000000000
+      chapter1Button: !<MappingBased.AssignableType_2> 00000000-0000-0000-0000-000000000000
+      chapter2Button: !<MappingBased.AssignableType_3> 00000000-0000-0000-0000-000000000000
+      chapter3Button: !<MappingBased.AssignableType_4> 00000000-0000-0000-0000-000000000000
       hideTemplate: true
       autoAdvanceSec: !<float> 0.000000
   ScriptTypes:
@@ -73,11 +83,16 @@
     - // @input float emToWorld = 5
     - // @input float textScaleMultiplier = 5
     - // @input float layoutWidthMargin = 1.18
+    - '// @input float sqrtWidthScale = 1 {"hint":"Scale factor for sqrt radical width. 1.0 is correct with the overbar clipping fix; lower only if you need to force a shorter overbar."}'
     - // @input float italicScaleAdjust = 1
     - "// @input vec4 textColor = {1,1,1,1}"
-    - // @input float containerWorldZ = 39
-    - // @input float containerWorldY
-    - '// @input SceneObject prevButton {"hint":"SceneObject with Interactable — pinch to go to previous formula"}'
-    - '// @input SceneObject nextButton {"hint":"SceneObject with Interactable — pinch to go to next formula"}'
+    - '// @input float containerWorldZ = -100 {"hint":"Local Z offset (negative = in front of parent). For device: parent this SceneObject to Camera Object."}'
+    - '// @input float containerWorldY {"hint":"Local Y offset (height relative to parent)"}'
+    - '// @input bool useWorldSpace {"hint":"Use world-space positioning (legacy). Leave OFF for on-device / head-tracked content."}'
+    - '// @input AssignableType prevButton {"hint":"PinchButton — previous formula"}'
+    - '// @input AssignableType_1 nextButton {"hint":"PinchButton — next formula"}'
+    - '// @input AssignableType_2 chapter1Button {"hint":"PinchButton on the splash/TOC page — jump to Chapter 1 Geometry (formula #1)"}'
+    - '// @input AssignableType_3 chapter2Button {"hint":"PinchButton on the splash/TOC page — jump to Chapter 2 Algebra (formula #21)"}'
+    - '// @input AssignableType_4 chapter3Button {"hint":"PinchButton on the splash/TOC page — jump to Chapter 3 Calculus (formula #41)"}'
     - '// @input bool hideTemplate = true {"hint":"Hide template after cloning"}'
     - '// @input float autoAdvanceSec {"hint":"Auto-advance interval in seconds (0 = disabled). Useful for testing without buttons."}'

@@ -39,6 +39,7 @@
     latex: false
     layoutWidthMargin: false
     lineMaterial: false
+    sqrtWidthScale: false
     templateText: false
     textColor: false
     textScaleMultiplier: false
@@ -62,6 +63,7 @@
       baseTextSize: 0.500000
       textScaleMultiplier: !<float> 1.000000
       layoutWidthMargin: 1.180000
+      sqrtWidthScale: 0.850000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
       dumpLayout: true
       containerWorldZ: !<float> 35.000000
@@ -82,6 +84,7 @@
     - '// @input float baseTextSize = 2 {"hint":"Lens Studio Text component size for 1.0x scale (em → text size)"}'
     - '// @input float textScaleMultiplier = 1 {"hint":"Multiplier for text SceneObject scale (cranks up cloned text size). Try 5 if text is small."}'
     - '// @input float layoutWidthMargin = 1.18 {"hint":"Width margin for fraction bars and radicals (compensates for text rendering scale mismatch). 1.0 = exact, 1.18 = 18% wider."}'
+    - "// @input float sqrtWidthScale = 0.5 {\"hint\":\"Scale factor for sqrt radical width. 1.0 = walker's predicted width. Lower if radical extends past content. Complex expressions need 0.4-0.6.\"}"
     - "// @input vec4 textColor = {1,1,1,1}"
     - '// @input bool dumpLayout = true {"hint":"Print layout items to console for debugging"}'
     - '// @input float containerWorldZ = 35 {"hint":"Container world Z (camera at z=40 looks toward -Z; 35 = 5 units in front)"}'

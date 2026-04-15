@@ -181,6 +181,8 @@ export class MatematexLayoutWalker {
     private seenUnhandledTags: { [key: string]: boolean } = {};
     private _pendingSVG: { el: SpaceElement; ctx: WalkContext } | null = null;
     _layoutWidthMargin: number = 1.18;
+    _sqrtWidthScale: number = 0.5; // compensate for walker overshooting visual content (more aggressive than before)
+    verbose: boolean = false;
 
     layout(katexHtmlRoot: SpaceElement, emToWorld: number): WalkResult {
         this.items = [];
@@ -383,13 +385,31 @@ export class MatematexLayoutWalker {
         const heightEm = parseEm(heightAttr) || 1.0;
         const heightWorld = heightEm * ctx.emToWorld * ctx.scale;
 
+        // Read the ORIGINAL viewBox to preserve its aspect ratio.
+        // KaTeX uses different sqrt SVGs for different content heights:
+        //   sqrtMain:  viewBox 0 0 400000 1080  (heightEm ≈ 1.08)
+        //   sqrtMain2: viewBox 0 0 400000 1440  (heightEm ≈ 1.44)
+        //   sqrtMain3: viewBox 0 0 400000 1800  (heightEm ≈ 1.80)
+        //   sqrtMain4: viewBox 0 0 400000 2400  (heightEm ≈ 2.40)
+        // Hardcoding 1080 distorts the aspect ratio for taller content,
+        // causing SpaceSVG to render the overbar dramatically wider than it should.
+        const originalVB = svgEl.getAttribute('viewBox') || '0 0 400000 1080';
+        const vbParts = originalVB.split(/\s+/).map(parseFloat);
+        const originalVBHeight = (vbParts.length >= 4 && !isNaN(vbParts[3])) ? vbParts[3] : 1080;
+
         // Convert content width from world units back to em, then to viewBox units.
         // contentWidthWorld already includes paddingLeft (~0.833em) which is the
-        // space reserved for the radical stem. So we DON'T add radicalStemEm again.
+        // radical-stem reservation.
+        //
+        // For long/complex content, the walker's metric-based width overshoots
+        // the actual rendered visual width (italic gaps accumulate, render scale
+        // differs from metric scale). Apply `_sqrtWidthScale` to compensate.
         const overhangEm = 0.05;
         const contentWidthEm = contentWidthWorld / (ctx.emToWorld * ctx.scale);
-        const widthEm = contentWidthEm + overhangEm;
+        const rawWidthEm = contentWidthEm + overhangEm;
+        const widthEm = rawWidthEm * this._sqrtWidthScale;
         const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
+
 
         // Clip the SVG viewBox. 1em ≈ 1000 viewBox units.
         const clippedVBWidth = Math.round(widthEm * 1000);
@@ -397,17 +417,34 @@ export class MatematexLayoutWalker {
         // Serialize and patch the SVG
         let svgString = serializeNode(svgEl);
 
-        // 1. Clip the viewBox
+        // 1. Clip the viewBox — preserve the ORIGINAL height so aspect
+        // ratio stays correct (critical for taller sqrt SVGs).
         svgString = svgString
-            .replace(/viewBox="[^"]*"/, `viewBox="0 0 ${clippedVBWidth} 1080"`)
+            .replace(/viewBox="[^"]*"/, `viewBox="0 0 ${clippedVBWidth} ${originalVBHeight}"`)
             .replace(/width="[^"]*"/, `width="${clippedVBWidth}"`)
             .replace(/preserveAspectRatio="[^"]*"/, '');
 
-        // 2. Clip the path data: replace "h400000" / "H400000" with our width.
-        const overbarlength = clippedVBWidth;
-        svgString = svgString.replace(/h400000/g, `h${overbarlength}`);
-        svgString = svgString.replace(/H400000/g, `H${overbarlength}`);
-        svgString = svgString.replace(/h-400000/g, `h-${overbarlength}`);
+        // 2. Clip the path data. The KaTeX radical path uses:
+        //    - "H400000" (absolute move-to X) in the first path's top edge
+        //    - "h400000" / "h-400000" (relative) in the second path's rectangle
+        //      which starts at x=834 (end of radical stem)
+        //
+        //    For the overbar to end exactly at viewBox right edge (clippedVBWidth):
+        //    - Absolute H target = clippedVBWidth
+        //    - Relative h length = clippedVBWidth - 834  (overbar length from x=834)
+        const RADICAL_STEM_END_X = 834;
+        const overbarRelLength = Math.max(1, clippedVBWidth - RADICAL_STEM_END_X);
+        // KaTeX sqrt variants use different overbar-end constants: sqrtMain /
+        // sqrtMain2/3/4 use H40000 (5 digits), the Size1–Size4 variants use
+        // H400000 (6 digits). Match any run of 5+ digits after H / h / h- so
+        // both families get clipped. Stem-end coordinates like "H1012.3" have
+        // a decimal and so won't match \d+. Without this clip, the overbar
+        // renders all the way to the original viewBox coord (e.g. x=40000)
+        // while the viewBox is clipped to ~11000, causing SpaceSVG to scale
+        // the overbar far past the sqrt's declared world width.
+        svgString = svgString.replace(/h(\d{5,})/g, `h${overbarRelLength}`);
+        svgString = svgString.replace(/H(\d{5,})/g, `H${clippedVBWidth}`);
+        svgString = svgString.replace(/h-(\d{5,})/g, `h-${overbarRelLength}`);
 
         const centerX = ctx.cursorX + widthWorld / 2;
         // Shift the SVG down slightly so the radical checkmark doesn't
@@ -436,6 +473,10 @@ export class MatematexLayoutWalker {
         const startX = ctx.cursorX;
         let maxX = startX;
         const lineItemIndices: number[] = [];
+        // Record the items index BEFORE walking this vlist's children so we can
+        // later measure the actual ink extents of any text emitted inside it
+        // (used for sqrt content width — avoids inflation from italic gaps).
+        const vlistItemsStartIdx = this.items.length;
 
         // Track per-child item ranges so we can CENTER narrower children
         // within the widest child's width (LaTeX centers numerator/denominator).
@@ -507,23 +548,47 @@ export class MatematexLayoutWalker {
         if (this._pendingSVG) {
             const svg = this._pendingSVG;
             this._pendingSVG = null;
-            const contentWidth = maxX - startX;
+            // Measure actual ink right edge from emitted text items inside
+            // this vlist (ignore cursor-based maxX which accumulates italic
+            // gaps and subscript padding that don't correspond to visible ink).
+            let inkRightX = startX;
+            for (let i = vlistItemsStartIdx; i < this.items.length; i++) {
+                const it = this.items[i];
+                if (it.kind === 'text') {
+                    const halfWidthWorld =
+                        (getTextWidthEm(it.text, it.italic) * svg.ctx.emToWorld * it.scale) / 2;
+                    const rightEdge = it.x + halfWidthWorld;
+                    if (rightEdge > inkRightX) inkRightX = rightEdge;
+                } else if (it.kind === 'svg' || it.kind === 'line') {
+                    const rightEdge = it.x + (it.width || 0) / 2;
+                    if (rightEdge > inkRightX) inkRightX = rightEdge;
+                }
+            }
+            const contentWidth = Math.max(inkRightX - startX, maxX - startX) > 0
+                ? inkRightX - startX
+                : 0;
             const svgWidthWorld = this.emitSVGWithContentWidth(svg.el, svg.ctx, contentWidth);
             if (startX + svgWidthWorld > maxX) {
                 maxX = startX + svgWidthWorld;
             }
         }
 
-        // Final total width across all children (including SVG + margin).
-        // The margin compensates for textScaleMultiplier making rendered
-        // glyphs wider than their font-metric widths predict. The margin
-        // is proportional to textScaleMultiplier — larger scale = larger mismatch.
+        // Final total width across all children.
+        // The layoutWidthMargin (e.g., 1.18x) widens the fraction bar so it
+        // extends past the text on both sides — compensates for char rendering
+        // being slightly wider than font metrics predict.
+        //
+        // Only apply the margin for vlists that contain a frac-line. Applying
+        // it to msupsub / sqrt / other vlists causes compound inflation that
+        // makes radicals and other SVGs overshoot the content dramatically
+        // (especially for expressions with many nested subscripts/superscripts).
         const rawWidth = maxX - startX;
-        const totalWidth = rawWidth * this._layoutWidthMargin;
+        const marginFactor = lineItemIndices.length > 0 ? this._layoutWidthMargin : 1.0;
+        const totalWidth = rawWidth * marginFactor;
         const totalCenterX = startX + totalWidth / 2;
 
-        // Debug
-        if (childRanges.length > 1 || lineItemIndices.length > 0) {
+        // Debug (only when verbose flag is set)
+        if (this.verbose && (childRanges.length > 1 || lineItemIndices.length > 0)) {
             print(`[MatematexBridge] vlist: totalWidth=${totalWidth.toFixed(2)}, children=${childRanges.length}, lines=${lineItemIndices.length}`);
             for (let ci = 0; ci < childRanges.length; ci++) {
                 const r = childRanges[ci];
@@ -581,6 +646,7 @@ export class MatematexLayoutWalker {
 export class MatematexSceneRenderer {
     private created: SceneObject[] = [];
     _italicScaleAdjust: number = 0.5;
+    verbose: boolean = false;
 
     render(
         items: LayoutItem[],
@@ -678,8 +744,8 @@ export class MatematexSceneRenderer {
             new vec3(item.x, item.y + baselineOffset, zNudge)
         );
 
-        // Diagnostic for the first text only
-        if (this.created.length === 0) {
+        // Diagnostic for the first text only (verbose mode only)
+        if (this.verbose && this.created.length === 0) {
             const wpos = obj.getTransform().getWorldPosition();
             const wscale = obj.getTransform().getWorldScale();
             print(`[MatematexBridge] First text "${item.text}" worldPos=(${wpos.x.toFixed(2)},${wpos.y.toFixed(2)},${wpos.z.toFixed(2)}) worldScale=(${wscale.x.toFixed(2)},${wscale.y.toFixed(2)},${wscale.z.toFixed(2)})`);
@@ -932,6 +998,10 @@ export class MatematexBridge extends BaseScriptComponent {
     private layoutWidthMargin: number = 1.18;
 
     @input
+    @hint("Scale factor for sqrt radical width. 1.0 = walker's predicted width. Lower if radical extends past content. Complex expressions need 0.4-0.6.")
+    private sqrtWidthScale: number = 0.5;
+
+    @input
     private textColor: vec4 = new vec4(1, 1, 1, 1);
 
     @input
@@ -1013,6 +1083,8 @@ export class MatematexBridge extends BaseScriptComponent {
         // tune textScaleMultiplier for text legibility.
         const walker = new MatematexLayoutWalker();
         walker._layoutWidthMargin = this.layoutWidthMargin;
+        walker._sqrtWidthScale = this.sqrtWidthScale;
+        walker.verbose = this.dumpLayout;
         const result = walker.layout(katexHtml, this.emToWorld);
 
         if (this.dumpLayout) {
@@ -1075,6 +1147,7 @@ export class MatematexBridge extends BaseScriptComponent {
         // Step 4: render the layout items to scene objects
         const renderer = new MatematexSceneRenderer();
         renderer._italicScaleAdjust = this.italicScaleAdjust;
+        renderer.verbose = this.dumpLayout;
         const created = renderer.render(
             result.items,
             this.container,

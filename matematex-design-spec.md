@@ -563,19 +563,36 @@ Maintain a screenshot gallery (PNG files in `tests/visual/golden/`) for each vis
 
 ---
 
-## 7. Implementation Milestones
+## 7. Implementation Status
 
-| Phase   | Deliverable                                                            | Duration (est.)  |
-|---------|------------------------------------------------------------------------|------------------|
-| Phase 0 | Import SpaceSVG + SpaceDOM into project; validate SpaceSVG renders hand-crafted SVG | 1 week |
-| Phase 1 | SpaceDOM Adapter: wire SpaceDOM as KaTeX's document; add `style` shim; run KaTeX `renderToString()` successfully for basic expressions | 1-2 weeks |
-| Phase 2 | KaTeX-to-SVG Bridge: implement class-to-SVG mapping for Priority 1 classes (`.mord`, `.mfrac`, `.msupsub`, `.sqrt`, `.base`, `.strut`) | 2 weeks |
-| Phase 3 | Font glyph extraction: build tooling to extract SVG paths from KaTeX fonts; create GlyphTable | 1 week |
-| Phase 4 | SpaceSVG integration: feed bridge SVG output to SpaceSVG, first visual render on Spectacles | 1 week |
-| Phase 5 | Conformance test suite (automated, 50 expressions vs. MathJax reference) | 1 week |
-| Phase 6 | Bridge expansion: remaining KaTeX CSS classes (`.mop`, `.delimsizing`, `.mtable`, `.vlist`) | 2 weeks |
-| Phase 7 | Visual test harness on Spectacles; polish spacing/sizing | 1 week |
-| Phase 8 | R5 (3D extensions) -- TikZ-subset parser + MeshBuilder integration | 3-4 weeks |
+| Phase | Deliverable | Status |
+|-------|-------------|--------|
+| 0 | SpaceSVG + SpaceDOM imported and validated | ✅ Complete (10/10 tests) |
+| 1 | SpaceDOM adapter + KaTeX `renderToString()` + `render()` working | ✅ Complete (14/14 tests) |
+| 2 | KaTeX-to-scene bridge: mord, mfrac, msupsub, sqrt, base, strut | ✅ Complete (MVP renders fractions) |
+| 2.5 | Additional constructs: superscript, subscript, Greek, italic variables, SVG radicals | ✅ Complete |
+| 3 | KaTeX font metrics extracted and wired into walker | ✅ Complete (per-glyph widths from fontMetricsData.js) |
+| 4 | Test harness: `MatematexValidator.ts` with 33 test cases | ✅ Complete (33/33 passing) |
+| 5 | Named operators (`.mop` class handling for `\sin`, `\cos`, `\lim`, etc.) | ✅ Complete |
+| 6 | Book of Math demo app: 60 theorems + splash/TOC + pinch navigation | ✅ Complete |
+| 7 | R5: TikZ-subset 3D plotting extensions | ⏳ Not started |
+
+### Architecture divergence from original plan
+
+The original design assumed an SVG intermediate format: `KaTeX DOM → SVG string → SpaceSVG → scene`. In practice, we adopted a **hybrid pipeline**:
+
+- **Text characters** render via cloned `Component.Text3D` (not SVG glyph paths). Programmatic `createComponent('Component.Text')` doesn't work; cloning an editor-created template via `copyComponent()` does.
+- **Fraction bars** render via `MeshBuilder` quads with a `RenderMeshVisual` (not SVG lines).
+- **Sqrt radicals** render via SpaceSVG — the only path where we actually use the SVG intermediate. KaTeX emits real `<svg><path>` elements for radicals which we serialize and feed to SpaceSVG's mesh backend.
+
+This hybrid approach proved simpler and more performant than a pure-SVG pipeline.
+
+### Key findings
+
+- **SpaceDOM provides everything KaTeX needs** — no forking or patching KaTeX source required. A small adapter (`.style` property bag, `compatMode` shim) was sufficient.
+- **`copyComponent()` is essential for Text3D rendering** — programmatic `createComponent` produces non-rendering components.
+- **`textScaleMultiplier` decouples layout from rendering scale** — layout uses em-based world units, text rendering uses SceneObject transform. A `layoutWidthMargin` fudge factor (~1.18) compensates for the mismatch.
+- **Tier 3 "unsupported" features render via generic passthrough** — `\sum`, `\int`, matrices, `\lim` all produce readable output because KaTeX emits Unicode glyphs for them, even without dedicated walker handlers.
 
 ---
 

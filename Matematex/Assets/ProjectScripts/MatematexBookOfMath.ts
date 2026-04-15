@@ -10,6 +10,8 @@
 //   3. Assign prevButton and nextButton SceneObjects (with Interactable component)
 //   4. Run — startup validates all 60 formulas, then shows formula #1
 
+import { PinchButton } from "SpectaclesInteractionKit.lspkg/Components/UI/PinchButton/PinchButton";
+// import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable";
 import { installSpaceDOMAdapter, getSpaceDocument } from './SpaceDOMAdapter';
 installSpaceDOMAdapter();
 
@@ -41,21 +43,47 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     @input emToWorld: number = 5.0;
     @input textScaleMultiplier: number = 5.0;
     @input layoutWidthMargin: number = 1.18;
+    @input
+    @hint("Scale factor for sqrt radical width. 1.0 is correct with the overbar clipping fix; lower only if you need to force a shorter overbar.")
+    sqrtWidthScale: number = 1.0;
     @input italicScaleAdjust: number = 1.0;
     @input textColor: vec4 = new vec4(1, 1, 1, 1);
 
     // --- Positioning ---
-    @input containerWorldZ: number = 39.0;
-    @input containerWorldY: number = 0.0;
+    // For ON-DEVICE use: parent this script's SceneObject to the Camera Object
+    // so content follows the user's head. Position below is relative to parent.
+    @input
+    @hint("Local Z offset (negative = in front of parent). For device: parent this SceneObject to Camera Object.")
+    containerWorldZ: number = -100.0;
+
+    @input
+    @hint("Local Y offset (height relative to parent)")
+    containerWorldY: number = 0.0;
+
+    @input
+    @hint("Use world-space positioning (legacy). Leave OFF for on-device / head-tracked content.")
+    useWorldSpace: boolean = false;
 
     // --- Navigation ---
     @input
-    @hint("SceneObject with Interactable — pinch to go to previous formula")
-    prevButton: SceneObject;
+    @hint("PinchButton — previous formula")
+    prevButton: PinchButton;
 
     @input
-    @hint("SceneObject with Interactable — pinch to go to next formula")
-    nextButton: SceneObject;
+    @hint("PinchButton — next formula")
+    nextButton: PinchButton;
+
+    @input
+    @hint("PinchButton on the splash/TOC page — jump to Chapter 1 Geometry (formula #1)")
+    chapter1Button: PinchButton;
+
+    @input
+    @hint("PinchButton on the splash/TOC page — jump to Chapter 2 Algebra (formula #21)")
+    chapter2Button: PinchButton;
+
+    @input
+    @hint("PinchButton on the splash/TOC page — jump to Chapter 3 Calculus (formula #41)")
+    chapter3Button: PinchButton;
 
     @input
     @hint("Hide template after cloning")
@@ -66,10 +94,12 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     autoAdvanceSec: number = 0;
 
     // --- Internal state ---
-    private currentIndex: number = 0;
+    // currentIndex: -1 = splash/TOC page, 0..59 = formulas
+    private currentIndex: number = -1;
     private container: SceneObject | null = null;
     private labelObj: SceneObject | null = null;
     private chapterLabelObj: SceneObject | null = null;
+    private splashObjects: SceneObject[] = [];
     private renderer: MatematexSceneRenderer | null = null;
     private templateTextComp: any = null;
     private templateScale: vec3 = new vec3(1, 1, 1);
@@ -92,12 +122,20 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         // Resolve template
         this.resolveTemplate();
 
-        // Create container
+        // Create container. Use LOCAL positioning so content follows the
+        // script's parent (e.g., Camera Object for head-tracked content).
+        // Set useWorldSpace=true for fixed-world emulator testing.
         this.container = global.scene.createSceneObject('BookContainer');
         this.container.setParent(this.getSceneObject());
-        this.container.getTransform().setWorldPosition(
-            new vec3(0, this.containerWorldY, this.containerWorldZ)
-        );
+        if (this.useWorldSpace) {
+            this.container.getTransform().setWorldPosition(
+                new vec3(0, this.containerWorldY, this.containerWorldZ)
+            );
+        } else {
+            this.container.getTransform().setLocalPosition(
+                new vec3(0, this.containerWorldY, this.containerWorldZ)
+            );
+        }
 
         // Create label objects
         this.createLabels();
@@ -108,8 +146,8 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         // Validate all formulas on startup
         this.validateAll(doc);
 
-        // Show first formula
-        this.renderFormula(0);
+        // Start on the splash/TOC page (currentIndex = -1)
+        this.renderPage();
     }
 
     // ─── Template resolution ─────────────────────────────────
@@ -210,24 +248,14 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     // ─── Navigation ──────────────────────────────────────────
 
     private setupNavigation(): void {
-        let prevBound = false;
-        let nextBound = false;
-
-        if (this.prevButton) {
-            prevBound = this.bindButton(this.prevButton, () => this.navigate(-1));
-        }
-        if (this.nextButton) {
-            nextBound = this.bindButton(this.nextButton, () => this.navigate(1));
-        }
-
-        if (!prevBound && !nextBound) {
-            print('[MatematexBook] No buttons bound — using auto-advance if enabled');
-        }
+        // Defer button binding to OnStartEvent (PinchButton initialization
+        // order is not guaranteed relative to our onAwake).
+        const startEvent = this.createEvent('OnStartEvent');
+        startEvent.bind(() => this.bindButtonsOnStart());
 
         // Auto-advance timer for testing without buttons
         if (this.autoAdvanceSec > 0) {
             print(`[MatematexBook] Auto-advance every ${this.autoAdvanceSec}s`);
-            const advanceEvent = this.createEvent('DelayedCallbackEvent') as any;
             const scheduleNext = () => {
                 const evt = this.createEvent('DelayedCallbackEvent') as any;
                 evt.bind(() => {
@@ -240,50 +268,104 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         }
     }
 
-    private bindButton(buttonObj: SceneObject, callback: () => void): boolean {
-        // SIK LabeledPinchButton has Interactable deep in its prefab hierarchy.
-        // Recursively search all descendants for any component with onTriggerEnd.
-        print(`[MatematexBook] Searching for Interactable on "${buttonObj.name}"...`);
-
-        const searchRecursive = (obj: SceneObject, depth: number): boolean => {
-            if (depth > 10) return false; // safety limit
-
-            // Check all components on this object
-            for (let i = 0; i < 30; i++) {
-                try {
-                    const comp = (obj as any).getComponentByIndex?.(i);
-                    if (!comp) break;
-                    // Look for onTriggerEnd (Interactable) or onButtonPinched (PinchButton)
-                    if ((comp as any).onTriggerEnd) {
-                        (comp as any).onTriggerEnd.add(callback);
-                        print(`[MatematexBook] Bound via onTriggerEnd on "${obj.name}" (depth ${depth})`);
-                        return true;
-                    }
-                    if ((comp as any).onButtonPinched) {
-                        (comp as any).onButtonPinched.add(callback);
-                        print(`[MatematexBook] Bound via onButtonPinched on "${obj.name}" (depth ${depth})`);
-                        return true;
-                    }
-                } catch (e) { break; }
+    private bindButtonsOnStart(): void {
+        if (this.prevButton) {
+            try {
+                const pb = this.prevButton as any;
+                if (pb.onButtonPinched && typeof pb.onButtonPinched.add === 'function') {
+                    pb.onButtonPinched.add(() => {
+                        print('[MatematexBook] prev pinched');
+                        this.navigate(-1);
+                    });
+                    print('[MatematexBook] Bound prevButton.onButtonPinched');
+                } else {
+                    print(`[MatematexBook] prevButton has no onButtonPinched (keys: ${Object.keys(pb).join(',')})`);
+                }
+            } catch (e: any) {
+                print(`[MatematexBook] Failed to bind prevButton: ${e.message || e}`);
             }
-
-            // Recurse into children
-            for (let c = 0; c < obj.getChildrenCount(); c++) {
-                if (searchRecursive(obj.getChild(c), depth + 1)) return true;
-            }
-            return false;
-        };
-
-        const found = searchRecursive(buttonObj, 0);
-        if (!found) {
-            print(`[MatematexBook] WARNING: no bindable event found in "${buttonObj.name}" hierarchy`);
         }
-        return found;
+        if (this.nextButton) {
+            try {
+                const pb = this.nextButton as any;
+                if (pb.onButtonPinched && typeof pb.onButtonPinched.add === 'function') {
+                    pb.onButtonPinched.add(() => {
+                        print('[MatematexBook] next pinched');
+                        this.navigate(1);
+                    });
+                    print('[MatematexBook] Bound nextButton.onButtonPinched');
+                } else {
+                    print(`[MatematexBook] nextButton has no onButtonPinched (keys: ${Object.keys(pb).join(',')})`);
+                }
+            } catch (e: any) {
+                print(`[MatematexBook] Failed to bind nextButton: ${e.message || e}`);
+            }
+        }
+
+        // Chapter buttons: jump directly to first formula of each chapter.
+        // Formula IDs are 1-based, but MATH_FORMULAS is 0-indexed, so
+        // Chapter 1 first formula (id=1) is at index 0, id=21 is at index 20, etc.
+        this.bindChapterButton(this.chapter1Button, 0,  'Chapter 1 (Geometry)');
+        this.bindChapterButton(this.chapter2Button, 20, 'Chapter 2 (Algebra)');
+        this.bindChapterButton(this.chapter3Button, 40, 'Chapter 3 (Calculus)');
+    }
+
+    private bindChapterButton(btn: PinchButton | null | undefined, formulaIndex: number, label: string): void {
+        if (!btn) return;
+        try {
+            const pb = btn as any;
+            if (pb.onButtonPinched && typeof pb.onButtonPinched.add === 'function') {
+                pb.onButtonPinched.add(() => {
+                    print(`[MatematexBook] ${label} pinched — jumping to formula #${formulaIndex + 1}`);
+                    this.goToFormula(formulaIndex);
+                });
+                print(`[MatematexBook] Bound ${label} button`);
+            } else {
+                print(`[MatematexBook] ${label} button has no onButtonPinched`);
+            }
+        } catch (e: any) {
+            print(`[MatematexBook] Failed to bind ${label} button: ${e.message || e}`);
+        }
+    }
+
+    goToFormula(index: number): void {
+        if (index < 0 || index >= MATH_FORMULAS.length) return;
+        this.currentIndex = index;
+        this.renderPage();
     }
 
     navigate(direction: number): void {
-        this.currentIndex = (this.currentIndex + direction + MATH_FORMULAS.length) % MATH_FORMULAS.length;
-        this.renderFormula(this.currentIndex);
+        // Total pages: 1 splash + 60 formulas = 61.
+        // Map currentIndex (-1 to 59) to paged (0 to 60) for modulo, then back.
+        const total = MATH_FORMULAS.length + 1;
+        const paged = (this.currentIndex + 1 + direction + total) % total;
+        this.currentIndex = paged - 1;
+        this.renderPage();
+    }
+
+    private renderPage(): void {
+        // Show chapter buttons only on the splash/TOC page
+        const showChapterButtons = (this.currentIndex === -1);
+        this.setChapterButtonsEnabled(showChapterButtons);
+
+        if (this.currentIndex === -1) {
+            this.renderSplash();
+        } else {
+            this.renderFormula(this.currentIndex);
+        }
+    }
+
+    private setChapterButtonsEnabled(enabled: boolean): void {
+        const buttons = [this.chapter1Button, this.chapter2Button, this.chapter3Button];
+        for (const btn of buttons) {
+            if (!btn) continue;
+            try {
+                const obj = (btn as any).getSceneObject?.() || (btn as any).sceneObject;
+                if (obj) {
+                    obj.enabled = enabled;
+                }
+            } catch (e) { /* ignore */ }
+        }
     }
 
     // ─── Rendering ───────────────────────────────────────────
@@ -294,10 +376,15 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
         print(`\n[MatematexBook] Rendering ${formula.id}/${MATH_FORMULAS.length}: ${formula.name}`);
 
-        // Clear previous rendering
+        // Clear previous rendering (both formula and splash)
         if (this.renderer) {
             this.renderer.clear();
         }
+        this.clearSplash();
+
+        // Make sure labels are visible again
+        if (this.labelObj) this.labelObj.enabled = true;
+        if (this.chapterLabelObj) this.chapterLabelObj.enabled = true;
 
         // Update labels
         this.updateLabels(formula);
@@ -321,6 +408,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
             // Walk
             const walker = new MatematexLayoutWalker();
             walker._layoutWidthMargin = this.layoutWidthMargin;
+            walker._sqrtWidthScale = this.sqrtWidthScale;
             const result = walker.layout(katexHtml as any, this.emToWorld);
 
             // Render
@@ -343,6 +431,82 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         } catch (e: any) {
             print(`[MatematexBook] FAIL: ${e.message || e}`);
         }
+    }
+
+    // ─── Splash / TOC page ───────────────────────────────────
+
+    private renderSplash(): void {
+        if (!this.container || !this.templateTextComp) return;
+
+        print('[MatematexBook] Rendering splash / TOC page');
+
+        // Clear previous formula rendering and hide formula labels
+        if (this.renderer) this.renderer.clear();
+        this.clearSplash();
+        if (this.labelObj) this.labelObj.enabled = false;
+        if (this.chapterLabelObj) this.chapterLabelObj.enabled = false;
+
+        // Vertical layout: stack text lines with spacing
+        const lineHeight = 7;
+        let y = 40; // start high, descend with each line
+
+        const lines: { text: string; scale: number }[] = [
+            { text: 'MATEMATEX',                     scale: 0.8 },
+            { text: 'Book of Math',                  scale: 0.6 },
+            { text: '',                              scale: 0.3 },
+            { text: 'A catalog of 60 theorems from',  scale: 0.35 },
+            { text: 'geometry, algebra, and calculus',scale: 0.35 },
+            { text: '',                              scale: 0.3 },
+            { text: '— Table of Contents —',         scale: 0.4 },
+            { text: 'Chapter 1  Geometry     (1–20)', scale: 0.35 },
+            { text: 'Chapter 2  Algebra      (21–40)',scale: 0.35 },
+            { text: 'Chapter 3  Calculus     (41–60)',scale: 0.35 },
+            { text: '',                              scale: 0.3 },
+            { text: 'Content sources (CC / public domain):', scale: 0.3 },
+            { text: 'ProofWiki  •  DLMF / NIST',     scale: 0.28 },
+            { text: 'OpenStax  •  Wikibooks  •  LibreTexts', scale: 0.28 },
+            { text: '',                              scale: 0.3 },
+            { text: 'Pinch Next to begin',           scale: 0.35 },
+            { text: '',                              scale: 0.5 },
+            { text: '© IoTone, Inc.',                scale: 0.3 },
+        ];
+
+        for (const line of lines) {
+            if (line.text.length > 0) {
+                this.makeSplashLine(line.text, y, line.scale);
+            }
+            y -= lineHeight * line.scale / 0.35; // scale-proportional spacing
+        }
+    }
+
+    private makeSplashLine(text: string, y: number, scaleFactor: number): void {
+        if (!this.container || !this.templateTextComp) return;
+
+        const obj = global.scene.createSceneObject('SplashLine');
+        obj.setParent(this.container);
+
+        const comp: any = (obj as any).copyComponent(this.templateTextComp);
+        if (!comp) return;
+
+        comp.text = text;
+        try { (comp.textFill as any).mappingType = 0; } catch (e) { /* ignore */ }
+        try { comp.textFill.color = this.textColor; } catch (e) { /* ignore */ }
+
+        obj.getTransform().setLocalPosition(new vec3(0, y, 0.01));
+        obj.getTransform().setLocalScale(new vec3(
+            this.templateScale.x * scaleFactor,
+            this.templateScale.y * scaleFactor,
+            this.templateScale.z * scaleFactor,
+        ));
+
+        this.splashObjects.push(obj);
+    }
+
+    private clearSplash(): void {
+        for (const obj of this.splashObjects) {
+            obj.destroy();
+        }
+        this.splashObjects = [];
     }
 
     // ─── Startup validation ──────────────────────────────────
@@ -368,6 +532,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
                 const walker = new MatematexLayoutWalker();
                 walker._layoutWidthMargin = this.layoutWidthMargin;
+            walker._sqrtWidthScale = this.sqrtWidthScale;
                 const result = walker.layout(katexHtml as any, this.emToWorld);
 
                 if (result.items.length > 0) {
