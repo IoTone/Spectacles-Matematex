@@ -4,10 +4,10 @@ Walk all 60 formulas in the Book of Math on device. For each formula, mark a sev
 
 ## Legend
 
-- ✅ — renders correctly
-- ⚠️ — minor defect (spacing, alignment, not blocking readability)
-- ❌ — broken (missing glyph, wrong structure, unreadable)
-- 🔍 — needs math professional review (correctness or convention question, not a rendering bug)
+- ✅ (0) — renders correctly
+- ⚠️ (1) — minor defect (spacing, alignment, not blocking readability)
+- ❌ (2) — broken (missing glyph, wrong structure, unreadable)
+- 🔍 (3) — needs math professional review (correctness or convention question, not a rendering bug)
 
 ## Categories (for the Category column)
 
@@ -30,14 +30,14 @@ Walk all 60 formulas in the Book of Math on device. For each formula, mark a sev
 |----|---------|-----|----------|-------|
 | 1  | Pythagorean Theorem          |   |   |   |
 | 2  | Law of Cosines               |   |   |   |
-| 3  | Law of Sines                 |   |   |   |
-| 4  | Area of Triangle             |   |   |   |
-| 5  | Area of Circle               |   |   |   |
-| 6  | Circumference                |   |   |   |
-| 7  | Surface Area of Sphere       |   |   |   |
-| 8  | Volume of Sphere             |   |   |   |
-| 9  | Volume of Cylinder           |   |   |   |
-| 10 | Distance Formula             |   |   |   |
+| 3  | Law of Sines                 | 1  | spacing around fraction  |   |
+| 4  | Area of Triangle             | 1  | spacing next to fraction  |   |
+| 5  | Area of Circle               | 1  | spacing between letters and symbols  |   |
+| 6  | Circumference                | 1  |  spacing bbetween letters and symbols |   |
+| 7  | Surface Area of Sphere       | 1  | spacing between fraction and symboles next to it  |   |
+| 8  | Volume of Sphere             | 1  | spacing between letters and symbols  |   |
+| 9  | Volume of Cylinder           | 1  |  spacing between exponent and sqrt |   |
+| 10 | Distance Formula             | 1  |  spacing between superscript and srt |   |
 | 11 | Midpoint Formula             |   |   |   |
 | 12 | Slope Formula                |   |   |   |
 | 13 | Heron's Formula              |   |   |   |
