@@ -98,6 +98,18 @@ const TEST_CORPUS: LaTeXTestCase[] = [
     { id: 'T31', name: 'LimitWithSub',      latex: '\\lim_{x \\to 0} x',            tier: 2, expectedMinItems: 3 },
     { id: 'T32', name: 'LogBase',           latex: '\\log_2 n',                      tier: 2, expectedMinItems: 3 },
     { id: 'T33', name: 'SinSquared',        latex: '\\sin^2 x',                      tier: 2, expectedMinItems: 3 },
+
+    // Phase 6.6: Bridge improvements (P0 + P1 from porting review)
+    // T34–T35 exercise the inter-atom spacing matrix (mbin/mrel gaps).
+    // T36 exercises bold (\mathbf) — needs boldFont assigned to render fully.
+    // T37 exercises accent (\hat) — left-offset + vlist stacking.
+    // T38–T39 exercise displayMode big-op limits (above/below positioning).
+    { id: 'T34', name: 'BinarySpacing',     latex: 'a + b - c \\cdot d',             tier: 1, expectedMinItems: 4 },
+    { id: 'T35', name: 'RelationSpacing',   latex: 'a = b \\neq c \\leq d',          tier: 1, expectedMinItems: 4 },
+    { id: 'T36', name: 'BoldVector',        latex: '\\mathbf{a} + \\mathbf{b}',     tier: 1, expectedMinItems: 2 },
+    { id: 'T37', name: 'HatAccent',         latex: '\\hat{H}\\Psi',                  tier: 2, expectedMinItems: 2 },
+    { id: 'T38', name: 'SumDisplayLimits',  latex: '\\sum_{i=1}^{n} i^2',           tier: 2, expectedMinItems: 3 },
+    { id: 'T39', name: 'IntegralLimits',    latex: '\\int_0^1 x^2\\,dx',             tier: 2, expectedMinItems: 3 },
 ];
 
 // ─── @component ──────────────────────────────────────────────
@@ -109,6 +121,9 @@ export class MatematexValidator extends BaseScriptComponent {
     @input lineMaterial: Material;
     @input templateText: SceneObject;
     @input italicFont: Font;
+    @input
+    @hint("Optional bold font for \\mathbf tests (T36). If unassigned, T36 still passes the layout count check; the visual swap just won't happen.")
+    boldFont: Font;
 
     @input emToWorld: number = 5.0;
     @input textScaleMultiplier: number = 5.0;
@@ -248,7 +263,9 @@ export class MatematexValidator extends BaseScriptComponent {
             const wrapper = doc.createElement('div');
             try {
                 // @ts-ignore
-                katex.render(test.latex, wrapper, { throwOnError: true });
+                // displayMode: true so big-operator limits exercise the op-limits
+                // vlist path (T38/T39); also matches the Book of Math runtime.
+                katex.render(test.latex, wrapper, { throwOnError: true, displayMode: true });
                 result.parseOk = true;
 
                 if (test.expectParseError) {
@@ -314,6 +331,7 @@ export class MatematexValidator extends BaseScriptComponent {
                     templateScale,
                     this.textScaleMultiplier,
                     this.italicFont || null,
+                    this.boldFont || null,
                 );
                 result.sceneObjects = created.length;
 

@@ -575,6 +575,12 @@ Maintain a screenshot gallery (PNG files in `tests/visual/golden/`) for each vis
 | 4 | Test harness: `MatematexValidator.ts` with 33 test cases | ✅ Complete (33/33 passing) |
 | 5 | Named operators (`.mop` class handling for `\sin`, `\cos`, `\lim`, etc.) | ✅ Complete |
 | 6 | Book of Math demo app: 60 theorems + splash/TOC + pinch navigation | ✅ Complete |
+| 6.1 | Sqrt overbar fix: regex now matches both `H40000` (sqrtMain) and `H400000` (Size variants) | ✅ Complete |
+| 6.2 | Book of Math v2: 80 formulas (+ Linear Algebra), `MathSearchIndex`, screen state machine, search-screen scaffold | ✅ Complete (UIKit migration pending) |
+| 6.5 | Visual QA traversal of all 80 formulas — defect catalog (`phase6-visual-qa.md`) | ⏳ In progress |
+| 6.6 | Bridge improvements: mbin/mrel spacing, big-op display-mode limits, `\mathbf` bold font, accent `left:` offset | ✅ Complete (P0 + P1, awaiting visual retest) |
+| 6.6.x | Deferred bridge work: mtable rendering, delimiter auto-sizing, italic auto-calibration | ⏳ Planned (`matematex-porting-review.md`) |
+| 6.7 | UIKit migration: `RectangleButton` swap, `TextInputField` for search, ASR mic | ⏳ Planned (`book-of-math-v2-plan.md`) |
 | 7 | R5: TikZ-subset 3D plotting extensions | ⏳ Not started |
 
 ### Architecture divergence from original plan
@@ -592,7 +598,13 @@ This hybrid approach proved simpler and more performant than a pure-SVG pipeline
 - **SpaceDOM provides everything KaTeX needs** — no forking or patching KaTeX source required. A small adapter (`.style` property bag, `compatMode` shim) was sufficient.
 - **`copyComponent()` is essential for Text3D rendering** — programmatic `createComponent` produces non-rendering components.
 - **`textScaleMultiplier` decouples layout from rendering scale** — layout uses em-based world units, text rendering uses SceneObject transform. A `layoutWidthMargin` fudge factor (~1.18) compensates for the mismatch.
-- **Tier 3 "unsupported" features render via generic passthrough** — `\sum`, `\int`, matrices, `\lim` all produce readable output because KaTeX emits Unicode glyphs for them, even without dedicated walker handlers.
+- **Tier 3 "unsupported" features render via generic passthrough** — `\sum`, `\int`, matrices, `\lim` all produce readable output because KaTeX emits Unicode glyphs for them, even without dedicated walker handlers — though spacing and limits placement are not yet typographically correct.
+- **KaTeX ships *two* sqrt SVG path families** with different overbar-end constants (`H40000` for sqrtMain, `H400000` for Size variants). The Phase 6.1 fix loosened the regex to `\d{5,}` to catch both.
+- **Walker uses font metrics, not measured ink** — content widths from `cursorX` accumulate italic gaps and subscript padding. The pending-SVG handler now measures emitted text items' ink extents to size the radical correctly; the same technique could be generalized to other layout primitives.
+
+### Porting review
+
+A current inventory of which KaTeX HTML constructs the bridge handles, what's partially supported, what's missing, and a prioritized improvement roadmap is in **[matematex-porting-review.md](./matematex-porting-review.md)**.
 
 ---
 

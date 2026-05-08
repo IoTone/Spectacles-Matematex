@@ -99,11 +99,36 @@ Walk all 60 formulas in the Book of Math on device. For each formula, mark a sev
 | 59 | Laplacian                    |   |   |   |
 | 60 | Schrodinger Equation         |   |   |   |
 
+## Chapter 4: Linear Algebra (61–80)
+
+| ID | Formula | Sev | Category | Notes |
+|----|---------|-----|----------|-------|
+| 61 | Matrix Multiplication        |   |   |   |
+| 62 | Identity Matrix              |   |   |   |
+| 63 | Matrix Inverse               |   |   |   |
+| 64 | Transpose                    |   |   |   |
+| 65 | Transpose of Product         |   |   |   |
+| 66 | Determinant of 2x2           |   |   |   |
+| 67 | Determinant of Product       |   |   |   |
+| 68 | Cofactor Expansion           |   |   |   |
+| 69 | Eigenvalue Equation          |   |   |   |
+| 70 | Characteristic Polynomial    |   |   |   |
+| 71 | Trace                        |   |   |   |
+| 72 | Trace of Product             |   |   |   |
+| 73 | Dot Product                  |   |   |   |
+| 74 | Cross Product Magnitude      |   |   |   |
+| 75 | Cauchy-Schwarz Inequality    |   |   |   |
+| 76 | Vector Norm (L2)             |   |   |   |
+| 77 | Orthogonality                |   |   |   |
+| 78 | Rank-Nullity Theorem         |   |   |   |
+| 79 | Spectral Decomposition       |   |   |   |
+| 80 | Singular Value Decomposition |   |   |   |
+
 ---
 
 ## Summary (fill in after traversal)
 
-- Total ✅: __ / 60
+- Total ✅: __ / 80
 - Total ⚠️: __
 - Total ❌: __
 - Total 🔍: __

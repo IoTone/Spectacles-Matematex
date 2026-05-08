@@ -64,6 +64,7 @@ export interface TextLayoutItem extends LayoutBase {
     kind: 'text';
     text: string;
     italic: boolean;
+    bold?: boolean;
 }
 
 export interface LineLayoutItem extends LayoutBase {
@@ -121,6 +122,46 @@ const SIZE_FACTORS: { [key: string]: number } = {
     size11: 2.488,
 };
 
+// ─── KaTeX inter-atom spacing matrix ────────────────────────────────────
+// KaTeX's spacing model: every atom has a class (ord, op, bin, rel, open,
+// close, punct, inner) and the TeXbook-spec gap between consecutive atoms
+// depends on their pair. KaTeX usually emits explicit <mspace> elements
+// with inline marginRight to realize these gaps, but some KaTeX rendering
+// paths rely on CSS rules (which SpaceDOM doesn't compute). We apply the
+// matrix defensively in walkChildren — only injecting the *missing* portion
+// after subtracting any margin KaTeX already emitted.
+//
+// Values from KaTeX/buildCommon.js spacings (textstyle/displaystyle):
+// 0.167em = thin (3mu), 0.222em = med (4mu), 0.278em = thick (5mu).
+// Cells with 0 gap are omitted (no entry → 0).
+type AtomClass = 'ord' | 'op' | 'bin' | 'rel' | 'open' | 'close' | 'punct' | 'inner' | 'space' | 'other';
+
+const ATOM_SPACING_EM: { [pair: string]: number } = {
+    'ord-op':    0.167, 'ord-bin':   0.222, 'ord-rel':   0.278, 'ord-inner': 0.167,
+    'op-ord':    0.167, 'op-op':     0.167, 'op-rel':    0.278, 'op-inner':  0.167,
+    'bin-ord':   0.222, 'bin-op':    0.222, 'bin-open':  0.222, 'bin-inner': 0.222,
+    'rel-ord':   0.278, 'rel-op':    0.278, 'rel-open':  0.278, 'rel-inner': 0.278,
+    'close-op':  0.167, 'close-bin': 0.222, 'close-rel': 0.278, 'close-inner': 0.167,
+    'punct-ord':   0.167, 'punct-op':    0.167, 'punct-rel':   0.167,
+    'punct-open':  0.167, 'punct-close': 0.167, 'punct-punct': 0.167, 'punct-inner': 0.167,
+    'inner-ord':   0.167, 'inner-op':    0.167, 'inner-bin':   0.222,
+    'inner-rel':   0.278, 'inner-open':  0.167, 'inner-punct': 0.167, 'inner-inner': 0.167,
+};
+
+function getAtomClass(el: SpaceElement): AtomClass {
+    const c = getClasses(el);
+    if (c.indexOf('mspace') >= 0) return 'space';
+    if (c.indexOf('mord') >= 0) return 'ord';
+    if (c.indexOf('mop') >= 0) return 'op';
+    if (c.indexOf('mbin') >= 0) return 'bin';
+    if (c.indexOf('mrel') >= 0) return 'rel';
+    if (c.indexOf('mopen') >= 0) return 'open';
+    if (c.indexOf('mclose') >= 0) return 'close';
+    if (c.indexOf('mpunct') >= 0) return 'punct';
+    if (c.indexOf('minner') >= 0) return 'inner';
+    return 'other';
+}
+
 function sizingMultiplier(classes: string[]): number {
     let resetSize = 1.0;
     let newSize = 1.0;
@@ -167,6 +208,7 @@ interface WalkContext {
     scale: number;
     emToWorld: number;
     italic: boolean;
+    bold: boolean;
 }
 
 interface WalkResult {
@@ -195,6 +237,7 @@ export class MatematexLayoutWalker {
             scale: 1.0,
             emToWorld,
             italic: false,
+            bold: false,
         };
 
         this.walk(katexHtmlRoot, ctx);
@@ -246,13 +289,20 @@ export class MatematexLayoutWalker {
         // Apply marginLeft and paddingLeft before walking children.
         // KaTeX uses marginLeft for spacing and paddingLeft inside sqrt
         // to offset content past the radical stem.
+        // KaTeX also uses `left:` (negative or positive em) on accent-body
+        // spans to fine-tune horizontal placement of accent glyphs over
+        // their base (e.g. `\hat{H}` uses left:-0.25em).
         const marginLeft = parseEm(getStyle(el, 'marginLeft'));
         const paddingLeft = parseEm(getStyle(el, 'paddingLeft'));
+        const leftOffset = parseEm(getStyle(el, 'left'));
         if (marginLeft) {
             ctx.cursorX += marginLeft * ctx.emToWorld * ctx.scale;
         }
         if (paddingLeft) {
             ctx.cursorX += paddingLeft * ctx.emToWorld * ctx.scale;
+        }
+        if (leftOffset) {
+            ctx.cursorX += leftOffset * ctx.emToWorld * ctx.scale;
         }
         const marginRight = parseEm(getStyle(el, 'marginRight'));
 
@@ -299,12 +349,17 @@ export class MatematexLayoutWalker {
 
         // Track italic state: KaTeX uses class "mathnormal" for italic
         // math variables (x, y, z, etc.) and "mathit" for explicit italic.
+        // Track bold state via "mathbf" (and the legacy "boldsymbol" alias).
         const isItalicContainer = hasClass(el, 'mathnormal') || hasClass(el, 'mathit');
-        if (isItalicContainer) {
+        const isBoldContainer = hasClass(el, 'mathbf') || hasClass(el, 'boldsymbol');
+        if (isItalicContainer || isBoldContainer) {
             const savedItalic = ctx.italic;
-            ctx.italic = true;
+            const savedBold = ctx.bold;
+            if (isItalicContainer) ctx.italic = true;
+            if (isBoldContainer) ctx.bold = true;
             this.walkChildren(el, ctx);
             ctx.italic = savedItalic;
+            ctx.bold = savedBold;
         } else {
             // Default: passthrough container
             this.walkChildren(el, ctx);
@@ -316,8 +371,54 @@ export class MatematexLayoutWalker {
     }
 
     private walkChildren(el: SpaceElement, ctx: WalkContext): void {
+        // Track the previous sibling's atom class and the cursor advance KaTeX
+        // already emitted after it (via mspace's marginRight, or the atom's
+        // own marginRight). Before walking each new atom, inject the KaTeX
+        // spacing matrix's required gap, minus what KaTeX already added.
+        let prevAtomClass: AtomClass | null = null;
+        let prevTrailingEm: number = 0;
+
         for (const child of el._childNodes) {
+            if (child.nodeType !== ELEMENT_NODE) {
+                this.walk(child, ctx);
+                continue;
+            }
+            const childEl = child as SpaceElement;
+            const tag = childEl.localName;
+            const classes = getClasses(childEl);
+
+            if (this.shouldSkip(tag, classes)) {
+                this.walk(child, ctx);
+                continue;
+            }
+
+            const currAtomClass = getAtomClass(childEl);
+
+            // Inject inter-atom gap when both sides are real atom classes.
+            // Skip when prev was an mspace (KaTeX already provided the gap)
+            // or 'other' (structural span — no atom semantics).
+            if (
+                prevAtomClass !== null &&
+                prevAtomClass !== 'space' &&
+                prevAtomClass !== 'other' &&
+                currAtomClass !== 'space' &&
+                currAtomClass !== 'other'
+            ) {
+                const wantEm = ATOM_SPACING_EM[`${prevAtomClass}-${currAtomClass}`] || 0;
+                const needEm = wantEm - prevTrailingEm;
+                if (needEm > 0) {
+                    ctx.cursorX += needEm * ctx.emToWorld * ctx.scale;
+                }
+            }
+
             this.walk(child, ctx);
+
+            // Record this child's trailing margin so the next iteration
+            // doesn't double-apply the gap. mspace's full advance is captured
+            // in its marginRight attribute; same for atom containers that
+            // KaTeX inline-margins.
+            prevAtomClass = currAtomClass;
+            prevTrailingEm = parseEm(getStyle(childEl, 'marginRight'));
         }
     }
 
@@ -352,6 +453,7 @@ export class MatematexLayoutWalker {
             y: centerY,
             scale: ctx.scale,
             italic: ctx.italic,
+            bold: ctx.bold,
         });
 
         ctx.cursorX += widthWorld;
@@ -658,13 +760,14 @@ export class MatematexSceneRenderer {
         templateScale: vec3,
         textScaleMultiplier: number,
         italicFont: Font | null,
+        boldFont: Font | null = null,
     ): SceneObject[] {
         this.clear();
 
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (item.kind === 'text') {
-                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale, italicFont);
+                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale, italicFont, boldFont);
             } else if (item.kind === 'line') {
                 this.createLine(item, parent, color, lineMaterial);
             } else if (item.kind === 'svg') {
@@ -688,6 +791,7 @@ export class MatematexSceneRenderer {
         templateTextComp: any,
         templateScale: vec3,
         italicFont: Font | null = null,
+        boldFont: Font | null = null,
     ): void {
         if (!templateTextComp) {
             if (this.created.length === 0) {
@@ -714,8 +818,12 @@ export class MatematexSceneRenderer {
         // The clone keeps the template's FontSize via copyComponent.
         comp.text = item.text;
 
-        // Apply italic font for math variables (KaTeX class "mathnormal")
-        if (item.italic && italicFont) {
+        // Apply italic / bold font when the walker recorded those flags.
+        // Bold takes precedence over italic if both fonts are assigned and
+        // both flags are set (rare — \mathbf{x} is bold-not-italic in KaTeX).
+        if (item.bold && boldFont) {
+            try { comp.font = boldFont; } catch (e) { /* ignore */ }
+        } else if (item.italic && italicFont) {
             try { comp.font = italicFont; } catch (e) { /* ignore */ }
         }
 
@@ -978,6 +1086,10 @@ export class MatematexBridge extends BaseScriptComponent {
     private italicFont: Font;
 
     @input
+    @hint("Bold font for \\mathbf / \\boldsymbol. Optional — falls back to template font.")
+    private boldFont: Font;
+
+    @input
     @hint("Scale adjustment for italic font (KaTeX_Math-Italic renders larger than Main-Regular at same FontSize). Try 0.5 if italic text is 2x too big.")
     private italicScaleAdjust: number = 0.5;
 
@@ -1158,6 +1270,7 @@ export class MatematexBridge extends BaseScriptComponent {
             templateScale,
             this.textScaleMultiplier,
             this.italicFont || null,
+            this.boldFont || null,
         );
 
         // Optional: draw debug markers at each text-item position

@@ -1,14 +1,17 @@
 // MatematexBookOfMath.ts — Interactive math formula viewer
 //
-// Renders 60 math formulas from geometry, algebra, and calculus using the
-// Matematex bridge. Navigate with prev/next buttons (SpaceSVGDemo pattern).
+// Renders 80 math formulas across 4 chapters (Geometry, Algebra, Calculus,
+// Linear Algebra) using the Matematex bridge. Three screens: Splash/TOC,
+// Search (delegated to MatematexSearchScreen), and Formula. Navigate
+// with prev/next buttons or jump via chapter buttons / search results.
 // On startup, validates all formulas via KaTeX parse + walk and logs results.
 //
 // Setup:
 //   1. Add to a SceneObject
 //   2. Assign lineMaterial, templateText, italicFont (same as MatematexBridge)
 //   3. Assign prevButton and nextButton SceneObjects (with Interactable component)
-//   4. Run — startup validates all 60 formulas, then shows formula #1
+//   4. (Optional) Assign searchScreen — a SceneObject with MatematexSearchScreen
+//   5. Run — startup validates all 80 formulas, then shows splash
 
 import { PinchButton } from "SpectaclesInteractionKit.lspkg/Components/UI/PinchButton/PinchButton";
 // import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable";
@@ -31,6 +34,17 @@ import {
 } from './MatematexBridge';
 
 import { MATH_FORMULAS, MathFormula } from './MathBookData';
+import { buildIndex, MathSearchIndex } from './MathSearchIndex';
+
+// Screen state machine. `formulaIndex` is only meaningful when
+// currentScreen === Formula. Search is delegated to a sibling
+// MatematexSearchScreen component (optional — if not assigned, the
+// "Search" entry points are inert and behavior reduces to the v1 viewer).
+const enum Screen {
+    Splash = 'splash',   // Splash + TOC merged (chapter buttons visible)
+    Search = 'search',   // Delegated to MatematexSearchScreen
+    Formula = 'formula', // Single-formula display
+}
 
 @component
 export class MatematexBookOfMath extends BaseScriptComponent {
@@ -39,6 +53,9 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     @input lineMaterial: Material;
     @input templateText: SceneObject;
     @input italicFont: Font;
+    @input
+    @hint("Bold font (e.g., NotoSans-Bold). Used when the walker encounters \\mathbf or \\boldsymbol. Leave empty to fall back to the regular template font.")
+    boldFont: Font;
 
     @input emToWorld: number = 5.0;
     @input textScaleMultiplier: number = 5.0;
@@ -48,6 +65,10 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     sqrtWidthScale: number = 1.0;
     @input italicScaleAdjust: number = 1.0;
     @input textColor: vec4 = new vec4(1, 1, 1, 1);
+
+    @input
+    @hint("KaTeX displayMode (textbook style). Big operators get above/below limits, fractions and sqrts render larger. Recommended: ON.")
+    displayMode: boolean = true;
 
     // --- Positioning ---
     // For ON-DEVICE use: parent this script's SceneObject to the Camera Object
@@ -86,6 +107,18 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     chapter3Button: PinchButton;
 
     @input
+    @hint("PinchButton on the splash/TOC page — jump to Chapter 4 Linear Algebra (formula #61). Optional — leave empty if not added to scene yet.")
+    chapter4Button: PinchButton;
+
+    @input
+    @hint("PinchButton — open the Search screen. Optional.")
+    searchButton: PinchButton;
+
+    @input
+    @hint("SceneObject hosting the MatematexSearchScreen component. Optional — search is unavailable if empty.")
+    searchScreen: SceneObject;
+
+    @input
     @hint("Hide template after cloning")
     hideTemplate: boolean = true;
 
@@ -94,8 +127,10 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     autoAdvanceSec: number = 0;
 
     // --- Internal state ---
-    // currentIndex: -1 = splash/TOC page, 0..59 = formulas
-    private currentIndex: number = -1;
+    // currentScreen: which screen is active.
+    // formulaIndex: 0..(N-1) — only valid when currentScreen === Screen.Formula.
+    private currentScreen: Screen = Screen.Splash;
+    private formulaIndex: number = 0;
     private container: SceneObject | null = null;
     private labelObj: SceneObject | null = null;
     private chapterLabelObj: SceneObject | null = null;
@@ -103,6 +138,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     private renderer: MatematexSceneRenderer | null = null;
     private templateTextComp: any = null;
     private templateScale: vec3 = new vec3(1, 1, 1);
+    private searchIndex: MathSearchIndex | null = null;
 
     onAwake(): void {
         print('[MatematexBook] ====== Book of Math ======');
@@ -143,11 +179,20 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         // Setup navigation buttons
         this.setupNavigation();
 
+        // Build the search index (cheap — ~80 entries)
+        this.searchIndex = buildIndex(MATH_FORMULAS);
+
         // Validate all formulas on startup
         this.validateAll(doc);
 
-        // Start on the splash/TOC page (currentIndex = -1)
-        this.renderPage();
+        // Start on the splash/TOC screen
+        this.showScreen(Screen.Splash);
+    }
+
+    /** Public accessor for the search index. The MatematexSearchScreen reads
+     *  this to query results and calls back via {@link goToFormula}. */
+    getSearchIndex(): MathSearchIndex | null {
+        return this.searchIndex;
     }
 
     // ─── Template resolution ─────────────────────────────────
@@ -303,11 +348,27 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         }
 
         // Chapter buttons: jump directly to first formula of each chapter.
-        // Formula IDs are 1-based, but MATH_FORMULAS is 0-indexed, so
-        // Chapter 1 first formula (id=1) is at index 0, id=21 is at index 20, etc.
+        // Formula IDs are 1-based, but MATH_FORMULAS is 0-indexed.
         this.bindChapterButton(this.chapter1Button, 0,  'Chapter 1 (Geometry)');
         this.bindChapterButton(this.chapter2Button, 20, 'Chapter 2 (Algebra)');
         this.bindChapterButton(this.chapter3Button, 40, 'Chapter 3 (Calculus)');
+        this.bindChapterButton(this.chapter4Button, 60, 'Chapter 4 (Linear Algebra)');
+
+        // Search button — opens the search screen (no-op if no searchScreen wired)
+        if (this.searchButton) {
+            try {
+                const sb = this.searchButton as any;
+                if (sb.onButtonPinched && typeof sb.onButtonPinched.add === 'function') {
+                    sb.onButtonPinched.add(() => {
+                        print('[MatematexBook] search pinched');
+                        this.showScreen(Screen.Search);
+                    });
+                    print('[MatematexBook] Bound searchButton.onButtonPinched');
+                }
+            } catch (e: any) {
+                print(`[MatematexBook] Failed to bind searchButton: ${e.message || e}`);
+            }
+        }
     }
 
     private bindChapterButton(btn: PinchButton | null | undefined, formulaIndex: number, label: string): void {
@@ -328,44 +389,89 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         }
     }
 
+    /** Jump to a specific formula by zero-based index. Switches to Formula screen. */
     goToFormula(index: number): void {
         if (index < 0 || index >= MATH_FORMULAS.length) return;
-        this.currentIndex = index;
-        this.renderPage();
+        this.formulaIndex = index;
+        this.showScreen(Screen.Formula);
     }
 
+    /** Move to prev/next formula. Wraps Splash → first formula and last formula → Splash.
+     *  Only meaningful from Splash or Formula screens. */
     navigate(direction: number): void {
-        // Total pages: 1 splash + 60 formulas = 61.
-        // Map currentIndex (-1 to 59) to paged (0 to 60) for modulo, then back.
-        const total = MATH_FORMULAS.length + 1;
-        const paged = (this.currentIndex + 1 + direction + total) % total;
-        this.currentIndex = paged - 1;
-        this.renderPage();
+        if (this.currentScreen === Screen.Search) {
+            // From search, prev/next does nothing — close search first.
+            return;
+        }
+        const N = MATH_FORMULAS.length;
+        // Splash counts as a virtual page at index -1. Total pages = N + 1.
+        const total = N + 1;
+        const currentPaged =
+            this.currentScreen === Screen.Splash ? 0 : this.formulaIndex + 1;
+        const nextPaged = (currentPaged + direction + total) % total;
+        if (nextPaged === 0) {
+            this.showScreen(Screen.Splash);
+        } else {
+            this.formulaIndex = nextPaged - 1;
+            this.showScreen(Screen.Formula);
+        }
     }
 
-    private renderPage(): void {
-        // Show chapter buttons only on the splash/TOC page
-        const showChapterButtons = (this.currentIndex === -1);
-        this.setChapterButtonsEnabled(showChapterButtons);
+    /** Switch to a screen and render it. Single source of truth for screen
+     *  transitions — handles tearing down per-screen UI and toggling button visibility. */
+    showScreen(screen: Screen): void {
+        this.currentScreen = screen;
 
-        if (this.currentIndex === -1) {
-            this.renderSplash();
-        } else {
-            this.renderFormula(this.currentIndex);
+        // Show chapter + search buttons only on Splash. Hide them on Formula
+        // and Search to avoid visual clutter.
+        const onSplash = screen === Screen.Splash;
+        this.setChapterButtonsEnabled(onSplash);
+        this.setSceneObjectEnabled(this.searchButton, onSplash);
+
+        // Show/hide the SearchScreen scene object based on screen.
+        if (this.searchScreen) {
+            this.searchScreen.enabled = screen === Screen.Search;
         }
+
+        if (screen === Screen.Splash) {
+            this.renderSplash();
+        } else if (screen === Screen.Formula) {
+            this.renderFormula(this.formulaIndex);
+        } else if (screen === Screen.Search) {
+            this.renderSearch();
+        }
+    }
+
+    private renderSearch(): void {
+        // Tear down formula + splash content; the SearchScreen owns its own UI.
+        if (this.renderer) this.renderer.clear();
+        this.clearSplash();
+        if (this.labelObj) this.labelObj.enabled = false;
+        if (this.chapterLabelObj) this.chapterLabelObj.enabled = false;
+
+        if (!this.searchScreen) {
+            print('[MatematexBook] WARN: search screen requested but no searchScreen assigned');
+            // Fall back to splash so the user isn't stranded.
+            this.showScreen(Screen.Splash);
+            return;
+        }
+        // The MatematexSearchScreen component is expected to populate itself
+        // when its SceneObject becomes enabled. Nothing else to do here.
     }
 
     private setChapterButtonsEnabled(enabled: boolean): void {
-        const buttons = [this.chapter1Button, this.chapter2Button, this.chapter3Button];
+        const buttons = [this.chapter1Button, this.chapter2Button, this.chapter3Button, this.chapter4Button];
         for (const btn of buttons) {
-            if (!btn) continue;
-            try {
-                const obj = (btn as any).getSceneObject?.() || (btn as any).sceneObject;
-                if (obj) {
-                    obj.enabled = enabled;
-                }
-            } catch (e) { /* ignore */ }
+            this.setSceneObjectEnabled(btn, enabled);
         }
+    }
+
+    private setSceneObjectEnabled(btn: PinchButton | null | undefined, enabled: boolean): void {
+        if (!btn) return;
+        try {
+            const obj = (btn as any).getSceneObject?.() || (btn as any).sceneObject;
+            if (obj) obj.enabled = enabled;
+        } catch (e) { /* ignore */ }
     }
 
     // ─── Rendering ───────────────────────────────────────────
@@ -396,7 +502,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
             // KaTeX render
             const wrapper = doc.createElement('div');
             // @ts-ignore
-            katex.render(formula.latex, wrapper, { throwOnError: true });
+            katex.render(formula.latex, wrapper, { throwOnError: true, displayMode: this.displayMode });
 
             // Find katex-html
             const katexHtml = this.findFirstWithClass(wrapper, 'katex-html');
@@ -424,6 +530,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
                 this.templateScale,
                 this.textScaleMultiplier,
                 this.italicFont || null,
+                this.boldFont || null,
             );
 
             print(`[MatematexBook] OK: ${result.items.length} items, ${result.warnings.length} warnings`);
@@ -451,24 +558,27 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         let y = 40; // start high, descend with each line
 
         const lines: { text: string; scale: number }[] = [
-            { text: 'MATEMATEX',                     scale: 0.8 },
-            { text: 'Book of Math',                  scale: 0.6 },
-            { text: '',                              scale: 0.3 },
-            { text: 'A catalog of 60 theorems from',  scale: 0.35 },
-            { text: 'geometry, algebra, and calculus',scale: 0.35 },
-            { text: '',                              scale: 0.3 },
-            { text: '— Table of Contents —',         scale: 0.4 },
-            { text: 'Chapter 1  Geometry     (1–20)', scale: 0.35 },
-            { text: 'Chapter 2  Algebra      (21–40)',scale: 0.35 },
-            { text: 'Chapter 3  Calculus     (41–60)',scale: 0.35 },
-            { text: '',                              scale: 0.3 },
+            { text: 'MATEMATEX',                            scale: 0.8 },
+            { text: 'Book of Math',                         scale: 0.6 },
+            { text: '',                                     scale: 0.3 },
+            { text: `A catalog of ${MATH_FORMULAS.length} theorems from`, scale: 0.35 },
+            { text: 'geometry, algebra, calculus,',         scale: 0.35 },
+            { text: 'and linear algebra',                   scale: 0.35 },
+            { text: '',                                     scale: 0.3 },
+            { text: '— Table of Contents —',                scale: 0.4 },
+            { text: 'Chapter 1  Geometry         (1–20)',   scale: 0.35 },
+            { text: 'Chapter 2  Algebra          (21–40)',  scale: 0.35 },
+            { text: 'Chapter 3  Calculus         (41–60)',  scale: 0.35 },
+            { text: 'Chapter 4  Linear Algebra   (61–80)',  scale: 0.35 },
+            { text: '',                                     scale: 0.3 },
             { text: 'Content sources (CC / public domain):', scale: 0.3 },
-            { text: 'ProofWiki  •  DLMF / NIST',     scale: 0.28 },
-            { text: 'OpenStax  •  Wikibooks  •  LibreTexts', scale: 0.28 },
-            { text: '',                              scale: 0.3 },
-            { text: 'Pinch Next to begin',           scale: 0.35 },
-            { text: '',                              scale: 0.5 },
-            { text: '© IoTone, Inc.',                scale: 0.3 },
+            { text: 'ProofWiki  •  DLMF / NIST',            scale: 0.28 },
+            { text: 'OpenStax  •  Wikibooks  •  LibreTexts',scale: 0.28 },
+            { text: 'Wikipedia (CC BY-SA)',                 scale: 0.28 },
+            { text: '',                                     scale: 0.3 },
+            { text: 'Pinch Next or Search to begin',        scale: 0.35 },
+            { text: '',                                     scale: 0.5 },
+            { text: '© IoTone, Inc.',                       scale: 0.3 },
         ];
 
         for (const line of lines) {
@@ -521,7 +631,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
             try {
                 const wrapper = doc.createElement('div');
                 // @ts-ignore
-                katex.render(formula.latex, wrapper, { throwOnError: true });
+                katex.render(formula.latex, wrapper, { throwOnError: true, displayMode: this.displayMode });
 
                 const katexHtml = this.findFirstWithClass(wrapper, 'katex-html');
                 if (!katexHtml) {
@@ -532,7 +642,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
                 const walker = new MatematexLayoutWalker();
                 walker._layoutWidthMargin = this.layoutWidthMargin;
-            walker._sqrtWidthScale = this.sqrtWidthScale;
+                walker._sqrtWidthScale = this.sqrtWidthScale;
                 const result = walker.layout(katexHtml as any, this.emToWorld);
 
                 if (result.items.length > 0) {
