@@ -26,6 +26,7 @@
   ExportUid: 00000000-0000-0000-0000-000000000000
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
+    boldFont: false
     containerWorldY: false
     containerWorldZ: false
     count: false
@@ -53,6 +54,7 @@
     - lineMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
       templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       italicFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
+      boldFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
       emToWorld: !<float> 5.000000
       textScaleMultiplier: !<float> 5.000000
       layoutWidthMargin: 1.180000
@@ -72,6 +74,7 @@
     - // @input Asset.Material lineMaterial
     - // @input SceneObject templateText
     - // @input Asset.Font italicFont
+    - "// @input Asset.Font boldFont {\"hint\":\"Optional bold font for \\\\mathbf tests (T36). If unassigned, T36 still passes the layout count check; the visual swap just won't happen.\"}"
     - // @input float emToWorld = 5
     - // @input float textScaleMultiplier = 5
     - // @input float layoutWidthMargin = 1.18

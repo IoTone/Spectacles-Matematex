@@ -31,10 +31,13 @@ import {
     MatematexLayoutWalker,
     MatematexSceneRenderer,
     LayoutItem,
+    countRenderableTextNodes,
 } from './MatematexBridge';
 
 import { MATH_FORMULAS, MathFormula } from './MathBookData';
 import { buildIndex, MathSearchIndex } from './MathSearchIndex';
+import { PROOFS } from './MathProofData';
+import { renderProof } from './MatematexProof';
 
 // Screen state machine. `formulaIndex` is only meaningful when
 // currentScreen === Formula. Search is delegated to a sibling
@@ -54,12 +57,15 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     @input templateText: SceneObject;
     @input italicFont: Font;
     @input
+    @allowUndefined
     @hint("Bold font (e.g., NotoSans-Bold). Used when the walker encounters \\mathbf or \\boldsymbol. Leave empty to fall back to the regular template font.")
     boldFont: Font;
 
     @input emToWorld: number = 5.0;
     @input textScaleMultiplier: number = 5.0;
-    @input layoutWidthMargin: number = 1.18;
+    @input
+    @hint("Multiplier on fraction width/bar. 1.0 matches KaTeX exactly; raise only if the rendered bar looks too short against the drawn glyphs.")
+    layoutWidthMargin: number = 1.0;
     @input
     @hint("Scale factor for sqrt radical width. 1.0 is correct with the overbar clipping fix; lower only if you need to force a shorter overbar.")
     sqrtWidthScale: number = 1.0;
@@ -69,6 +75,27 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     @input
     @hint("KaTeX displayMode (textbook style). Big operators get above/below limits, fractions and sqrts render larger. Recommended: ON.")
     displayMode: boolean = true;
+
+    // ─── Visual proofs (Phase 7.0) ─────────────────────────────────────
+    @input
+    @hint("Render visual proofs alongside formulas that have one (currently: Pythagorean Theorem #1). Toggle off to hide.")
+    showProofs: boolean = true;
+
+    @input
+    @hint("Multiplier from proof units to world units. ~1.5 places a 3-4-5 triangle in a comfortable ~15-unit footprint.")
+    proofWorldScale: number = 1.5;
+
+    @input
+    @hint("Local X offset for the proof relative to the formula container.")
+    proofOffsetX: number = 0.0;
+
+    @input
+    @hint("Local Y offset for the proof relative to the formula container. Negative places it below the formula.")
+    proofOffsetY: number = -25.0;
+
+    @input
+    @hint("Local Z offset for the proof relative to the formula container. More negative pushes the proof further from the user.")
+    proofOffsetZ: number = -10.0;
 
     // --- Positioning ---
     // For ON-DEVICE use: parent this script's SceneObject to the Camera Object
@@ -107,14 +134,17 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     chapter3Button: PinchButton;
 
     @input
+    @allowUndefined
     @hint("PinchButton on the splash/TOC page — jump to Chapter 4 Linear Algebra (formula #61). Optional — leave empty if not added to scene yet.")
     chapter4Button: PinchButton;
 
     @input
+    @allowUndefined
     @hint("PinchButton — open the Search screen. Optional.")
     searchButton: PinchButton;
 
     @input
+    @allowUndefined
     @hint("SceneObject hosting the MatematexSearchScreen component. Optional — search is unavailable if empty.")
     searchScreen: SceneObject;
 
@@ -139,6 +169,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     private templateTextComp: any = null;
     private templateScale: vec3 = new vec3(1, 1, 1);
     private searchIndex: MathSearchIndex | null = null;
+    private proofContainer: SceneObject | null = null;
 
     onAwake(): void {
         print('[MatematexBook] ====== Book of Math ======');
@@ -443,9 +474,10 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     }
 
     private renderSearch(): void {
-        // Tear down formula + splash content; the SearchScreen owns its own UI.
+        // Tear down formula + splash + proof content; the SearchScreen owns its own UI.
         if (this.renderer) this.renderer.clear();
         this.clearSplash();
+        this.clearProof();
         if (this.labelObj) this.labelObj.enabled = false;
         if (this.chapterLabelObj) this.chapterLabelObj.enabled = false;
 
@@ -482,11 +514,12 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
         print(`\n[MatematexBook] Rendering ${formula.id}/${MATH_FORMULAS.length}: ${formula.name}`);
 
-        // Clear previous rendering (both formula and splash)
+        // Clear previous rendering (formula, splash, proof)
         if (this.renderer) {
             this.renderer.clear();
         }
         this.clearSplash();
+        this.clearProof();
 
         // Make sure labels are visible again
         if (this.labelObj) this.labelObj.enabled = true;
@@ -538,6 +571,44 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         } catch (e: any) {
             print(`[MatematexBook] FAIL: ${e.message || e}`);
         }
+
+        // Render the visual proof if one exists for this formula.
+        if (this.showProofs) {
+            this.renderProofForFormula(formula);
+        }
+    }
+
+    private renderProofForFormula(formula: MathFormula): void {
+        const proof = PROOFS[formula.id];
+        if (!proof || !this.container || !this.templateTextComp) return;
+
+        try {
+            this.proofContainer = renderProof(proof, {
+                parent: this.container,
+                lineMaterial: this.lineMaterial,
+                templateTextComp: this.templateTextComp,
+                templateScale: this.templateScale,
+                worldScale: this.proofWorldScale,
+                defaultColor: this.textColor,
+                offset: new vec3(this.proofOffsetX, this.proofOffsetY, this.proofOffsetZ),
+                // Anchor the figure's top edge at proofOffsetY so it always
+                // hangs below the chapter label, whatever size the proof is.
+                anchor: 'top',
+                // The book already shows the formula name (top label) and the
+                // formula itself — the proof's title/caption would repeat both.
+                showTitleCaption: false,
+            });
+            print(`[MatematexBook] Proof rendered for #${formula.id}`);
+        } catch (e: any) {
+            print(`[MatematexBook] Proof render failed: ${e.message || e}`);
+        }
+    }
+
+    private clearProof(): void {
+        if (this.proofContainer) {
+            this.proofContainer.destroy();
+            this.proofContainer = null;
+        }
     }
 
     // ─── Splash / TOC page ───────────────────────────────────
@@ -547,9 +618,10 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
         print('[MatematexBook] Rendering splash / TOC page');
 
-        // Clear previous formula rendering and hide formula labels
+        // Clear previous formula rendering, proof, and hide formula labels
         if (this.renderer) this.renderer.clear();
         this.clearSplash();
+        this.clearProof();
         if (this.labelObj) this.labelObj.enabled = false;
         if (this.chapterLabelObj) this.chapterLabelObj.enabled = false;
 
@@ -625,6 +697,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         print(`\n[MatematexBook] ====== Validating ${MATH_FORMULAS.length} formulas ======`);
         let passed = 0;
         let failed = 0;
+        let dropped = 0;
         const t0 = Date.now();
 
         for (const formula of MATH_FORMULAS) {
@@ -645,12 +718,30 @@ export class MatematexBookOfMath extends BaseScriptComponent {
                 walker._sqrtWidthScale = this.sqrtWidthScale;
                 const result = walker.layout(katexHtml as any, this.emToWorld);
 
-                if (result.items.length > 0) {
-                    passed++;
-                } else {
+                if (result.items.length === 0) {
                     print(`[MatematexBook] [${formula.id}] ${formula.name}: FAIL (0 items)`);
                     failed++;
+                    continue;
                 }
+
+                // Structural check: every text node KaTeX produced must survive
+                // the walk. Item-count > 0 alone would pass a formula that lost
+                // an entire sub-expression — see countRenderableTextNodes.
+                const expectedText = countRenderableTextNodes(katexHtml as any);
+                const actualText = result.items.filter(
+                    (i: LayoutItem) => i.kind === 'text',
+                ).length;
+                if (actualText !== expectedText) {
+                    print(
+                        `[MatematexBook] [${formula.id}] ${formula.name}: ` +
+                        `FAIL (dropped content — ${actualText}/${expectedText} text items)`,
+                    );
+                    dropped++;
+                    failed++;
+                    continue;
+                }
+
+                passed++;
             } catch (e: any) {
                 print(`[MatematexBook] [${formula.id}] ${formula.name}: FAIL (${e.message?.substring(0, 50)})`);
                 failed++;
@@ -658,7 +749,8 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         }
 
         const elapsed = Date.now() - t0;
-        print(`[MatematexBook] ====== Validation: ${passed}/${MATH_FORMULAS.length} passed, ${failed} failed (${elapsed}ms) ======\n`);
+        const droppedNote = dropped > 0 ? `, ${dropped} with DROPPED CONTENT` : '';
+        print(`[MatematexBook] ====== Validation: ${passed}/${MATH_FORMULAS.length} passed, ${failed} failed${droppedNote} (${elapsed}ms) ======\n`);
     }
 
     // ─── Helpers ─────────────────────────────────────────────

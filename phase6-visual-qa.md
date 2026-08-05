@@ -126,6 +126,27 @@ Walk all 60 formulas in the Book of Math on device. For each formula, mark a sev
 
 ---
 
+## Machine-measured baseline (2026-08-04, after the fix pass)
+
+Independent of the human traversal above, the layout conformance harness
+(`test/layout-conformance/`) diffs all 80 formulas against KaTeX rendered in a
+real browser, per glyph, in em. It measures **geometry only** — it cannot see
+font substitution, SpaceSVG radicals, or anything about the proof layer, so the
+human pass above is still required.
+
+| | PASS | WARN | FAIL | conformant |
+|---|---:|---:|---:|---:|
+| Before | 1 | 1 | 78 | **2%** |
+| After | 61 | 5 | 14 | **82%** |
+
+Worst horizontal error 0.330em (was 2.4em); worst vertical 0.002em; zero
+structural mismatches. Rows 3–10 — the ⚠️ spacing defects that motivated this
+sheet — all PASS now, as do rows 1 and 12.
+
+The 14 remaining failures all involve a large operator (`\int`, `\sum`) or an
+auto-scaled delimiter (`\left(`, `\lVert`, `\binom`). Worth checking those
+specifically by eye.
+
 ## Summary (fill in after traversal)
 
 - Total ✅: __ / 80

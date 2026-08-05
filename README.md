@@ -30,11 +30,23 @@ Spectacles-Matematex brings LaTeX to Snap Spectacles as a spatially rendered exp
 
 ## Design Proposal
 
-TODO
+Approach A was selected: run KaTeX unmodified on top of SpaceDOM, then walk the
+resulting DOM tree into Lens Studio scene objects. Full rationale, the two
+rejected alternatives, and the comparison matrix are in
+**[matematex-design-spec.md](./matematex-design-spec.md)**.
 
 ## Implementation
 
-TODO
+| Doc | Covers |
+|---|---|
+| [matematex-design-spec.md](./matematex-design-spec.md) | Architecture, module breakdown, test plan, phase-by-phase status |
+| [matematex-porting-review.md](./matematex-porting-review.md) | What of KaTeX's HTML output the bridge handles today, what's missing, prioritized roadmap |
+| [book-of-math-v2-plan.md](./book-of-math-v2-plan.md) | Search index, Spectacles UIKit migration, voice/keyboard input, Linear Algebra chapter |
+| [phase6-visual-qa.md](./phase6-visual-qa.md) | Per-formula visual defect catalog (80 formulas) |
+
+The sample lens is `Matematex/` — open it in Lens Studio and enable the
+`MatematixBookOfMathPhase6` scene object. It validates all 80 formulas on
+startup and logs the result.
 
 ## Future
 

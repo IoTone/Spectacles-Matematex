@@ -2,7 +2,11 @@
 
 A snapshot of `MatematexBridge.ts`'s current coverage of KaTeX HTML output, what's partial, what's missing, and a prioritized improvement list. Companion to `matematex-design-spec.md`.
 
-Last updated: 2026-04-30 (after Phase 6.1 sqrt overbar fix and Phase 6.2 v2 plan landing).
+Last updated: 2026-08-04 (after the layout-conformance fix pass: corpus went from 2% to 82% conformant against KaTeX-in-browser).
+
+> **Scope note.** This document covers the *KaTeX bridge* only. The visual-proof
+> layer (`MatematexProof.ts`) is a separate renderer with its own findings —
+> see "Key findings" in `matematex-design-spec.md` §7.
 
 ---
 
@@ -13,11 +17,11 @@ Each entry cites `MatematexBridge.ts` line numbers as anchors.
 ### Core text rendering (lines 216–369)
 - Single chars and Unicode glyphs via `emitText()` using KaTeX's per-glyph font metrics (`getTextWidthEm`).
 - Per-character positioning at world-units; baseline derived from a fixed x-height (0.43em) — not per-char height — to keep glyphs like `i` and `l` aligned with their neighbors.
-- Italic state tracked via `mathnormal` / `mathit` classes; per-glyph italic correction applied between consecutive italic characters with a 0.12em minimum gap.
+- Italic state tracked via `mathnormal` / `mathit` classes. Italic correction is NOT synthesised per glyph — it arrives as KaTeX's own inline `margin-right`, and vlist rows carry the negative `margin-left` that cancels it for subscripts.
 
 ### Vertical lists — fractions, sub/superscripts, sqrt content (lines 466–614)
 - `vlist-t` walked uniformly: each child's `top:` em offset translates to a `baselineY` shift; cursor resets to vlist start per child.
-- Fraction bar detection via `frac-line` descendant; emitted as a `MeshBuilder` quad. Width post-adjusted to span actual numerator/denominator extent + `layoutWidthMargin` (default 1.18×).
+- Fraction bar detection via `findRowFracLine` — a bounded search that will not descend into a nested `vlist-t`, so a row containing another fraction is not mistaken for the bar. Emitted as a `MeshBuilder` quad spanning the numerator/denominator extent (`layoutWidthMargin` default 1.0, matching `.frac-line { width: 100% }`).
 - Numerator/denominator centered within the wider child's bounds.
 - Nested vlists (sub-of-sub, frac-of-sqrt, etc.) supported via recursion.
 
@@ -32,11 +36,13 @@ Each entry cites `MatematexBridge.ts` line numbers as anchors.
 - Restores prior italic state and applies any `marginRight`.
 
 ### Spacing primitives
-- Inline `marginLeft` / `marginRight` / `paddingLeft` parsed from KaTeX's inline `style` attribute and applied to cursor (lines 249–256, 313–315).
-- `mspace` standalone spacing element (lines 260–262).
+- Inline `marginLeft` / `marginRight` / `paddingLeft` parsed from KaTeX's inline `style` attribute and applied to the cursor — on elements AND on vlist rows.
+- `mspace` standalone spacing element.
+- Inter-atom spacing matrix (`ATOM_SPACING_EM`) plus the script-style `TIGHT_ATOM_SPACING_EM` variant, both verbatim from `KaTeX/src/spacingData.js`.
+- `nulldelimiter` advances 0.12em (`$nulldelimiterspace`) rather than being skipped.
 
 ### Sizing and font-size variants (lines 110–122, 266–276)
-- KaTeX's 11 size classes (`size1` … `size11`) mapped to multipliers (0.5× … 2.488×).
+- KaTeX's 11 size classes (`size1` … `size11`) mapped to multipliers, verbatim from `KaTeX/src/Options.js` `sizeMultipliers` (0.5 … 2.488).
 - `sizing` class scopes a scale multiplier across descendants and restores on exit.
 
 ### Renderer (`MatematexSceneRenderer`, lines 683–949)
@@ -53,31 +59,71 @@ Each entry cites `MatematexBridge.ts` line numbers as anchors.
 
 ## 2. Partially supported / known issues
 
-### Mbin / mrel / mopen / mclose / minner / mpunct margins (P0, systemic)
-- **Symptom:** Phase 6.5 visual QA shows the first 8 Geometry formulas (rows 3–10) all marked ⚠️ "spacing around fractions / between letters and symbols."
-- **Cause:** the walker applies any *inline* `marginLeft` / `marginRight` KaTeX puts on these atoms (line 249–315) but does not apply KaTeX's *class-driven* spacing rules (e.g. thin space around `mbin` in script mode; wider in display). KaTeX usually emits inline margins for these, but some contexts rely on CSS rules SpaceDOM doesn't compute.
-- **Likely scope:** affects ~20+ formulas to varying degrees; most visible around fractions and operators (`+`, `-`, `=`).
-- **Investigation needed:** dump a failing-case DOM (e.g. `\frac{a+b}{c}`) and inspect what margins KaTeX actually attaches inline vs. via stylesheet.
+### ~~Mbin / mrel / mopen / mclose spacing~~ ✅ RESOLVED (was P0, systemic)
+Phase 6.5 flagged the first 8 Geometry formulas as ⚠️ "spacing around fractions /
+between letters and symbols." Root causes are now identified and fixed — they were
+not one systemic margin bug but four separate ones (italic double-counting,
+missing script-style `tightSpacings`, wrong size multipliers, missing
+nulldelimiter/scriptspace widths). All 8 of those formulas now PASS the
+conformance harness.
 
-### Italic font width mismatch (medium)
-- **Symptom:** rendered italic glyphs are visibly narrower than KaTeX font metrics predict, leaving gaps between consecutive italic chars.
-- **Mitigation today:** `_italicScaleAdjust` (default 1.0) and `textScaleMultiplier` (default 5.0) act as global compensators.
-- **Limitation:** single-knob tuning — doesn't auto-adapt to the actual Lens Studio Text 3D italic font.
+### ~~Italic handling~~ ✅ FIXED (was P0)
+Two independent bugs, both now gone:
+1. **`emitText` synthesised italic correction** on top of the `margin-right` KaTeX
+   already puts on the glyph's own span — double-counting it. Removed;
+   `_italicMinGapEm` dropped from 0.12 to 0 and is now documented as a pure
+   rendering compensator with no layout justification.
+2. **vlist row `margin-left` was ignored.** That margin is how KaTeX implements
+   TeX's rule that italic correction shifts *superscripts* but not *subscripts*
+   (`F_n` → `margin-left:-0.1389em` against F's `margin-right:0.1389em`). Rows are
+   walked via `walkChildren`, which bypasses `walk()`'s margin handling, so every
+   subscript sat one italic correction too far right — 1.850em accumulated on #39,
+   the corpus's worst error at the time.
 
-### Sqrt content-width calibration (medium, mostly resolved)
-- **Symptom (pre-Phase 6.1):** overbar extending dramatically past content for complex expressions.
-- **Status:** root cause was the regex/path-clip mismatch (sqrtMain used `H40000`, regex only matched `H400000`). Now fixed — `_sqrtWidthScale` default returned to 1.0.
-- **Residual:** ink-extent measurement (lines 545–569) skips italic gaps, but for expressions ending in non-italic chars (digits, `^2`) the savings are zero — measurement still tracks `maxX`. Low-priority follow-up.
+`_italicScaleAdjust` / `textScaleMultiplier` remain single global knobs that don't
+adapt to the actual font. Unchanged, and still the right place to fix glyph
+collision if it appears on device.
 
-### Big-operator limits (`\sum_{i=1}^n`, `\int_0^1`) — partial
-- **Today:** rendered as super/subscript regardless of display vs. inline mode.
-- **Correct behavior:** display-mode limits sit *above/below* the operator, not as super/subscript.
-- **Affected formulas:** ~13 (Σ, ∏, ∫ in MathBookData).
+### ~~Script-style spacing~~ ✅ FIXED (NEW)
+TeX drops the medium (bin) and thick (rel) spaces in script and scriptscript
+styles; KaTeX implements this as `tightSpacings`, selected by the right-hand
+atom's `mtight` class. We had no such table, so the walker injected a full
+0.222em around every `-` inside a subscript like `F_{n-1}` where KaTeX emits no
+glue at all. Table added verbatim from `KaTeX/src/spacingData.js`.
 
-### Implicit-passthrough atom classes
-- `mbin`, `mrel`, `mopen`, `mclose`, `minner`, `mpunct` have **no explicit handler**; they pass through `walkChildren` and emit text from descendants. Class-specific semantics (size variants, accent positioning, scaling delimiters) are not interpreted.
+### ~~Size-class multipliers~~ ✅ FIXED (NEW)
+`SIZE_FACTORS` had size2–size5 shifted one slot up, so scriptstyle rendered at
+0.8 where KaTeX uses 0.7. Corrected against `KaTeX/src/Options.js`
+`sizeMultipliers`.
 
----
+**Caution, recorded because it cost a cycle:** this bug and the missing
+scriptspace (below) were cancelling each other almost exactly. Fixing either
+alone made the corpus measurably *worse*. Re-measure the whole corpus after each
+change rather than trusting a single formula.
+
+### ~~Scriptspace / nulldelimiter widths~~ ✅ FIXED (NEW)
+- A sub/superscript row's trailing `margin-right` (0.05em scriptspace) was not
+  advancing the parent.
+- `nulldelimiter` was in the skip list, but katex.scss gives it
+  `$nulldelimiterspace` = `1.2em/10` = 0.12em. Every fraction was 0.24em too
+  narrow, which `layoutWidthMargin: 1.18` had been masking. That knob is now 1.0,
+  matching `.frac-line { width: 100% }`.
+
+### Fraction row centring — resolved as a symptom
+The 0.09–0.19em asymmetry between numerator and denominator was the nulldelimiter
+and margin bugs above, not a centring bug. No separate fix needed.
+
+### Large operators and scaled delimiters (P1, open)
+The 14 remaining conformance failures (all ≤0.330em) involve KaTeX_Size1–4
+glyphs: `\int`, `\sum`, `\left(`, `\lVert`, `\binom`.
+
+**Do not re-try the obvious fix.** Adding the Size1–4 metrics tables and
+selecting them by class (`.large-op` → Size2, `.delimsizing.sizeN` → SizeN, per
+katex.scss) was implemented and measured: it made 13 of the 14 strictly worse
+(#38 0.110 → 0.631em) and was reverted. KaTeX evidently does not advance by the
+Size-font metric width in these positions. The real mechanism is unidentified;
+start by dumping a `\left(` subtree with `dump-dom.ts` and finding where the
+advance actually comes from.
 
 ## 3. Not supported
 
@@ -112,18 +158,21 @@ Each entry cites `MatematexBridge.ts` line numbers as anchors.
 
 ## 4. Prioritized improvement list
 
-| Priority | Feature                                              | Affected formulas | Effort | Risk | Status |
-|----------|------------------------------------------------------|-------------------|--------|------|--------|
-| **P0**   | mbin/mrel/mopen/mclose spacing fix                   | ~20+ (8 confirmed)| M      | M    | ✅ Defensive class-driven inter-atom spacing matrix in `walkChildren`; injects KaTeX-spec gap minus what KaTeX already emitted via mspace/marginRight. |
-| **P0**   | Visual QA defect catalog (Phase 6.5)                 | All 80            | S      | L    | ⏳ User in progress (`phase6-visual-qa.md`). |
-| **P1**   | Big-op display-mode limits (Σ, ∏, ∫ above/below)     | ~13               | M      | L    | ✅ Added `displayMode: true` @input on BookOfMath. KaTeX now emits `op-limits` vlist; existing `walkVlistGroup` handles vertical stacking. |
-| **P1**   | Bold font support (`\mathbf`)                        | 11                | M      | L    | ✅ `WalkContext.bold` flag, `mathbf`/`boldsymbol` detection, `@input boldFont` on BookOfMath + Bridge, renderer picks bold over italic when both fonts assigned. |
-| **P1**   | Accent marks (`\vec`, `\hat`, `\bar`)                | 1 (`\hat{H}`)     | S      | L    | ✅ Walker now reads `left:` style and applies horizontal offset for accent-body centering. Existing vlist handler covers vertical stacking. |
-| **P1**   | Matrix rendering (`mtable`, `pmatrix`)               | 5+                | L      | H    | Deferred — substantial 2D layout work, likely scoped with Phase 7 (TikZ). |
-| **P2**   | Delimiter auto-sizing (`\left/\right`)               | ~5                | M      | M    | Glyph-variant lookup based on enclosed content height. |
-| **P2**   | Italic font auto-calibration                          | All italic        | M      | M    | Measure rendered glyph width on first text item; back-solve `italicScaleAdjust`. |
-| **P3**   | Text mode (`\text{...}`)                              | rare              | S      | L    | Add `\text` class handler; toggle italic + font. |
-| **P3**   | Color (`\color`, `\textcolor`)                        | 0 today           | M      | L    | Future-proofing; deferred until needed. |
+| Priority | Feature | Status |
+|---|---|---|
+| **P0** | mbin/mrel/mopen/mclose spacing | ✅ Resolved — was four separate bugs, all fixed. 8/8 flagged formulas now PASS. |
+| **P0** | Nested-fraction content loss + validator structural guard | ✅ Fixed (`findRowFracLine`, `countRenderableTextNodes`). |
+| **P0** | Italic correction double-count; subscript vs superscript rule | ✅ Fixed. Was the corpus's largest error (1.850em). |
+| **P0** | Script-style `tightSpacings`; size multipliers; scriptspace; nulldelimiter width | ✅ Fixed, all verified against KaTeX source. |
+| **P0** | Layout conformance harness (all 80, per-glyph, em) | ✅ Built — `test/layout-conformance/`, golden committed, CI-ready. |
+| **P1** | Large operators / scaled delimiters (KaTeX_Size1–4 advances) | ⏳ Open — 14 failures, all ≤0.330em. Size-metrics fix TRIED AND REVERTED (made 13 worse); mechanism unidentified. |
+| **P1** | Big-op display-mode limits | ✅ `displayMode` input; `op-limits` vlist handled. |
+| **P1** | Bold font support (`\mathbf`) | ✅ `WalkContext.bold`, `boldFont` input. |
+| **P1** | Accent marks (`\vec`, `\hat`, `\bar`) | ✅ Walker reads `left:` for accent-body centring. |
+| **P1** | Matrix rendering (`mtable`, `pmatrix`) | Deferred — 2D layout, likely scoped with Phase 7 (TikZ). |
+| **P2** | Italic font auto-calibration | Open. `_italicMinGapEm` is now 0; if glyphs collide on device, calibrate `italicScaleAdjust` rather than re-padding. |
+| **P2** | Visual QA traversal (Phase 6.5) | ⏳ Human pass still needed — the harness covers geometry only. |
+| **P3** | Text mode (`\text{...}`), colour | Deferred. |
 
 **Effort key:** S = ≤1 day; M = 2–4 days; L = ≥1 week.
 
@@ -137,7 +186,12 @@ Each entry cites `MatematexBridge.ts` line numbers as anchors.
 
 3. **Scene object scaling.** Each glyph is its own `Component.Text 3D` clone. A 60-char expression already creates ~60 SceneObjects; matrix support would multiply. No batching today. Add a scene-object cap and consider glyph batching once formulas grow.
 
-4. **Validator coverage gap.** `MatematexValidator` only checks parse success and item count. It would miss the spacing defects Phase 6.5 is finding. Visual regression tests (mentioned in design spec §6.3 but not built) would close this.
+4. **Validator coverage gap — partly closed.** `MatematexValidator` only checks parse
+   success and item count, so it misses every spacing defect Phase 6.5 found. The
+   **layout conformance harness** (`test/layout-conformance/`) now closes the geometry
+   half: it diffs the walker against KaTeX rendered in a real browser, per glyph, in em,
+   and exits non-zero on regression. It does *not* cover font substitution, SpaceSVG
+   radicals, or the proof layer — those still need on-device eyes.
 
 5. **Phase 7 (TikZ 3D extensions) overlap.** TikZ rendering needs 2D layout primitives (rows, columns, alignment) that overlap heavily with `mtable`. Worth scoping them together rather than building two layout engines.
 

@@ -127,7 +127,7 @@ export class MatematexValidator extends BaseScriptComponent {
 
     @input emToWorld: number = 5.0;
     @input textScaleMultiplier: number = 5.0;
-    @input layoutWidthMargin: number = 1.18;
+    @input layoutWidthMargin: number = 1.0;
     @input italicScaleAdjust: number = 1.0;
     @input textColor: vec4 = new vec4(1, 1, 1, 1);
 

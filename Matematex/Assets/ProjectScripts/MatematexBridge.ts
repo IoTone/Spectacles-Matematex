@@ -107,13 +107,17 @@ function parseEm(value: string | null): number {
     return parseFloat(m[1]);
 }
 
-// KaTeX size classes — multiplier relative to size6 (= 1.0)
+// KaTeX size classes — multiplier relative to size6 (= 1.0).
+// Verbatim from KaTeX/src/Options.js `sizeMultipliers`, indexed size-1:
+//   [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.44, 1.728, 2.074, 2.488]
+// size2..size5 were previously shifted one slot too large, which made every
+// script-style glyph render at 0.8 where KaTeX uses 0.7 (scriptstyle = size3).
 const SIZE_FACTORS: { [key: string]: number } = {
     size1: 0.5,
-    size2: 0.7,
-    size3: 0.8,
-    size4: 0.9,
-    size5: 1.0,
+    size2: 0.6,
+    size3: 0.7,
+    size4: 0.8,
+    size5: 0.9,
     size6: 1.0,
     size7: 1.2,
     size8: 1.44,
@@ -146,6 +150,21 @@ const ATOM_SPACING_EM: { [pair: string]: number } = {
     'punct-open':  0.167, 'punct-close': 0.167, 'punct-punct': 0.167, 'punct-inner': 0.167,
     'inner-ord':   0.167, 'inner-op':    0.167, 'inner-bin':   0.222,
     'inner-rel':   0.278, 'inner-open':  0.167, 'inner-punct': 0.167, 'inner-inner': 0.167,
+};
+
+// Script and scriptscript styles use a REDUCED spacing table: TeX drops the
+// medium (bin) and thick (rel) spaces entirely, keeping only thin spaces
+// adjacent to large operators. Verbatim from KaTeX/src/spacingData.js
+// `tightSpacings`; KaTeX selects it with `node.hasClass("mtight")`, which is
+// exactly the marker we test for.
+//
+// Without this the walker injected a full 0.222em around every `-` inside a
+// subscript like `F_{n-1}`, where KaTeX emits no glue at all.
+const TIGHT_ATOM_SPACING_EM: { [pair: string]: number } = {
+    'ord-op': 0.167,
+    'op-ord': 0.167, 'op-op': 0.167,
+    'close-op': 0.167,
+    'inner-op': 0.167,
 };
 
 function getAtomClass(el: SpaceElement): AtomClass {
@@ -200,6 +219,49 @@ function approxTextWidthEm(text: string): number {
     return width;
 }
 
+// Elements that carry no ink — pure layout scaffolding KaTeX uses for sizing
+// and alignment. The walker skips them; `countRenderableTextNodes` must skip
+// exactly the same set or the structural check below produces false alarms.
+const SKIP_CLASSES = ['strut', 'pstrut', 'vlist-s'];
+
+// `\nulldelimiterspace` — the empty delimiter slot KaTeX puts on both sides of
+// a \frac, \binom, etc. It draws nothing but it is NOT free: katex.scss sets
+// `.nulldelimiter { width: $nulldelimiterspace }` with
+// `$nulldelimiterspace: calc(1.2em / $ptperem)` and `$ptperem: 10` → 0.12em.
+// Treating it as skippable made every fraction 0.24em too narrow.
+const NULLDELIMITER_EM = 0.12;
+
+/** Count the text nodes KaTeX expects to be rendered, i.e. how many `text`
+ *  LayoutItems a correct walk of this tree must produce.
+ *
+ *  Compare against the walker's actual output to detect **silent content
+ *  loss** — a whole subtree dropped because a container was misclassified.
+ *  `validateAll` cannot catch that on its own: it only asserts that *some*
+ *  items were emitted, so a formula missing its entire radicand still reports
+ *  a pass. (That is exactly how the #56 Lorentz Factor bug survived.)
+ *
+ *  The walk mirrors `MatematexLayoutWalker.walk`: same skip classes, same
+ *  zero-width-space filter, one item per text node. */
+export function countRenderableTextNodes(root: SpaceNode): number {
+    let n = 0;
+    const visit = (node: SpaceNode): void => {
+        if (node.nodeType === TEXT_NODE) {
+            const text = (node as SpaceText).data;
+            if (text && text.length > 0 && text !== '​') n++;
+            return;
+        }
+        if (node.nodeType !== ELEMENT_NODE) return;
+        const el = node as SpaceElement;
+        const classes = getClasses(el);
+        for (const c of SKIP_CLASSES) {
+            if (classes.indexOf(c) >= 0) return;
+        }
+        for (const child of el._childNodes) visit(child);
+    };
+    visit(root);
+    return n;
+}
+
 // ─── Walker ──────────────────────────────────────────────────
 
 interface WalkContext {
@@ -222,8 +284,32 @@ export class MatematexLayoutWalker {
     private warnings: string[] = [];
     private seenUnhandledTags: { [key: string]: boolean } = {};
     private _pendingSVG: { el: SpaceElement; ctx: WalkContext } | null = null;
-    _layoutWidthMargin: number = 1.18;
-    _sqrtWidthScale: number = 0.5; // compensate for walker overshooting visual content (more aggressive than before)
+    // Multiplier on a fraction's total width (and therefore its bar). KaTeX's
+    // `.frac-line { width: 100% }` means the bar spans the vlist exactly, so
+    // the layout-faithful value is 1.0.
+    //
+    // It was 1.18 — a fudge that existed to hide the missing 0.24em of
+    // `nulldelimiter` padding on either side of every fraction. With the
+    // nulldelimiters now measured properly, 1.18 overshoots badly (56% of the
+    // corpus conformant vs 89% at 1.0). Treat any value above 1.0 as a
+    // rendering compensator, not layout.
+    _layoutWidthMargin: number = 1.0;
+    // 1.0 = trust the measured content width. Was 0.5 to compensate for the
+    // walker overshooting the radicand, which the Phase 6.1 overbar-clip fix and
+    // the nulldelimiter/scriptspace corrections removed the need for. Three
+    // different values used to coexist here, in the @input, and in the scene.
+    _sqrtWidthScale: number = 1.0;
+    // Extra gap forced after every italic glyph. Purely a RENDERING compensator
+    // for fonts whose drawn glyphs are wider than KaTeX's metrics predict — it
+    // has no basis in TeX layout, and it used to be 0.12em, which made it the
+    // single largest source of horizontal drift versus real KaTeX (~0.12em per
+    // italic glyph, accumulating to ~0.7em across a formula).
+    //
+    // Now 0: the genuine italic correction arrives from KaTeX's own inline
+    // margins (see emitText), so padding on top of it was double-counting.
+    // Raise this only if italic glyphs visibly collide on device, and prefer
+    // correcting `italicScaleAdjust` on the renderer instead.
+    _italicMinGapEm: number = 0;
     verbose: boolean = false;
 
     layout(katexHtmlRoot: SpaceElement, emToWorld: number): WalkResult {
@@ -275,6 +361,14 @@ export class MatematexLayoutWalker {
         // Skip invisible structural elements entirely.
         if (this.shouldSkip(tag, classes)) return;
 
+        // Empty delimiter slot: draws nothing, occupies 0.12em. Must advance
+        // the cursor or the enclosing fraction comes out too narrow and every
+        // glyph after it drifts left.
+        if (classes.indexOf('nulldelimiter') >= 0) {
+            ctx.cursorX += NULLDELIMITER_EM * ctx.emToWorld * ctx.scale;
+            return;
+        }
+
         // SVG blocks (e.g., sqrt radical) — defer emission until the parent
         // vlist finishes walking so we know the actual content width. The
         // radical overbar must span ALL content, not just a fixed estimate.
@@ -305,6 +399,7 @@ export class MatematexLayoutWalker {
             ctx.cursorX += leftOffset * ctx.emToWorld * ctx.scale;
         }
         const marginRight = parseEm(getStyle(el, 'marginRight'));
+
 
         // mspace: explicit horizontal space, no children to walk
         if (hasClass(el, 'mspace')) {
@@ -404,7 +499,12 @@ export class MatematexLayoutWalker {
                 currAtomClass !== 'space' &&
                 currAtomClass !== 'other'
             ) {
-                const wantEm = ATOM_SPACING_EM[`${prevAtomClass}-${currAtomClass}`] || 0;
+                // KaTeX picks the table from the RIGHT-hand atom's own
+                // `mtight` class (buildHTML.js), not from an inherited style.
+                const table = hasClass(childEl, 'mtight')
+                    ? TIGHT_ATOM_SPACING_EM
+                    : ATOM_SPACING_EM;
+                const wantEm = table[`${prevAtomClass}-${currAtomClass}`] || 0;
                 const needEm = wantEm - prevTrailingEm;
                 if (needEm > 0) {
                     ctx.cursorX += needEm * ctx.emToWorld * ctx.scale;
@@ -423,10 +523,9 @@ export class MatematexLayoutWalker {
     }
 
     private shouldSkip(tag: string, classes: string[]): boolean {
-        if (classes.indexOf('strut') >= 0) return true;
-        if (classes.indexOf('pstrut') >= 0) return true;
-        if (classes.indexOf('vlist-s') >= 0) return true;
-        if (classes.indexOf('nulldelimiter') >= 0) return true;
+        for (const c of SKIP_CLASSES) {
+            if (classes.indexOf(c) >= 0) return true;
+        }
         return false;
     }
 
@@ -458,16 +557,20 @@ export class MatematexLayoutWalker {
 
         ctx.cursorX += widthWorld;
 
-        // Add italic inter-character spacing using real italic correction
-        // from font metrics. Many math-italic characters have correction=0,
-        // so we enforce a minimum gap to prevent visual overlapping (the
-        // rendered text at textScaleMultiplier may be wider than metrics predict).
-        if (ctx.italic && text.length > 0) {
-            const lastChar = text.charAt(text.length - 1);
-            const italicCorrectionEm = getCharItalicEm(lastChar);
-            const minGapEm = 0.12; // minimum gap between consecutive italic chars
-            const gapEm = Math.max(italicCorrectionEm, minGapEm);
-            ctx.cursorX += gapEm * ctx.emToWorld * ctx.scale;
+        // Italic correction is NOT applied here. KaTeX already emits it as an
+        // inline `margin-right` on the glyph's own span (e.g. `F` carries
+        // margin-right:0.1389em), which `walk()` applies — adding it again here
+        // double-counted it. KaTeX also *cancels* that correction for
+        // subscripts via a negative `margin-left` on the subscript row, which
+        // only works if the correction arrives from KaTeX's own markup rather
+        // than being synthesised per-glyph. See walkVlistGroup.
+        //
+        // `_italicMinGapEm` survives purely as a RENDERING compensator for
+        // fonts whose drawn glyphs are wider than KaTeX's metrics predict. It
+        // defaults to 0 (faithful layout); raise it only if italic glyphs
+        // visibly collide on device, and prefer fixing `italicScaleAdjust`.
+        if (ctx.italic && this._italicMinGapEm > 0 && text.length > 0) {
+            ctx.cursorX += this._italicMinGapEm * ctx.emToWorld * ctx.scale;
         }
     }
 
@@ -613,7 +716,30 @@ export class MatematexLayoutWalker {
                     ctx.cursorX = startX;
                     ctx.baselineY = savedY + yOffsetWorld;
 
-                    const fracLineEl = this.findDescendantByClass(childEl, 'frac-line');
+                    // A vlist row carries its own horizontal margins, and they
+                    // are load-bearing: KaTeX cancels the preceding glyph's
+                    // italic correction on SUBSCRIPT rows with a negative
+                    // margin-left (e.g. `F_n` → margin-left:-0.1389em against
+                    // F's margin-right:0.1389em) while leaving superscripts
+                    // shifted. That is exactly TeX's rule, handed to us for
+                    // free. These rows are walked via walkChildren, which
+                    // bypasses walk()'s margin handling, so apply them here or
+                    // every subscript sits an italic correction too far right.
+                    const rowMarginLeft = parseEm(getStyle(childEl, 'marginLeft'));
+                    if (rowMarginLeft) {
+                        ctx.cursorX += rowMarginLeft * ctx.emToWorld * ctx.scale;
+                    }
+
+                    // Identify the fraction BAR row. This must not cross into a
+                    // nested vlist: a numerator or denominator that itself
+                    // contains a fraction has that inner fraction's `frac-line`
+                    // somewhere in its subtree, and an unbounded descendant
+                    // search would misread the whole row as the bar — emitting a
+                    // spurious line and silently dropping every glyph in the row.
+                    // That was the #56 Lorentz Factor bug: the entire radicand
+                    // `1 - v²/c²` vanished, and `validateAll` still reported a
+                    // pass because it only checks that *some* items were emitted.
+                    const fracLineEl = this.findRowFracLine(childEl);
                     if (fracLineEl) {
                         const thicknessEm =
                             parseEm(getStyle(fracLineEl, 'borderBottomWidth')) || 0.04;
@@ -629,6 +755,20 @@ export class MatematexLayoutWalker {
                     } else {
                         const childStartIdx = this.items.length;
                         this.walkChildren(childEl, ctx);
+                        // The row's trailing margin is KaTeX's scriptspace
+                        // (0.05em after a sub/superscript) and it does advance
+                        // the parent.
+                        //
+                        // Worth knowing: this looked wrong until SIZE_FACTORS
+                        // was corrected. At the old (too large) script scale the
+                        // content overshot by almost exactly 0.05em, cancelling
+                        // the missing scriptspace and making both bugs invisible
+                        // in the totals. Fix one without the other and the
+                        // corpus gets worse, not better.
+                        const rowMarginRight = parseEm(getStyle(childEl, 'marginRight'));
+                        if (rowMarginRight) {
+                            ctx.cursorX += rowMarginRight * ctx.emToWorld * ctx.scale;
+                        }
                         const childWidth = ctx.cursorX - startX;
                         childRanges.push({
                             startIdx: childStartIdx,
@@ -726,6 +866,25 @@ export class MatematexLayoutWalker {
                 const el = child as SpaceElement;
                 if (hasClass(el, cls)) return el;
             }
+        }
+        return null;
+    }
+
+    /** Find a `frac-line` belonging to THIS vlist row.
+     *
+     *  KaTeX always emits the bar as a direct sibling of the row's `pstrut`, but
+     *  we search a little deeper to survive an intervening wrapper (e.g. a
+     *  `sizing` span) — while refusing to descend into a nested `vlist-t`.
+     *  Anything inside a nested vlist belongs to a different fraction, and
+     *  claiming it here would drop this row's content entirely. */
+    private findRowFracLine(rowEl: SpaceElement): SpaceElement | null {
+        for (const child of rowEl._childNodes) {
+            if (child.nodeType !== ELEMENT_NODE) continue;
+            const el = child as SpaceElement;
+            if (hasClass(el, 'frac-line')) return el;
+            if (hasClass(el, 'vlist-t')) continue; // a nested fraction's own bar — not ours
+            const found = this.findRowFracLine(el);
+            if (found) return found;
         }
         return null;
     }
@@ -1107,11 +1266,11 @@ export class MatematexBridge extends BaseScriptComponent {
 
     @input
     @hint("Width margin for fraction bars and radicals (compensates for text rendering scale mismatch). 1.0 = exact, 1.18 = 18% wider.")
-    private layoutWidthMargin: number = 1.18;
+    private layoutWidthMargin: number = 1.0;
 
     @input
     @hint("Scale factor for sqrt radical width. 1.0 = walker's predicted width. Lower if radical extends past content. Complex expressions need 0.4-0.6.")
-    private sqrtWidthScale: number = 0.5;
+    private sqrtWidthScale: number = 1.0;
 
     @input
     private textColor: vec4 = new vec4(1, 1, 1, 1);

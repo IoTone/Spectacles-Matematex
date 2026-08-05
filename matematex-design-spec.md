@@ -478,6 +478,16 @@ Empty groups, consecutive operators
 
 #### 6.2.2 Comparison Methodology
 
+> **Superseded in practice.** The SSIM approach below was designed around MathJax as the
+> oracle, which forces fuzzy comparison because it's a *different engine*. The harness we
+> actually built (`test/layout-conformance/`) uses **KaTeX in a real browser** instead.
+> Because both sides traverse the same KaTeX DOM produced by the same KaTeX build, glyph
+> correspondence is exact and deltas are measured directly in em — no rasterisation, no
+> SSIM, no engine-difference tolerance. Every delta is unambiguously our bug. The browser
+> supplies the CSS inline layout SpaceDOM cannot compute, which is exactly where the
+> Phase 6.5 spacing defects live. Keep the method below in mind only if a second,
+> independent oracle is ever wanted.
+
 Since pixel-perfect SVG matching is impractical (different engines make different styling choices), use **structural comparison**:
 
 1. **Element count match:** Same number of `<path>`, `<text>`, `<line>`, `<rect>` elements (within tolerance)
@@ -581,7 +591,15 @@ Maintain a screenshot gallery (PNG files in `tests/visual/golden/`) for each vis
 | 6.6 | Bridge improvements: mbin/mrel spacing, big-op display-mode limits, `\mathbf` bold font, accent `left:` offset | ✅ Complete (P0 + P1, awaiting visual retest) |
 | 6.6.x | Deferred bridge work: mtable rendering, delimiter auto-sizing, italic auto-calibration | ⏳ Planned (`matematex-porting-review.md`) |
 | 6.7 | UIKit migration: `RectangleButton` swap, `TextInputField` for search, ASR mic | ⏳ Planned (`book-of-math-v2-plan.md`) |
-| 7 | R5: TikZ-subset 3D plotting extensions | ⏳ Not started |
+| 7.0 | Visual proofs v1: typed primitive layer (line/polygon/circle/label/arrow), 3D-spatial rendering, Pythagoras as first proof | ✅ Complete (awaiting visual retest) |
+| 7.0.1 | Proof renderer correctness pass: per-color cloned materials, CCW winding normalisation, z-step layering, bbox anchoring | ✅ Complete (awaiting visual retest) |
+| 7.0.2 | Sample-scene repair: `@allowUndefined` on optional inputs, Chapter 4 button added and bound | ✅ Complete (lens runs, 80/80 validate) |
+| 6.2b | **Layout conformance harness** (`test/layout-conformance/`) — per-glyph diff of the walker against KaTeX in a real browser, in em. Implements §6.2 with exact glyph correspondence instead of SSIM | ✅ Complete (all 80 measured) |
+| 6.8 | Nested-fraction content loss fixed (`findRowFracLine`) + structural assertion in `validateAll` | ✅ Complete (80/80 intact, guard verified sensitive) |
+| 6.9 | Layout conformance fix pass: italic-correction double-count, subscript vs superscript rule, `tightSpacings`, size multipliers, scriptspace, `nulldelimiter` width, `layoutWidthMargin` 1.18→1.0 | ✅ Complete (corpus 2% → 82% conformant; worst error 2.4em → 0.330em) |
+| 7.1 | Additional proofs: Heron, Distance, Polyhedron, Circle area | ⏳ Planned |
+| 7.2 | True 3D proofs (sphere volume via Cavalieri, cylinder/cone, polyhedra) — needs out-of-plane primitives | ⏳ Planned |
+| 7.3 | TikZ-string parser → typed primitives (defer until proof catalog grows) | ⏳ Planned |
 
 ### Architecture divergence from original plan
 
@@ -601,6 +619,11 @@ This hybrid approach proved simpler and more performant than a pure-SVG pipeline
 - **Tier 3 "unsupported" features render via generic passthrough** — `\sum`, `\int`, matrices, `\lim` all produce readable output because KaTeX emits Unicode glyphs for them, even without dedicated walker handlers — though spacing and limits placement are not yet typographically correct.
 - **KaTeX ships *two* sqrt SVG path families** with different overbar-end constants (`H40000` for sqrtMain, `H400000` for Size variants). The Phase 6.1 fix loosened the regex to `\d{5,}` to catch both.
 - **Walker uses font metrics, not measured ink** — content widths from `cursorX` accumulate italic gaps and subscript padding. The pending-SVG handler now measures emitted text items' ink extents to size the radical correctly; the same technique could be generalized to other layout primitives.
+- **`lineMaterial` is a shared asset — never write color into it.** `visual.mainPass` and `material.mainPass` both resolve to the *material*, so assigning a color there repaints every visual using that material. It's invisible for the bridge (every fraction bar is the same `textColor`) but it silently collapsed the proof layer to a single color. Multi-color geometry must either use `visual.mainPassOverrides` (per-visual) or its own `material.clone()`. `MatematexProof` now clones one material per distinct color and caches it per render.
+- **Generated geometry must be wound consistently.** A quad built from `a→b` flips orientation with the line's direction, and hand-authored polygons arrive in both windings. Under a back-face-culling material that makes shapes vanish with no error. The proof renderer normalises every ring to counter-clockwise (front face toward +Z, toward the viewer) via a shoelace test before emitting indices.
+- **Coplanar proof geometry z-fights.** Fills, their strokes, and labels all sat at z=0. The renderer now advances a small z bias per primitive in draw order (strokes half a step ahead of their own fill, labels a full step), which also makes the documented "later primitives render on top" actually true.
+- **Author coordinates should not drive placement.** Proof figures are now positioned by their measured XY bounding box (`anchor: 'center' | 'top'`), so a proof whose author origin is a right-angle vertex still lands where the host asked. The Book of Math anchors the top edge below the chapter label, which keeps any future proof from colliding with it regardless of size.
+- **"Optional" `@input`s need `@allowUndefined`.** Without it Lens Studio hard-fails the whole lens at runtime (`Input <name> was not provided`), not just the feature — the hint text saying "optional" has no effect on its own.
 
 ### Porting review
 

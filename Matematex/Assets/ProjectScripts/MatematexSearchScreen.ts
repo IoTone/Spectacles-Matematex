@@ -34,46 +34,55 @@ const DEFAULT_CHIP_LABELS = ['matrix', 'trig', 'derivative', 'integral', 'series
 export class MatematexSearchScreen extends BaseScriptComponent {
 
     @input
+    @allowUndefined
     @hint("The MatematexBookOfMath component that owns the search index and formula-display state.")
     bookOfMath: MatematexBookOfMath;
 
     // ─── Query field (v1: manual keyboard-trigger button + display label) ───
 
     @input
+    @allowUndefined
     @hint("PinchButton to open the XR keyboard. v1.1: replaced by UIKit TextInputField.")
     queryButton: PinchButton;
 
     @input
+    @allowUndefined
     @hint("SceneObject with a Text3D component to display the current query string.")
     queryLabelObj: SceneObject;
 
     @input
+    @allowUndefined
     @hint("SceneObject with a Text3D component showing 'N results' or hints. Optional.")
     resultsLabelObj: SceneObject;
 
     // ─── Topic chips ────────────────────────────────────────────────────────
 
     @input
+    @allowUndefined
     @hint("Topic chip buttons. Pinching seeds the query with the chip's label. Length should match topicChipLabels.")
     topicChips: PinchButton[];
 
     @input
+    @allowUndefined
     @hint("Labels for each topic chip — these are also used as queries when the chip is pinched. Default: matrix/trig/derivative/integral/series/log.")
     topicChipLabels: string[];
 
     // ─── Result rows (button pool) ──────────────────────────────────────────
 
     @input
+    @allowUndefined
     @hint("Pool of result-row PinchButtons. Each represents one search result; unused rows are hidden. Length determines max visible results.")
     resultRowButtons: PinchButton[];
 
     @input
+    @allowUndefined
     @hint("SceneObjects (with Text3D children) for each result row label. Length must equal resultRowButtons length.")
     resultRowLabelObjs: SceneObject[];
 
     // ─── Navigation ─────────────────────────────────────────────────────────
 
     @input
+    @allowUndefined
     @hint("PinchButton — close the search screen and return to splash.")
     closeButton: PinchButton;
 
@@ -187,7 +196,7 @@ export class MatematexSearchScreen extends BaseScriptComponent {
             const row = rows[i];
             const labelObj = labels[i];
             if (!row) continue;
-            const rowSceneObj = this.getSceneObject(row);
+            const rowSceneObj = this.getButtonSceneObject(row);
             const formula = this.currentResults[i];
             if (formula) {
                 if (rowSceneObj) rowSceneObj.enabled = true;
@@ -281,7 +290,7 @@ export class MatematexSearchScreen extends BaseScriptComponent {
         return null;
     }
 
-    private getSceneObject(btn: PinchButton): SceneObject | null {
+    private getButtonSceneObject(btn: PinchButton): SceneObject | null {
         try {
             const pb = btn as any;
             return pb.getSceneObject?.() || pb.sceneObject || null;

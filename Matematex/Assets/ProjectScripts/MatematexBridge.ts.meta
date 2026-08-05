@@ -27,6 +27,7 @@
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
     baseTextSize: false
+    boldFont: false
     containerWorldY: false
     containerWorldZ: false
     debugAnchor: false
@@ -58,6 +59,7 @@
       hideTemplate: true
       debugTextBounds: false
       italicFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
+      boldFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
       italicScaleAdjust: 0.500000
       emToWorld: 0.500000
       baseTextSize: 0.500000
@@ -79,12 +81,13 @@
     - '// @input bool hideTemplate = true {"hint":"Hide the template SceneObject after using it as a clone source"}'
     - '// @input bool debugTextBounds {"hint":"Debug: draw a colored outline at each text item position so you can see layout placement"}'
     - '// @input Asset.Font italicFont {"hint":"Font for italic math variables (e.g. KaTeX_Math-Italic). If not set, uses template font for everything."}'
+    - '// @input Asset.Font boldFont {"hint":"Bold font for \\mathbf / \\boldsymbol. Optional — falls back to template font."}'
     - '// @input float italicScaleAdjust = 0.5 {"hint":"Scale adjustment for italic font (KaTeX_Math-Italic renders larger than Main-Regular at same FontSize). Try 0.5 if italic text is 2x too big."}'
     - '// @input float emToWorld = 2 {"hint":"World units per em — controls layout spacing between characters. Start at 2, increase if chars overlap, decrease if too spread out."}'
     - '// @input float baseTextSize = 2 {"hint":"Lens Studio Text component size for 1.0x scale (em → text size)"}'
     - '// @input float textScaleMultiplier = 1 {"hint":"Multiplier for text SceneObject scale (cranks up cloned text size). Try 5 if text is small."}'
-    - '// @input float layoutWidthMargin = 1.18 {"hint":"Width margin for fraction bars and radicals (compensates for text rendering scale mismatch). 1.0 = exact, 1.18 = 18% wider."}'
-    - "// @input float sqrtWidthScale = 0.5 {\"hint\":\"Scale factor for sqrt radical width. 1.0 = walker's predicted width. Lower if radical extends past content. Complex expressions need 0.4-0.6.\"}"
+    - '// @input float layoutWidthMargin = 1 {"hint":"Width margin for fraction bars and radicals (compensates for text rendering scale mismatch). 1.0 = exact, 1.18 = 18% wider."}'
+    - "// @input float sqrtWidthScale = 1 {\"hint\":\"Scale factor for sqrt radical width. 1.0 = walker's predicted width. Lower if radical extends past content. Complex expressions need 0.4-0.6.\"}"
     - "// @input vec4 textColor = {1,1,1,1}"
     - '// @input bool dumpLayout = true {"hint":"Print layout items to console for debugging"}'
     - '// @input float containerWorldZ = 35 {"hint":"Container world Z (camera at z=40 looks toward -Z; 35 = 5 units in front)"}'

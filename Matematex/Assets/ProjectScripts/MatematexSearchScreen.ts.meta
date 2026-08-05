@@ -1,0 +1,72 @@
+- !<AssetImportMetadata/b8dff5b0-0d18-48b5-a06f-3fa83a44bcec>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> ba8c7567-766d-4a88-8619-ea05996ae870
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> ba8c7567-766d-4a88-8619-ea05996ae870
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 570b50b0-a6ac-4640-b078-5f472b1fa73e
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/570b50b0-a6ac-4640-b078-5f472b1fa73e>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 2f4eca23-d51a-4c4d-b3d0-e227151254b0
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    bookOfMath: false
+    closeButton: false
+    queryButton: false
+    queryLabelObj: false
+    resultRowButtons: false
+    resultRowLabelObjs: false
+    resultsLabelObj: false
+    topicChipLabels: false
+    topicChips: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - bookOfMath: !<MappingBased.AssignableType> 00000000-0000-0000-0000-000000000000
+      queryButton: !<MappingBased.AssignableType_1> 00000000-0000-0000-0000-000000000000
+      queryLabelObj: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      resultsLabelObj: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      topicChips: !<MappingBased.AssignableType_2[]>
+        []
+      topicChipLabels: !<string[]>
+        []
+      resultRowButtons: !<MappingBased.AssignableType_3[]>
+        []
+      resultRowLabelObjs: !<reference.SceneObject[]>
+        []
+      closeButton: !<MappingBased.AssignableType_4> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input AssignableType bookOfMath {"hint":"The MatematexBookOfMath component that owns the search index and formula-display state."}'
+    - '// @input AssignableType_1 queryButton {"hint":"PinchButton to open the XR keyboard. v1.1: replaced by UIKit TextInputField."}'
+    - '// @input SceneObject queryLabelObj {"hint":"SceneObject with a Text3D component to display the current query string."}'
+    - "// @input SceneObject resultsLabelObj {\"hint\":\"SceneObject with a Text3D component showing 'N results' or hints. Optional.\"}"
+    - "// @input AssignableType_2[] topicChips {\"hint\":\"Topic chip buttons. Pinching seeds the query with the chip's label. Length should match topicChipLabels.\"}"
+    - '// @input string[] topicChipLabels {"hint":"Labels for each topic chip — these are also used as queries when the chip is pinched. Default: matrix/trig/derivative/integral/series/log."}'
+    - '// @input AssignableType_3[] resultRowButtons {"hint":"Pool of result-row PinchButtons. Each represents one search result; unused rows are hidden. Length determines max visible results."}'
+    - '// @input SceneObject[] resultRowLabelObjs {"hint":"SceneObjects (with Text3D children) for each result row label. Length must equal resultRowButtons length."}'
+    - '// @input AssignableType_4 closeButton {"hint":"PinchButton — close the search screen and return to splash."}'
