@@ -828,6 +828,12 @@ export class MatematexBookOfMath extends BaseScriptComponent {
             if (c) c.text = proof.caption || '';
         }
 
+        // Time the build. Every polygon becomes its own SceneObject with its own
+        // mesh and material, so a heavy figure is a one-frame spike at the
+        // moment the Proof button is pinched — #7 is 387 objects against a
+        // catalogue median of 24. If this number is large, mesh batching is the
+        // fix, and knowing it beats guessing at it.
+        const t0 = getTime();
         try {
             this.proofContainer = renderProof(proof, {
                 parent: this.container,
@@ -842,7 +848,10 @@ export class MatematexBookOfMath extends BaseScriptComponent {
                 // Headroom for the name label at +20 and the caption at −20.
                 fitBox: { halfWidth: SAFE_HALF_WIDTH - 4, halfHeight: SAFE_HALF_HEIGHT - 9 },
             });
-            print(`[MatematexBook] Proof screen rendered for #${formula.id}`);
+            const ms = (getTime() - t0) * 1000;
+            const objs = this.proofContainer ? this.proofContainer.getChildrenCount() : 0;
+            print(`[MatematexBook] Proof screen for #${formula.id}: ` +
+                  `${objs} objects in ${ms.toFixed(0)}ms`);
         } catch (e: any) {
             print(`[MatematexBook] Proof screen failed: ${e.message || e}`);
         }

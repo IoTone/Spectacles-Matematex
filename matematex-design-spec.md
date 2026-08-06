@@ -602,6 +602,8 @@ Maintain a screenshot gallery (PNG files in `tests/visual/golden/`) for each vis
 | 6.7 | Search screen scaffolded in-scene: `MatematexSearchScreen` object + 16 UI children, scalar inputs wired, splash "Search" button bound, array inputs auto-wired from child names | ✅ Complete (no Inspector work; logs `auto-wired 6 topic chips` / `6 result rows`) |
 | 6.11 | **FOV budget**: splash trimmed from 149 → 46 units tall, attribution moved to a new About page behind a toggle button, chapter buttons driven from the same y constants as the TOC rows | ✅ Complete (runtime `SAFE_HALF_HEIGHT` guard, verified it fires) |
 | 7.1 | Additional proofs: circle area (#5), distance (#10), Heron (#13), difference of squares (#22) | ✅ Complete (catalog 1 → 5; `test/proof-data.test.ts` validates geometry outside Lens Studio) |
+| 7.1.3 | **Proof mathematics verified**, not just renderability: `test/proof-math.test.ts` re-derives each claim from the authored coordinates — squares on the Pythagoras sides are checked to BE squares and to sit outside the triangle, the difference-of-squares pieces must tile a² and share an (a−b) edge, Heron must reproduce the drawn triangle's shoelace area, the circle's wedges must be equal. All 5 pass | ✅ Complete |
+| 7.1.4 | **All five figures now argue rather than assert.** #1 rebuilt as the two-(a+b)²-squares rearrangement, #5 draws the wedges interleaved into the r × πr strip beside the disc, #13 draws the incircle that makes s−a, s−b, s−c geometric. #22 and #10 were already genuine | ✅ Complete |
 | 7.1.1 | Proof gets its own screen with a `Proof` button, auto-scaled to the FOV budget via `fitBox` | ✅ Complete (the inline thumbnail hung to y −40, well past the ±27 the device shows) |
 | 6.12 | **Formulas centred and width-fitted.** The walker lays out from x=0 rightward, so every formula sat entirely right of centre — #2 ran 17 units off the right edge with 34 units empty on the left; #10 lost half its width. Now offset by −width/2 and shrunk if wider than ±34 | ✅ Complete (only #40 and #78 need shrinking) |
 | 7.1.2 | Inline proof thumbnail removed; proof title/caption reuse the name and chapter label slots instead of drawing over them | ✅ Complete |
@@ -672,3 +674,234 @@ A current inventory of which KaTeX HTML constructs the bridge handles, what's pa
 5. **KaTeX version management:** Should we vendor KaTeX 0.16.22 as-is, or apply minimal patches? Vendoring unchanged maximizes upstream compatibility.
 
 6. **Caching strategy:** Should rendered SVG strings or scene object trees be cached for repeated expressions?
+
+
+## Proof rigour — what the five figures establish
+
+`test/proof-math.test.ts` checks that all five are mathematically TRUE. That is
+a different question from whether they PROVE anything, and originally three of
+them did not — they drew the identity and labelled it. All five now carry an
+argument.
+
+| # | the argument the figure makes |
+|---|---|
+| 1 | Two (a+b)² squares hold the same four copies of the a-b-c triangle, so the leftovers are equal: c² on the left, a²+b² on the right |
+| 5 | The disc's twelve wedges, redrawn interleaved into a strip r tall and πr wide, so A = r · πr |
+| 10 | The segment is the hypotenuse of a right triangle whose legs are the coordinate differences |
+| 13 | The incircle cuts each side into s−a, s−b, s−c (side c visibly into (s−a)+(s−b)), and the three inradius slivers give A = r·s |
+| 22 | a² dissected into a(a−b) + b(a−b) + b²; factoring (a−b) out of the two remaining pieces gives (a+b)(a−b) |
+
+**What the tests verify.** Not renderability — `proof-data.test.ts` covers that —
+but the claim itself, re-derived from the authored coordinates:
+
+- #1: both outer squares are squares and equal in area; all eight triangles are
+  mutually congruent and right-angled; each dissection tiles its square exactly
+  (4·triangle + leftovers = the whole square, so no overlap or gap); the
+  leftovers come out 25 and 9+16.
+- #5: all 24 wedges are sectors of one radius and congruent to each other; the
+  strip's apexes alternate 6-up / 6-down exactly r apart; six wedge pitches span
+  πr, so r × πr = πr².
+- #13: the inradius equals A/s; the incentre is exactly r from all three sides
+  and each tangency falls strictly inside its side; the tangent lengths are
+  s−a, s−b, s−c and (s−a)+(s−b) = c; and r² = (s−a)(s−b)(s−c)/s, the algebraic
+  step the caption states.
+- #22: the pieces tile a² exactly and share an (a−b) edge, without which the
+  promised reassembly into (a+b)×(a−b) is impossible.
+- #10: the legs are genuinely axis-parallel (or they are not coordinate
+  differences), the angle between them is right, and the segment marked d joins
+  the two labelled points.
+
+**Where the figures stop.** #13 still needs one algebraic step the picture
+cannot draw — r² = (s−a)(s−b)(s−c)/s — so the caption states it rather than
+pretending the figure is a complete derivation. #5 is exact only in the limit;
+twelve wedges leave the strip visibly scalloped, which is drawn honestly rather
+than smoothed into a rectangle.
+
+**Coverage.** 8 of 80 formulas have a proof.
+
+## Phase 7.2 — spatial proofs
+
+The renderer was already 2.5D: `toWorld` honoured a primitive's z, so anything
+could be placed at any depth. What it could not do was draw a *solid*, for four
+reasons, all now fixed:
+
+| was | now |
+|---|---|
+| `drawFace` oriented winding by a shoelace sum on the **XY projection**, which collapses to zero for a face seen edge-on — a cube's side walls had their front decided by rounding noise | Newell normal, well defined in any plane, plus an explicit `outwardFrom` so a face turns away from the centre of its solid and stays correct from every angle |
+| `drawLine` took its perpendicular as `(-dy, dx, 0)`, which is zero for a line running along z — **a cube's depth edges would not have drawn at all** | perpendicular from `cross(dir, +Z)`, falling back to `cross(dir, +Y)` when the line points at the viewer |
+| `proofBounds` tracked only x and y, so fit-to-box ignored depth | bounds carry z; a spatial figure is fitted against the diagonal of its x-z footprint, since the viewer walks around it and that is its widest projection |
+| the per-primitive `Z_STEP` bias that stops coplanar flat art z-fighting would **shear a solid** — six faces at 0.05 apart is 0.3 units of skew | `spatial: true` on a VisualProof switches the bias off; strokes instead ride proud along their face's own outward normal |
+| an axis-aligned box drawn straight down the view axis **is a rectangle** — every face dead-on or edge-on, so the first render of #24 looked completely flat | `rotateProof` turns a spatial figure to a three-quarter view (yaw −32°, pitch 22°) before anything measures or draws it, bringing three faces of each box into sight |
+
+Flat proofs are unaffected by construction: for a polygon in the XY plane the
+Newell z-component is exactly twice the old signed area, so the orientation
+decision is identical, and with zero depth the fit calculation reduces to the
+old one.
+
+`boxFaces()` / `boxEdges()` / `boxCentre()` build axis-aligned solids and set
+`outwardFrom` themselves, so winding is never the author's problem. The test
+suite checks the helper directly — a box is closed exactly when each of its 12
+edges is shared by exactly 2 faces — because every future spatial proof is built
+on it and one bad face ring would corrupt them all at once.
+
+**#24 Difference of Cubes** is the first spatial proof, chosen to debug the
+pipeline: it is the direct 3D analogue of #22, so the same tiling-and-volume
+argument verifies it, and a fault in the new code shows up as arithmetic rather
+than as a judgement call about a picture. The slabs are drawn pulled slightly
+apart so the seams are visible; `CUBE_SLABS` holds their true positions and the
+test checks tiling from those, so the visual gap cannot hide a real gap. It also
+checks pairwise non-overlap — a decomposition that double-counts volume would
+otherwise still sum correctly by luck.
+
+### Two failure modes that only exist for solids
+
+Neither is visible in any check of the mathematics, and both were live in the
+first build of #24:
+
+- **A piece can be completely hidden.** At the gap originally authored the b³
+  corner sat squarely behind slab 3 along the view axis, and behind slab 1 as
+  well. The figure was correct and the viewer could not see it. `proof-math`
+  now casts a ray from each piece toward the viewer and intersects the filled
+  triangles in front of it; the gap went from 0.55 to 1.3.
+
+  A piece is sampled at every one of its face centroids and passes if ANY of
+  them survives. Testing a single centroid was the first attempt and it condemns
+  #8 outright: a closed solid always hides its own far side, and the bored cone
+  is a cavity only ever seen through its opening. Pieces are grouped by an
+  explicit `piece` tag, because `outwardFrom` cannot identify a cavity — no
+  single point lies outside a cone's inner wall on every side, so those faces
+  each carry their own reference and looked like hundreds of separate objects.
+
+  Comparing piece centroid *depths* is the tempting version and it is wrong:
+  after the view rotation, depth is dominated by x position, so an annotation
+  lifted a hair off a face reads as being behind the whole face — that check
+  passed #24 and failed #74, both incorrectly. Only filled geometry counts as an
+  occluder, since a wireframe can be hidden but never hides. Verified against
+  the real bug: at the original 0.55 gap the test reports `1 buried`.
+- **Labels do not scale with the figure.** `createLabel` applies
+  `templateScale` directly, so a label is a fixed world size no matter how far
+  the fit-to-box calculation shrinks the drawing. At the 0.75 used on flat
+  proofs, a seven-character label came out nearly half the width of the entire
+  solid. Spatial labels are authored at 0.45.
+
+- **An unlit material makes a solid a silhouette.** `MatematexUnlit` has no
+  lighting term, so all six faces of a box drew the identical colour — turning
+  the figure changed its outline and nothing else. Rather than depend on scene
+  lights (the figure stands in a room the lens does not control), a Lambert term
+  is baked into each face's colour from its own outward normal. The three faces
+  visible in the default view come out at 0.62 / 0.71 / 0.87 of the base colour.
+  A weak back-light keeps the three REAR faces at 0.47 / 0.49 / 0.54 rather than
+  clamping them all to flat ambient, which would have moved the same problem to
+  whoever walked round the back.
+- **Transparent fills flatten a solid.** The flat proofs use 0.35-alpha fills;
+  on a box that reads as tinted glass, and whatever shows through washes out the
+  shading that gives the shape away. `opaque()` returns the same colour at full
+  alpha for spatial use.
+- **A label tinted to match its piece is invisible on that piece.** Amber text
+  on an amber slab has no edge at all. Every proof label now draws a dark offset
+  copy behind it (~0.06 em, scaling with the label), which also lifts pale
+  labels off a bright passthrough background. Spatial labels are additionally
+  lightened well clear of the shaded face they name.
+
+- **A tilted face eats its own labels.** `|b| sin θ` rendered as `|b| si` and
+  reads exactly like font clipping — it is not. `horizontalOverflow` on the
+  Text3D template is already `Overflow` (0), so nothing truncates. What happened
+  is that `spatial` switches off the Z_STEP that normally lifts a label off the
+  geometry, and #74's parallelogram is tilted, so the part of the face to the
+  right of the label sits NEARER the viewer and covers the tail of the text.
+  Labels in a spatial proof are now floated to a plane in front of the whole
+  figure, keeping their x and y so they still point at their piece.
+- **Title and caption are drawn at a fixed world size**, so their character
+  count alone decides whether they fit. #74's original 91-character caption ran
+  off both edges of the display. `proof-data` now enforces a budget calibrated
+  against a title that just fits — "Cross Product Magnitude", 23 characters at
+  scale 1.2, spanning about half the ~68-unit safe width — with a 0.9 margin,
+  giving 40 characters for a title and 69 for a caption.
+
+`rotateProof` is checked to be a rigid motion — the other tests reason about the
+unrotated coordinates while the renderer draws the rotated ones, which is only
+sound if no distance changes. Worst drift across 96 points is 2.7e-15.
+
+**#74 Cross Product Magnitude** is the second spatial proof, chosen because
+nothing in it is axis-aligned — the parallelogram sits at a slant, the height
+drops at an angle to it, and the product leaves the plane entirely. #24 was
+axis-aligned throughout, so this is what exercises the Newell winding and the 3D
+ribbon on arbitrary orientations.
+
+It found a fourth 3D bug the cube never touched: `createArrow` measured its
+length and built its head from `dx, dy` only. An arrow with depth had its head
+and shaft-shortening scaled wrong, and an arrow along the view axis failed the
+zero-length guard and **drew nothing at all** — which is precisely what a×b is.
+Both the arrow and `drawLine` now share `viewPerp()`.
+
+What the figure argues: the parallelogram has base |a|; dropping a perpendicular
+from the tip of b makes a right triangle whose hypotenuse is b, so the height is
+|b| sin θ; area is base times height. The product vector is drawn at its TRUE
+length, so the reader can see it matches rather than being told. Identifying
+|a×b| with that area is the definition of the cross product's magnitude — the
+figure shows what the definition amounts to and the caption does not claim more.
+
+**#8 Volume of a Sphere** — Archimedes, and the reason the spatial renderer
+exists. A hemisphere beside a cylinder with a cone bored out of it: slice both
+at height y and you get a disc of radius √(r²−y²) against an annulus from y out
+to r, both of area π(r²−y²). Same at every height, so same volume — and the cut
+cylinder's is one you already know, πr³ − πr³/3. This is the proof that cannot
+be flattened at all: the argument compares cross-sections at every height, and a
+plane figure has no heights to compare. The slices are drawn lifted out and set
+down below their solids, because a cross-section left in place would be sealed
+inside an opaque solid.
+
+It needed a new primitive: `revolve()` turns a silhouette into a closed surface
+of revolution, so a cylinder, a cone, a hemisphere and a flat disc are all just
+different profiles. `facing: 'in'` is explicit rather than inferred, because a
+cavity — the inner wall of a bored cone — is a surface whose visible side faces
+the axis, and getting it wrong makes the surface vanish under back-face culling
+rather than look wrong.
+
+Two more things the earlier solids never exercised:
+
+- **A flat cap has no interior direction at its own height.** `revolve` first
+  used the axis point at each band's height as the "inside", which for a disc
+  lies IN the disc — leaving the face with no side to turn away from. The
+  reference is now the middle of the profile's height range.
+- **Shading needed the true face normal.** It was using the direction from the
+  reference point to the face centre, which coincides with the normal on a box
+  and is badly skewed on anything tall or curved — a cylinder wall would shade
+  as though every face pointed at the solid's midpoint. It now takes the Newell
+  normal and only uses the reference for its sign.
+
+The tests separate the mathematics from the picture. The identity is checked at
+a tessellation fine enough not to be the limiting factor (hemisphere 16.75433 vs
+cylinder−cone 16.75447, analytic 16.75516); what is DRAWN is then checked
+against a tessellation budget (0.62% apart at 20 segments and 12 bands), plus
+the requirement that an inscribed approximation must run UNDER the true volume,
+which catches a reversed winding or a bad profile. At 362 faces it is by far the
+heaviest proof — every face is its own SceneObject, so if device performance
+becomes a problem this is where batching is needed.
+
+### Remaining 3D candidates
+
+Genuinely need depth: **#7** surface area of a sphere (Archimedes' hat-box — the
+sphere and its circumscribed cylinder have equal lateral area), **#8** volume of
+a sphere (cylinder minus double cone, by Cavalieri), **#9** volume of a cylinder,
+**#18** Euler's polyhedron formula, **#74** cross product magnitude. Better in 3D
+but provable flat: **#1** (lift the four triangles to show the rearrangement as
+motion), **#5** (fan the wedges out of plane), **#27** (staircase of unit cubes).
+
+### There is no theorem → proof mechanism
+
+`PROOFS` is hand-authored data keyed by formula id, and nothing derives a figure
+from the LaTeX. That is not a gap that can be closed: KaTeX yields the parse tree
+of the *statement*, and automated provers yield symbolic derivations — neither
+produces a picture. Choosing what to draw is a design act.
+
+The work is not 80 independent problems, though. Classical visual proofs cluster
+into a few families — area dissection (#1, #22, #23, #27, #33), volume dissection
+(#24, #8), limit of dissection (#5, #7, #8), similar triangles (#3, #11, #12),
+unit circle (#40, #49, #50), vector parallelogram (#34, #73, #74, #75) — and
+parameterised templates for those would cover roughly 25–30 of the 80, reducing
+each to instantiation plus label placement. The remainder splits into bespoke
+proofs (#13 incircle, #21 completing the square, #45 FTC) and formulas with **no
+sensible visual proof at all**: #57–60 are definitions or PDEs, #78–80 are real
+theorems whose proofs are symbolic. Drawing anything for those would be
+decoration, not argument.
