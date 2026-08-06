@@ -14,6 +14,8 @@
 //   - A future TikZ-string parser can target these same primitives without
 //     changing the renderer or proof catalog.
 
+import { applyTextColor } from './MatematexTextColor';
+
 // ─── Pure-TS primitive types ────────────────────────────────────────────
 
 export type Vec3 = [number, number, number];
@@ -100,8 +102,18 @@ export interface ProofRenderOptions {
     templateTextComp: any;
     /** Local scale of the templateText SceneObject. */
     templateScale: vec3;
-    /** Multiplier applied to all proof coordinates (proof units → world units). */
+    /** Multiplier applied to all proof coordinates (proof units → world units).
+     *  Ignored when `fitBox` is given. */
     worldScale: number;
+    /** Fit the figure inside this half-extent (world units) instead of using a
+     *  fixed `worldScale`.
+     *
+     *  Proofs are authored in whatever units suit the geometry — Pythagoras is
+     *  a 3-4-5 triangle, a circle proof might be radius 1 — so a single
+     *  `worldScale` that frames one of them crops another. Deriving the scale
+     *  from the figure's own bounds means a new proof is drawn to fit without
+     *  anyone tuning a number, and it cannot silently overflow the display. */
+    fitBox?: { halfWidth: number; halfHeight: number };
     /** Default color used when a primitive omits its own. */
     defaultColor: vec4;
     /** Optional offset (in world units) applied to the proof's container. */
@@ -152,9 +164,24 @@ export function renderProof(proof: VisualProof, opts: ProofRenderOptions): Scene
     }
 
     const b = proofBounds(proof);
+
+    // Derive the scale from the figure's own size when a fit box is supplied.
+    // Labels sit outside the geometric bounds, so leave a margin rather than
+    // filling the box exactly.
+    let effectiveOpts = opts;
+    if (opts.fitBox) {
+        const w = Math.max(b.maxX - b.minX, 1e-6);
+        const h = Math.max(b.maxY - b.minY, 1e-6);
+        const fit = Math.min(
+            (opts.fitBox.halfWidth * 2 * 0.85) / w,
+            (opts.fitBox.halfHeight * 2 * 0.85) / h,
+        );
+        effectiveOpts = { ...opts, worldScale: fit };
+    }
+
     const ctx: DrawCtx = {
         parent: container,
-        opts,
+        opts: effectiveOpts,
         shiftX: -(b.minX + b.maxX) / 2,
         shiftY: opts.anchor === 'top' ? -b.maxY : -(b.minY + b.maxY) / 2,
         z: 0,
@@ -371,8 +398,10 @@ function createLabel(p: ProofLabel, ctx: DrawCtx): void {
     const comp: any = (obj as any).copyComponent(opts.templateTextComp);
     if (!comp) return;
     comp.text = p.text;
-    try { (comp.textFill as any).mappingType = 0; } catch (e) { /* ignore */ }
-    try { comp.textFill.color = color4(p.color, opts.defaultColor); } catch (e) { /* ignore */ }
+    // Text3D colour lives on the material, not on a `textFill` — see
+    // applyTextColor. Proof labels are deliberately multi-coloured, so this
+    // matters more here than anywhere else.
+    applyTextColor(comp, color4(p.color, opts.defaultColor));
 
     const s = (p.scale ?? 1.0);
     // Labels sit a full step in front of the geometry they annotate so text

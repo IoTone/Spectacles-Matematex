@@ -1,0 +1,17 @@
+{
+  "name": "matematex-layout-conformance",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Dev-only harness: diff the Matematex layout walker against KaTeX rendered in a real browser. Scoped here so the repo root stays package.json-free.",
+  "//": "No \"type\": \"module\" — that would make node treat the .ts files here as ESM and break ts-node's CJS loader. capture-reference.mjs is explicitly ESM via its extension.",
+  "scripts": {
+    "dump:formulas": "npx ts-node --transpile-only ./dump-formulas.ts > ./reference/formulas.json",
+    "dump:ours": "npx ts-node --transpile-only ./dump-ours.ts > ./ours.json",
+    "serve": "node ./serve.js",
+    "capture": "node ./capture-reference.mjs",
+    "compare": "npx ts-node --transpile-only ./compare.ts"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.1"
+  }
+}

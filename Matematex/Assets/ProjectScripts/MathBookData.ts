@@ -228,8 +228,11 @@ export const MATH_FORMULAS: MathFormula[] = [
     { id: 65, chapter: 'Linear Algebra', name: 'Transpose of Product',
       latex: '(AB)^T = B^T A^T',
       keywords: ['matrix', 'transpose', 'product', 'identity'] },
+    // Restored to the real pmatrix form now that the bridge renders `mtable`
+    // (arraycolsep widths + the existing vlist stacking). The matrix-free
+    // workaround from the v2 plan is no longer needed.
     { id: 66, chapter: 'Linear Algebra', name: 'Determinant of 2x2',
-      latex: '\\det A = a_{11} a_{22} - a_{12} a_{21}',
+      latex: '\\det\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} = ad - bc',
       keywords: ['matrix', 'determinant', '2x2'] },
     { id: 67, chapter: 'Linear Algebra', name: 'Determinant of Product',
       latex: '\\det(AB) = \\det(A)\\,\\det(B)',

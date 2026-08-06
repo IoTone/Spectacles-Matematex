@@ -1,0 +1,6 @@
+# Dependency trees — never checked in, restored with `npm install`.
+node_modules/
+
+# macOS / editor noise
+.DS_Store
+*.swp

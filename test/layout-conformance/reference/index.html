@@ -1,0 +1,176 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Matematex layout reference — KaTeX in browser</title>
+<link rel="stylesheet" href="katex.css">
+<style>
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; margin: 24px; max-width: 60rem; }
+  h1 { font-size: 1.2rem; }
+  .row { border-bottom: 1px solid #ddd; padding: 10px 0; }
+  .id { color: #888; font-size: 12px; }
+  #status { position: sticky; top: 0; background: #fff; padding: 8px 0; font-weight: 600; }
+  pre { background: #f6f6f6; padding: 10px; overflow: auto; max-height: 20rem; font-size: 11px; }
+</style>
+
+<h1>Matematex layout reference</h1>
+<p>Renders each formula with the <em>same</em> KaTeX 0.16.22 build the bridge uses
+(<code>katex_bundle.ts</code> = <code>dist/katex.mjs</code>), lets the browser do the CSS
+inline layout SpaceDOM can't, and measures every text node. Results POST to
+<code>reference.json</code>.</p>
+
+<div id="status">loading…</div>
+<div id="render"></div>
+<pre id="out"></pre>
+
+<script type="module">
+import katex from './katex.mjs';
+
+// Mirror MatematexLayoutWalker.shouldSkip — these carry no glyphs, only spacing.
+const SKIP_CLASSES = new Set(['strut', 'pstrut', 'vlist-s', 'nulldelimiter']);
+
+const statusEl = document.getElementById('status');
+const renderEl = document.getElementById('render');
+
+function isSkipped(el) {
+  const cls = (el.getAttribute('class') || '').split(/\s+/);
+  for (const c of cls) if (SKIP_CLASSES.has(c)) return true;
+  return false;
+}
+
+// Collect text nodes in document order, applying the walker's skip rules.
+function textNodesOf(root) {
+  const out = [];
+  (function walk(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const t = node.nodeValue || '';
+      // Zero-width spaces (vlist-s uses U+200B) and pure whitespace carry no ink.
+      if (t.replace(/[​\s]/g, '').length === 0) return;
+      out.push(node);
+      return;
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (isSkipped(node)) return;
+    for (const child of node.childNodes) walk(child);
+  })(root);
+  return out;
+}
+
+// A zero-size inline-block aligned to the baseline sits with its top edge exactly
+// ON the baseline. That gives us a true baseline reference per inline context —
+// necessary because Range.getBoundingClientRect returns the font's line box, not
+// tight ink bounds, so raw rect centres carry a font-size-dependent offset that
+// would masquerade as a vertical layout defect.
+function baselineProbe() {
+  const s = document.createElement('span');
+  s.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline;';
+  s.setAttribute('data-mtx-probe', '1');
+  return s;
+}
+
+function measure(katexHtml) {
+  const origin = katexHtml.getBoundingClientRect();
+  // 1em == the .katex root's font-size, which is what the walker treats as 1em.
+  const katexRoot = katexHtml.closest('.katex') || katexHtml;
+  const rootEm = parseFloat(getComputedStyle(katexRoot).fontSize);
+
+  const nodes = textNodesOf(katexHtml);
+
+  // Pass 1 — horizontal geometry and ink boxes, DOM untouched.
+  const items = nodes.map(node => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const r = range.getBoundingClientRect();
+    const parentEm = parseFloat(getComputedStyle(node.parentElement).fontSize);
+    return {
+      text: node.nodeValue,
+      x: ((r.left + r.right) / 2 - origin.left) / rootEm,
+      yBox: -((r.top + r.bottom) / 2 - origin.top) / rootEm,
+      left: (r.left - origin.left) / rootEm,
+      right: (r.right - origin.left) / rootEm,
+      width: r.width / rootEm,
+      scale: parentEm / rootEm,
+    };
+  });
+
+  // Pass 2 — baselines, via probes inserted then removed.
+  const probes = nodes.map(node => {
+    const p = baselineProbe();
+    node.parentNode.insertBefore(p, node);
+    return p;
+  });
+  probes.forEach((p, i) => {
+    const pr = p.getBoundingClientRect();
+    items[i].yBaseline = -(pr.top - origin.top) / rootEm;
+    // The probe's left edge is the PEN POSITION at the start of this text node
+    // — the same quantity the walker tracks as cursorX. Comparing pen positions
+    // beats comparing ink-box centres: a glyph's ink is not centred in its
+    // advance, and for KaTeX's Size1–4 fonts (large operators like ∫, scaled
+    // \left( delimiters) the side bearings are big enough that centre-to-centre
+    // comparison reports errors that aren't there.
+    items[i].xPen = (pr.left - origin.left) / rootEm;
+  });
+  probes.forEach(p => p.remove());
+
+  return { items, width: origin.width / rootEm, height: origin.height / rootEm, rootEm };
+}
+
+async function run() {
+  const formulas = await (await fetch('formulas.json')).json();
+
+  // Fonts must be loaded before any measurement, or widths are the fallback
+  // font's and the whole run is garbage. Load EVERY @font-face the stylesheet
+  // declares rather than a hand-listed subset: an earlier version listed only
+  // Main/Math/Size1/AMS, so KaTeX_Size2–4 (large operators and scaled
+  // delimiters) silently measured against a fallback serif — which made a
+  // size3 "(" report a 0.334em advance, narrower than plain Main's 0.389em.
+  // That is impossible for a larger variant, and it poisoned every \int, \sum
+  // and \left( comparison in the corpus.
+  await document.fonts.ready;
+  const faces = Array.from(document.fonts);
+  await Promise.all(faces.map(f => f.load().catch(() => {})));
+  await document.fonts.ready;
+  const unloaded = Array.from(document.fonts).filter(f => f.status !== 'loaded');
+  if (unloaded.length) {
+    console.warn('fonts not loaded:', unloaded.map(f => f.family).join(', '));
+  }
+  statusEl.textContent = `fonts ready (${faces.length} faces) — measuring…`;
+
+  const out = { generator: 'katex-browser', katexVersion: katex.version, formulas: [] };
+
+  for (const f of formulas) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<div class="id">#${f.id} — ${f.name}</div>`;
+    const host = document.createElement('div');
+    row.appendChild(host);
+    renderEl.appendChild(row);
+
+    const rec = { id: f.id, name: f.name, latex: f.latex };
+    try {
+      katex.render(f.latex, host, { throwOnError: true, displayMode: true });
+      const katexHtml = host.querySelector('.katex-html');
+      if (!katexHtml) throw new Error('no .katex-html');
+      Object.assign(rec, measure(katexHtml));
+    } catch (e) {
+      rec.error = String(e && e.message || e);
+      rec.items = [];
+    }
+    out.formulas.push(rec);
+    statusEl.textContent = `measured ${out.formulas.length}/${formulas.length}`;
+  }
+
+  const json = JSON.stringify(out, null, 2);
+  document.getElementById('out').textContent = json.slice(0, 4000) + (json.length > 4000 ? '\n…' : '');
+
+  try {
+    const res = await fetch('/save', { method: 'POST', body: json });
+    statusEl.textContent = res.ok
+      ? `✅ measured ${out.formulas.length} formulas — reference.json saved`
+      : `⚠️ measured, but save failed (${res.status})`;
+  } catch (e) {
+    statusEl.textContent = `⚠️ measured, but save failed: ${e}. Copy the JSON below.`;
+  }
+  window.__RESULT__ = out;
+}
+
+run().catch(e => { statusEl.textContent = '❌ ' + e; console.error(e); });
+</script>

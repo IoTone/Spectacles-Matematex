@@ -2,7 +2,10 @@
 
 A snapshot of `MatematexBridge.ts`'s current coverage of KaTeX HTML output, what's partial, what's missing, and a prioritized improvement list. Companion to `matematex-design-spec.md`.
 
-Last updated: 2026-08-04 (after the layout-conformance fix pass: corpus went from 2% to 82% conformant against KaTeX-in-browser).
+Last updated: 2026-08-04 (layout-conformance fix pass + matrix support).
+> Corpus went from 2% to **79%** conformant against KaTeX-in-browser. Note: an
+> earlier revision of this file claimed 82% — that was measured against a
+> reference whose KaTeX_Size2–4 fonts had not loaded. 79% is the honest number.
 
 > **Scope note.** This document covers the *KaTeX bridge* only. The visual-proof
 > layer (`MatematexProof.ts`) is a separate renderer with its own findings —
@@ -113,23 +116,82 @@ change rather than trusting a single formula.
 The 0.09–0.19em asymmetry between numerator and denominator was the nulldelimiter
 and margin bugs above, not a centring bug. No separate fix needed.
 
-### Large operators and scaled delimiters (P1, open)
-The 14 remaining conformance failures (all ≤0.330em) involve KaTeX_Size1–4
-glyphs: `\int`, `\sum`, `\left(`, `\lVert`, `\binom`.
+### Large operators and scaled delimiters (P1, partially fixed)
+**Correction to a previous entry in this document.** An earlier pass concluded
+that using KaTeX_Size1–4 metrics "made things strictly worse" and reverted it.
+That conclusion was wrong: the conformance page was only explicitly loading four
+font families, so KaTeX_Size2–4 measured against a fallback serif. The reference
+itself was broken. A size3 `(` was being reported at a 0.334em advance — narrower
+than plain KaTeX_Main's 0.389em, which is impossible for a larger variant.
 
-**Do not re-try the obvious fix.** Adding the Size1–4 metrics tables and
-selecting them by class (`.large-op` → Size2, `.delimsizing.sizeN` → SizeN, per
-katex.scss) was implemented and measured: it made 13 of the 14 strictly worse
-(#38 0.110 → 0.631em) and was reverted. KaTeX evidently does not advance by the
-Size-font metric width in these positions. The real mechanism is unidentified;
-start by dumping a `\left(` subtree with `dump-dom.ts` and finding where the
-advance actually comes from.
+With every `@font-face` loaded, the browser reports 0.736em, matching
+`Size3-Regular`'s 0.73611em exactly. The metrics were right all along.
+
+**Now applied** for `delimsizing.size1..4` / `delim-size1` / `delim-size4`:
+pmatrix's delimiter error halved (0.348 → 0.174em), bmatrix 0.252 → 0.126em.
+
+**Deliberately NOT applied** to `.op-symbol.small-op` / `.large-op`, even though
+katex.scss maps them to Size1/Size2. Measured: it makes `\sum` formulas worse
+(#68 0.360 → 0.471em). In display mode a large operator sits inside an
+`op-limits` vlist, so its glyph width feeds our limit-*centring* rather than the
+cursor directly, and a wider (correct) glyph shifts the centring the wrong way.
+Fix the centring interaction first, then the metric can be turned on — the
+mapping is already written and commented out in `sizeFamilyFor`.
+
+### ~~`textColor` silently ignored on Text3D~~ ✅ FIXED (NEW)
+`createText` tinted glyphs with `comp.textFill.color = color` inside a try/catch.
+`Component.Text` (2D) has a `textFill`; **`Component.Text3D` does not** — its
+colour lives on the *material*. The assignment threw, the catch swallowed it,
+and every glyph kept the template material's colour. `@input textColor` had
+never had any effect.
+
+The tell was that sqrt radicals came out white while all the surrounding text
+was green: radicals render as a `RenderMeshVisual` and take the
+`mainPassOverrides` path, which does work.
+
+Fixed with `applyTextColor()` — tries `textFill` first (2D Text), then falls
+back to cloning the material once per distinct colour, cached on the source
+material so the shared template isn't repainted. Applied in `createText`, the
+book's splash/label lines, and `MatematexProof`'s labels, which had the same
+copy-pasted trap and where it mattered most (proof labels are deliberately
+multi-coloured).
+
+### ~~Upright glyphs drawn in the wrong font~~ ✅ FIXED (NEW, root cause)
+The template Text3D had **no font assigned**, so every non-italic glyph — digits,
+operators, parens, delimiters — was drawn in Lens Studio's default face while
+being spaced with KaTeX_Main metrics. Only italics ever got a KaTeX font.
+`KaTeX_Main-Regular.ttf` was already in the project, just never wired.
+
+This was the real cause of the collisions reported in visual QA (`2ab` running
+together, `|x|` fouling its bars, superscripts touching their base) — not the
+italic padding, which cannot explain a collision between an upright `2` and its
+neighbour. Fixed with a `mainFont` input threaded through the renderer.
+
+Two fudge factors existed only to mask it and are now unnecessary:
+`layoutWidthMargin` 1.18 (removed earlier) and a brief `emToWorld` 5 → 5.9
+(reverted). If glyph collisions ever return, check the font assignment before
+reaching for either.
 
 ## 3. Not supported
 
-### Matrices and array environments (`mtable`, `pmatrix`, `bmatrix`, `vmatrix`)
-- **Affected:** 1 entry (#66 — uses entry-form workaround in v2). Linear Algebra chapter has 5+ entries that *would* benefit from real matrix layout.
-- **Effort:** large. Needs a 2D row/column layout engine, delimiter scaling, and cell alignment.
+### ~~Matrices and array environments~~ ✅ SUPPORTED (was "L / ≥1 week")
+The estimate was wrong — KaTeX renders an array as **columns side by side, each a
+vlist of stacked cells**, which is the exact primitive `walkVlistGroup` already
+implemented for fractions and scripts. No 2D layout engine was needed.
+
+The only missing piece was `.arraycolsep`, the column gutter: an empty span with
+an inline `width: 0.5em` (KaTeX emits two per gutter) and no CSS width, so it was
+being skipped. Every matrix came out exactly 1em per column gap too narrow.
+
+Verified with 8 new conformance cases (`EXTRA_FORMULAS` in the harness):
+`matrix` 3×3 and `vmatrix` 2×2 now PASS at **maxDx 0.001em**, and vertical
+stacking was already exact (maxDy 0.000em). `pmatrix`/`bmatrix`/`cases` still
+fail, but only by the enclosing delimiter's advance — the cell layout inside them
+is correct. #66 has been restored from its matrix-free workaround to the real
+`\det\begin{pmatrix}…\end{pmatrix}` form.
+
+Still unsupported: column alignment specifiers beyond centring (`col-align-l/r`
+are parsed as ordinary columns), and `\hline`.
 
 ### Accent marks (`\hat`, `\bar`, `\vec`, `\widetilde`, `\overline`, `\underline`)
 - **Affected:** ~11 formulas that use `\mathbf{v}` (vector bold) — would also benefit from `\vec{v}` rendering.
@@ -165,11 +227,12 @@ advance actually comes from.
 | **P0** | Italic correction double-count; subscript vs superscript rule | ✅ Fixed. Was the corpus's largest error (1.850em). |
 | **P0** | Script-style `tightSpacings`; size multipliers; scriptspace; nulldelimiter width | ✅ Fixed, all verified against KaTeX source. |
 | **P0** | Layout conformance harness (all 80, per-glyph, em) | ✅ Built — `test/layout-conformance/`, golden committed, CI-ready. |
-| **P1** | Large operators / scaled delimiters (KaTeX_Size1–4 advances) | ⏳ Open — 14 failures, all ≤0.330em. Size-metrics fix TRIED AND REVERTED (made 13 worse); mechanism unidentified. |
+| **P1** | Scaled delimiters (KaTeX_Size1–4 advances) | ✅ Applied for `delimsizing` — pmatrix error halved. Earlier "reverted, made things worse" verdict was a harness font-loading bug, now fixed. |
+| **P1** | Large operators (`\sum`/`\int`) inside `op-limits` vlists | ⏳ Open — Size metrics are correct but interact badly with limit-centring; mapping written and commented out in `sizeFamilyFor`. |
+| **P0** | Matrices / array environments (`mtable`) | ✅ Supported — `arraycolsep` gutter was the only gap; #66 restored to real `pmatrix`. |
 | **P1** | Big-op display-mode limits | ✅ `displayMode` input; `op-limits` vlist handled. |
 | **P1** | Bold font support (`\mathbf`) | ✅ `WalkContext.bold`, `boldFont` input. |
 | **P1** | Accent marks (`\vec`, `\hat`, `\bar`) | ✅ Walker reads `left:` for accent-body centring. |
-| **P1** | Matrix rendering (`mtable`, `pmatrix`) | Deferred — 2D layout, likely scoped with Phase 7 (TikZ). |
 | **P2** | Italic font auto-calibration | Open. `_italicMinGapEm` is now 0; if glyphs collide on device, calibrate `italicScaleAdjust` rather than re-padding. |
 | **P2** | Visual QA traversal (Phase 6.5) | ⏳ Human pass still needed — the harness covers geometry only. |
 | **P3** | Text mode (`\text{...}`), colour | Deferred. |
@@ -223,3 +286,63 @@ advance actually comes from.
 | Validator | `MatematexValidator.ts` |
 | 80 formulas with keywords | `MathBookData.ts` |
 | Search index | `MathSearchIndex.ts` |
+
+
+## Glyph scale vs the em grid — why the conformance harness could not see it
+
+The layout advances the pen by `emToWorld` world units per em. A glyph must
+DRAW at that same scale or it cannot fit the slot the pen leaves it. Nothing
+tied those two numbers together, and the error was large:
+
+| | drawn per em | vs emToWorld = 5.0 |
+|---|---|---|
+| upright (KaTeX_Main-Regular) | 6.327 w | 1.265x too big |
+| italic (KaTeX_Math-Italic)   | 7.968 w | 1.594x too big |
+
+Measured on device by comparing each glyph's rendered bounding box against its
+true ink box read out of the TTF `glyf` table. The factor came out identical to
+three decimals for every glyph of a font, which is what makes it a scale error
+rather than a per-glyph layout bug.
+
+At that scale the upright `2`'s INK (1.767 w) was already wider than its entire
+advance (1.750 w) — no side bearing at all — and the italic `a`'s ink was 1.43x
+its whole advance. Hence `2ab`, `b^2`, `|a|`, and denominators fouling the
+fraction bar: every reported collision, one cause.
+
+**The extra italic factor is not a fudge.** Lens Studio fits a font's `hhea`
+ascent−descent span to the requested `size`. Those spans differ:
+
+    KaTeX_Main-Regular   903 .. -272  =  1.1750 em
+    KaTeX_Math-Italic    717 .. -218  =  0.9350 em   ratio 1.2567
+
+which matches the measured 1.594 / 1.265 = 1.260. Because the cause is font
+scaling, the correction is **uniform on both axes** — which is why superscripts
+collided vertically too, and why an x-only correction would have been wrong.
+
+Fix: `textScaleMultiplier` 5.0 → 3.951 (= 5 / 1.2654) and `italicScaleAdjust`
+1.0 → 0.7957 (= 935 / 1175, straight out of the font headers). Re-measured
+after: drawn-em is 5.00 for both fonts, every glyph's ink now sits inside its
+advance.
+
+### Why this was invisible for so long
+
+The conformance harness compares **pen positions in em**. `emToWorld` cancels
+out of that comparison entirely, so a formula could score PASS at 0.005 em —
+as `|a+b| \le |a| + |b|` (#34) and the Law of Cosines (#2) both did — while
+rendering with glyphs overlapping on the device. Layout fidelity and render
+fidelity are separate properties and the harness only ever measured the first.
+
+**Corrections to earlier conclusions in this document.** Two knobs were tuned to
+compensate for this without knowing the cause, and both were wrong:
+
+- `emToWorld` was raised 5 → 5.9, then reverted to 5.0 when the missing
+  `mainFont` was found. The `mainFont` bug was real, but reverting removed a
+  compensation that was doing something — the scale error was still there.
+  Neither value was right, because `emToWorld` is not the knob: it sets how wide
+  a formula is, and changing it to fix spacing just moves the overflow problem.
+- `layoutWidthMargin` was set to 1.18 in the scene to stretch fraction bars out
+  to glyphs that were 1.265x oversize. With the scale correct it returns to 1.0.
+
+The general lesson is the one already recorded for the font-loading bug: a
+measurement that cannot see a whole class of defect will report clean while that
+defect is present. Before trusting a green harness, check what it measures.

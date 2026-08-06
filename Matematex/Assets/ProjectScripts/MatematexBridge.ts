@@ -262,7 +262,32 @@ export function countRenderableTextNodes(root: SpaceNode): number {
     return n;
 }
 
+export { applyTextColor } from './MatematexTextColor';
+import { applyTextColor } from './MatematexTextColor';
+
 // ─── Walker ──────────────────────────────────────────────────
+
+// Which KaTeX_Size* font a class selects, per katex.scss. Applied by
+// font-FAMILY at font-size 1em, so the element still reports scale 1.0 while
+// its glyphs are materially wider than the KaTeX_Main equivalents (a size3
+// "(" advances 0.736em vs Main's 0.389em; "∑" isn't in Main at all).
+function sizeFamilyFor(classes: string[]): string | null {
+    if (classes.indexOf('delimsizing') >= 0) {
+        for (const n of ['size1', 'size2', 'size3', 'size4']) {
+            if (classes.indexOf(n) >= 0) return n;
+        }
+    }
+    if (classes.indexOf('delim-size1') >= 0) return 'size1';
+    if (classes.indexOf('delim-size4') >= 0) return 'size4';
+
+    // Deliberately NOT mapping `.op-symbol.small-op`/`.large-op` to Size1/Size2,
+    // even though katex.scss does. Measured: it makes `\sum` formulas worse
+    // (#68 0.360 → 0.471em). In display mode a large operator is wrapped in an
+    // `op-limits` vlist, so its glyph width feeds our limit-centring rather than
+    // the cursor directly, and a wider (correct) glyph shifts the centring the
+    // wrong way. That interaction needs fixing before the metric can be applied.
+    return null;
+}
 
 interface WalkContext {
     cursorX: number;
@@ -271,6 +296,8 @@ interface WalkContext {
     emToWorld: number;
     italic: boolean;
     bold: boolean;
+    /** Active KaTeX_Size* variant ('size1'..'size4'), or null for Main/Italic. */
+    fontFamily: string | null;
 }
 
 interface WalkResult {
@@ -324,6 +351,7 @@ export class MatematexLayoutWalker {
             emToWorld,
             italic: false,
             bold: false,
+            fontFamily: null,
         };
 
         this.walk(katexHtmlRoot, ctx);
@@ -369,6 +397,15 @@ export class MatematexLayoutWalker {
             return;
         }
 
+        // Column gutter inside an array/matrix. Empty span, no CSS width — the
+        // measurement is an inline `width` (0.5em by default, and KaTeX emits
+        // TWO of them per gutter). Skipping them left every matrix exactly 1em
+        // per column gap too narrow.
+        if (classes.indexOf('arraycolsep') >= 0) {
+            ctx.cursorX += parseEm(getStyle(el, 'width')) * ctx.emToWorld * ctx.scale;
+            return;
+        }
+
         // SVG blocks (e.g., sqrt radical) — defer emission until the parent
         // vlist finishes walking so we know the actual content width. The
         // radical overbar must span ALL content, not just a fixed estimate.
@@ -400,10 +437,18 @@ export class MatematexLayoutWalker {
         }
         const marginRight = parseEm(getStyle(el, 'marginRight'));
 
+        // Entering a KaTeX_Size* subtree (large operator or scaled delimiter)
+        // switches which metrics table measures its glyphs. Scoped to the
+        // subtree and restored on every exit path, like `sizing` and italic.
+        const sizeFamily = sizeFamilyFor(classes);
+        const savedFamily = ctx.fontFamily;
+        if (sizeFamily) ctx.fontFamily = sizeFamily;
+        const restoreFamily = () => { ctx.fontFamily = savedFamily; };
 
         // mspace: explicit horizontal space, no children to walk
         if (hasClass(el, 'mspace')) {
             ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
+            restoreFamily();
             return;
         }
 
@@ -417,6 +462,7 @@ export class MatematexLayoutWalker {
             if (marginRight) {
                 ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
             }
+            restoreFamily();
             return;
         }
 
@@ -426,6 +472,7 @@ export class MatematexLayoutWalker {
             if (marginRight) {
                 ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
             }
+            restoreFamily();
             return;
         }
 
@@ -439,6 +486,7 @@ export class MatematexLayoutWalker {
             if (marginRight) {
                 ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
             }
+            restoreFamily();
             return;
         }
 
@@ -463,6 +511,7 @@ export class MatematexLayoutWalker {
         if (marginRight) {
             ctx.cursorX += marginRight * ctx.emToWorld * ctx.scale;
         }
+        restoreFamily();
     }
 
     private walkChildren(el: SpaceElement, ctx: WalkContext): void {
@@ -537,7 +586,7 @@ export class MatematexLayoutWalker {
         //    NOT per-character height. Per-character height varies (e.g., "i" is
         //    taller than "s" due to its dot) which causes characters on the same
         //    line to render at different y positions. Using x-height keeps them aligned.
-        const widthEm = getTextWidthEm(text, ctx.italic);
+        const widthEm = getTextWidthEm(text, ctx.italic, ctx.fontFamily);
         const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
         const centerX = ctx.cursorX + widthWorld / 2;
 
@@ -908,6 +957,47 @@ export class MatematexSceneRenderer {
     private created: SceneObject[] = [];
     _italicScaleAdjust: number = 0.5;
     verbose: boolean = false;
+    /** Number of glyphs still to report in the calibration probe. Set >0 to
+     *  sample a render; it decrements itself. */
+    _calibrationSamples: number = 0;
+    _probeEmToWorld: number = 5.0;
+    private _probeRecords: { text: string, italic: boolean, comp: any, obj: SceneObject, metricW: number }[] = [];
+
+    /** Report drawn width vs metric width for the sampled glyphs.
+     *
+     *  Must be called at least one frame AFTER render(): a Text3D's bounds are
+     *  only populated once its mesh has been built, so reading them during
+     *  creation returns nothing at all.
+     *
+     *  A ratio near 1.0 means the renderer draws a glyph at exactly the width
+     *  the layout reserved for it. Anything else is a scale mismatch, and it
+     *  shows up as collisions in the tightest gaps (|a, the 2 in 2ab) long
+     *  before it is visible anywhere else — which is why the conformance
+     *  harness, which measures em-space positions, cannot see it. */
+    runCalibrationReport(): void {
+        if (this._probeRecords.length === 0) return;
+        print('[Matematex] ── calibration: drawn width vs metric width ──');
+        for (const r of this._probeRecords) {
+            const parts: string[] = [];
+            const sx = r.obj.getTransform().getWorldScale().x;
+            try {
+                const d = r.comp.worldAabbMax.x - r.comp.worldAabbMin.x;
+                if (isFinite(d) && d > 0) parts.push(`worldAabb=${d.toFixed(3)} ratio=${(d / r.metricW).toFixed(3)}`);
+            } catch (e) { /* absent */ }
+            try {
+                const d = (r.comp.localAabbMax.x - r.comp.localAabbMin.x) * sx;
+                if (isFinite(d) && d > 0) parts.push(`localAabb=${d.toFixed(3)} ratio=${(d / r.metricW).toFixed(3)}`);
+            } catch (e) { /* absent */ }
+            try {
+                const bb = r.comp.getBoundingBox();
+                const d = (bb.max ? (bb.max.x - bb.min.x) : (bb.right - bb.left)) * sx;
+                if (isFinite(d) && d > 0) parts.push(`bbox=${d.toFixed(3)} ratio=${(d / r.metricW).toFixed(3)}`);
+            } catch (e) { /* absent */ }
+            print(`[Matematex] calib ${JSON.stringify(r.text)} italic=${r.italic} ` +
+                  `metric=${r.metricW.toFixed(3)}w  ${parts.length ? parts.join('  ') : 'no bounds'}`);
+        }
+        this._probeRecords = [];
+    }
 
     render(
         items: LayoutItem[],
@@ -920,13 +1010,14 @@ export class MatematexSceneRenderer {
         textScaleMultiplier: number,
         italicFont: Font | null,
         boldFont: Font | null = null,
+        mainFont: Font | null = null,
     ): SceneObject[] {
         this.clear();
 
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (item.kind === 'text') {
-                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale, italicFont, boldFont);
+                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale, italicFont, boldFont, mainFont);
             } else if (item.kind === 'line') {
                 this.createLine(item, parent, color, lineMaterial);
             } else if (item.kind === 'svg') {
@@ -951,6 +1042,7 @@ export class MatematexSceneRenderer {
         templateScale: vec3,
         italicFont: Font | null = null,
         boldFont: Font | null = null,
+        mainFont: Font | null = null,
     ): void {
         if (!templateTextComp) {
             if (this.created.length === 0) {
@@ -980,15 +1072,22 @@ export class MatematexSceneRenderer {
         // Apply italic / bold font when the walker recorded those flags.
         // Bold takes precedence over italic if both fonts are assigned and
         // both flags are set (rare — \mathbf{x} is bold-not-italic in KaTeX).
+        // Font selection must match the metrics the layout used, or glyphs are
+        // drawn to a different width than the space reserved for them. Upright
+        // glyphs are measured against KaTeX_Main, so they have to be DRAWN in
+        // KaTeX_Main — leaving `mainFont` unset meant digits, operators and
+        // parens rendered in Lens Studio's default face while being spaced by
+        // KaTeX's metrics, which is what made `2ab` collide and `|a|` foul its
+        // bars. Italics were already correct; uprights never were.
         if (item.bold && boldFont) {
             try { comp.font = boldFont; } catch (e) { /* ignore */ }
         } else if (item.italic && italicFont) {
             try { comp.font = italicFont; } catch (e) { /* ignore */ }
+        } else if (mainFont) {
+            try { comp.font = mainFont; } catch (e) { /* ignore */ }
         }
 
-        // Try color override (template color is used as fallback)
-        try { (comp.textFill as any).mappingType = 0; } catch (e) { /* ignore */ }
-        try { comp.textFill.color = color; } catch (e) { /* ignore */ }
+        applyTextColor(comp, color);
 
         // Apply the template's local scale to the clone, multiplied by the
         // per-item scale factor (e.g. 0.8x for super/subscripts). This makes
@@ -1010,6 +1109,25 @@ export class MatematexSceneRenderer {
         obj.getTransform().setLocalPosition(
             new vec3(item.x, item.y + baselineOffset, zNudge)
         );
+
+        // ── Glyph calibration probe ────────────────────────────────────
+        // Layout advances the cursor by KaTeX's METRIC width; the renderer
+        // draws each glyph at a FontSize the layout knows nothing about. If
+        // those two disagree, glyphs collide or drift apart no matter how exact
+        // the layout is — and the conformance harness cannot see it, because it
+        // measures em-space positions, not drawn pixels.
+        //
+        // So measure. For the first few glyphs of a render, report the metric
+        // advance next to the actual world-space width of the object we just
+        // created. A ratio near 1.0 means layout and rendering agree.
+        // Record for the deferred calibration report (see runCalibrationReport).
+        // Bounds cannot be read here: the mesh for a Text3D created this frame
+        // has not been built yet, so worldAabbMin/Max are still empty.
+        if (this._calibrationSamples > 0) {
+            this._calibrationSamples--;
+            this._probeRecords.push({ text: item.text, italic: item.italic, comp, obj,
+                                      metricW: getTextWidthEm(item.text, item.italic) * this._probeEmToWorld * item.scale });
+        }
 
         // Diagnostic for the first text only (verbose mode only)
         if (this.verbose && this.created.length === 0) {

@@ -26,8 +26,10 @@
   ExportUid: 00000000-0000-0000-0000-000000000000
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
+    aboutButton: false
     autoAdvanceSec: false
     boldFont: false
+    calibrationProbe: false
     chapter1Button: false
     chapter2Button: false
     chapter3Button: false
@@ -38,11 +40,14 @@
     emToWorld: false
     hideTemplate: false
     italicFont: false
+    italicMinGapEm: false
     italicScaleAdjust: false
     layoutWidthMargin: false
     lineMaterial: false
+    mainFont: false
     nextButton: false
     prevButton: false
+    proofButton: false
     proofOffsetX: false
     proofOffsetY: false
     proofOffsetZ: false
@@ -66,6 +71,7 @@
   DefaultScriptInputs:
     - lineMaterial: !<reference.Material> d8596ebf-e771-4a92-9430-31cc2a994424
       templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      mainFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
       italicFont: !<reference.Font> 0b51787e-7320-4143-8277-bedeb78dd015
       boldFont: !<reference.Font> 00000000-0000-0000-0000-000000000000
       emToWorld: !<float> 5.000000
@@ -73,6 +79,7 @@
       layoutWidthMargin: 1.180000
       sqrtWidthScale: 0.850000
       italicScaleAdjust: !<float> 1.000000
+      italicMinGapEm: !<float> 0.000000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
       displayMode: true
       showProofs: true
@@ -90,22 +97,27 @@
       chapter3Button: !<MappingBased.AssignableType_4> 00000000-0000-0000-0000-000000000000
       chapter4Button: !<MappingBased.AssignableType_5> 00000000-0000-0000-0000-000000000000
       searchButton: !<MappingBased.AssignableType_6> 00000000-0000-0000-0000-000000000000
+      aboutButton: !<MappingBased.AssignableType_7> 00000000-0000-0000-0000-000000000000
+      proofButton: !<MappingBased.AssignableType_8> 00000000-0000-0000-0000-000000000000
       searchScreen: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       hideTemplate: true
       autoAdvanceSec: !<float> 0.000000
+      calibrationProbe: false
   ScriptTypes:
     -
       {}
   InputLines:
     - // @input Asset.Material lineMaterial
     - // @input SceneObject templateText
+    - "// @input Asset.Font mainFont {\"hint\":\"Upright font for non-italic glyphs — should be KaTeX_Main-Regular. The layout measures every upright glyph (digits, operators, parens) with KaTeX_Main metrics, so drawing them in any other font guarantees collisions like the 2 in '2ab' touching the a. Leave empty only to fall back to whatever font the template carries.\"}"
     - // @input Asset.Font italicFont
     - '// @input Asset.Font boldFont {"hint":"Bold font (e.g., NotoSans-Bold). Used when the walker encounters \\mathbf or \\boldsymbol. Leave empty to fall back to the regular template font."}'
-    - // @input float emToWorld = 5
+    - '// @input float emToWorld = 5 {"hint":"World units per em — the scale factor between LAYOUT and RENDERING. Back to 5.0 now that `mainFont` draws upright glyphs in KaTeX_Main — the earlier 5.9 was compensating for the wrong font being used, not for a real scale mismatch. Raise it only if glyphs still collide after the fonts are right. Does not affect layout fidelity: the conformance harness measures in em, so this cancels out."}'
     - // @input float textScaleMultiplier = 5
-    - // @input float layoutWidthMargin = 1.18
+    - '// @input float layoutWidthMargin = 1 {"hint":"Multiplier on fraction width/bar. 1.0 matches KaTeX exactly; raise only if the rendered bar looks too short against the drawn glyphs."}'
     - '// @input float sqrtWidthScale = 1 {"hint":"Scale factor for sqrt radical width. 1.0 is correct with the overbar clipping fix; lower only if you need to force a shorter overbar."}'
-    - // @input float italicScaleAdjust = 1
+    - "// @input float italicScaleAdjust = 1 {\"hint\":\"Horizontal scale applied to italic glyphs only. <1 narrows them. Use this to fix italic glyphs drawn wider than KaTeX's metrics predict — that mismatch is what makes a superscript collide with its base (b^2) or |x| foul its bars.\"}"
+    - '// @input float italicMinGapEm {"hint":"Extra gap (em) forced after every italic glyph. A RENDERING compensator with no basis in TeX layout — 0 is layout-correct. Raise toward 0.12 only as a stopgap if italic glyphs collide; prefer fixing italicScaleAdjust, which addresses the cause instead of padding around it."}'
     - "// @input vec4 textColor = {1,1,1,1}"
     - '// @input bool displayMode = true {"hint":"KaTeX displayMode (textbook style). Big operators get above/below limits, fractions and sqrts render larger. Recommended: ON."}'
     - '// @input bool showProofs = true {"hint":"Render visual proofs alongside formulas that have one (currently: Pythagorean Theorem #1). Toggle off to hide."}'
@@ -123,6 +135,9 @@
     - '// @input AssignableType_4 chapter3Button {"hint":"PinchButton on the splash/TOC page — jump to Chapter 3 Calculus (formula #41)"}'
     - '// @input AssignableType_5 chapter4Button {"hint":"PinchButton on the splash/TOC page — jump to Chapter 4 Linear Algebra (formula #61). Optional — leave empty if not added to scene yet."}'
     - '// @input AssignableType_6 searchButton {"hint":"PinchButton — open the Search screen. Optional."}'
+    - '// @input AssignableType_7 aboutButton {"hint":"PinchButton — toggle the About page (sources, licences, credits). Pinching it again returns to the splash. Optional."}'
+    - '// @input AssignableType_8 proofButton {"hint":"PinchButton — show the visual proof for the current formula, full size. Only appears on formulas that have one. Pinching it again returns to the formula. Optional."}'
     - '// @input SceneObject searchScreen {"hint":"SceneObject hosting the MatematexSearchScreen component. Optional — search is unavailable if empty."}'
     - '// @input bool hideTemplate = true {"hint":"Hide template after cloning"}'
     - '// @input float autoAdvanceSec {"hint":"Auto-advance interval in seconds (0 = disabled). Useful for testing without buttons."}'
+    - '// @input bool calibrationProbe {"hint":"Log the first few glyphs of each formula with their metric advance vs their drawn width. Use when glyphs collide or drift: a ratio far from 1.0 means the layout and the renderer disagree about how big an em is."}'

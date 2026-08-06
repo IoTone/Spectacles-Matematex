@@ -1,0 +1,9 @@
+node_modules/
+package-lock.json
+# Regenerated each run from the walker — cheap to reproduce, no need to track.
+ours.json
+reference/formulas.json
+# NOTE: reference.json is deliberately NOT ignored. It is the golden capture of
+# KaTeX's own layout, so committing it lets compare.ts run in CI with no browser
+# and no playwright install. Refresh it only when KaTeX is upgraded or the
+# formula corpus changes.

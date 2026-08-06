@@ -140,3 +140,130 @@ Adds `chapter: 'Linear Algebra'` to `MathBookData.ts`. Sources cited per row.
 - [specs-devs/context — UI Kit components](https://github.com/specs-devs/context/tree/main/docs/spectacles-frameworks/spectacles-ui-kit/components)
 - [specs-devs/context — ASR Module doc](https://github.com/specs-devs/context/blob/main/docs/about-spectacles-features/apis/asr-module.mdx)
 - [specs-devs/context — XR Keyboard doc](https://github.com/specs-devs/context/blob/main/docs/about-spectacles-features/apis/key-board.mdx)
+
+
+---
+
+## 7. Status update (2026-08-04)
+
+**Search screen is scaffolded in-scene.** `MatematexSearchScreen` now exists under
+`MatematixBookOfMathPhase6` with 16 UI children, built by duplicating the working
+`Launch PinchButtonCapsuleCh1` / `Text3D` objects (programmatic `Component.Text`
+does not render — a clone is the only reliable path):
+
+| Object | Purpose |
+|---|---|
+| `SearchQueryButton` | opens the XR keyboard |
+| `SearchQueryLabel`, `SearchResultsLabel` | Text3D readouts |
+| `SearchChip1..6` | topic chips, pre-labelled matrix / trig / derivative / integral / series / log |
+| `SearchRow1..6` | result-row button pool |
+| `SearchCloseButton` | back to splash |
+
+A `Launch PinchButtonCapsuleSearch` button was added to the splash page and is
+confirmed binding at runtime (`Bound searchButton.onButtonPinched`).
+
+**Wired automatically:** `bookOfMath`, `queryButton`, `queryLabelObj`,
+`resultsLabelObj`, `closeButton` on the screen; `searchScreen` and `searchButton`
+on `MatematexBookOfMath`.
+
+### Auto-wiring — no Inspector work needed
+
+Three inputs are **arrays**, and arrays are the one thing the Lens Studio MCP
+bridge cannot write (no array `valueType`; values get stringified). That left a
+dozen drag-and-drop steps whose only rule was "match the numbers" — a poor job
+for a human and one that fails silently when a row lands in the wrong slot.
+
+`MatematexSearchScreen.autoWireFromChildren()` now runs at startup and fills any
+array input still empty, by reading its own children's names:
+
+| Child name pattern | Fills | Taken from each object |
+|---|---|---|
+| `SearchChip<n>` | `topicChips` | its PinchButton component |
+| `SearchRow<n>` | `resultRowButtons` | its PinchButton component |
+| `SearchRow<n>` | `resultRowLabelObjs` | the object itself — the caption is a `Text` on its `Launch Text` child |
+
+Rows appear in two lists because two different things are read off them: the
+button to bind a pinch to, and the object to find the caption on. Sorting is
+numeric, so `SearchRow10` follows `SearchRow9`, not `SearchRow1`.
+
+A hand-assigned array always wins — this only fills gaps, so any of it can still
+be overridden in the Inspector. Adding a 7th row is just duplicating `SearchRow6`
+as `SearchRow7`; it joins the pool automatically and the result limit becomes 7.
+
+`topicChipLabels` stays empty on purpose: the fallback
+(`matrix, trig, derivative, integral, series, log`) already matches the chip
+captions.
+
+**Verified in preview:** logs `auto-wired 6 topic chips` and
+`auto-wired 6 result rows`.
+
+**Check it:** Preview → pinch *Search* on the splash → pinch the **matrix** chip.
+The results label should read "N results" and rows fill with entries like
+`#61 Matrix Multiplication (Linear Algebra)`. No auto-wire lines in the Logger
+means the child names don't match the patterns above.
+
+### Layout fixes from the first on-device look
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Row captions spilled well past their buttons | capsule ≈ 90px wide, `#1 Pythagorean Theorem (Geometry)` needs ≈ 190px | rows scaled **2.6× on X**; their `Launch Text` child counter-scaled to **0.48** so the type isn't stretched |
+| `<<` / `>>` floating over the chip rows | `showScreen` toggled chapter + search buttons but never prev/next | both now hidden on the Search screen (`navigate()` already ignored them there, so they were inert as well as in the way) |
+| ~~Row hit targets overlap~~ | my error — read `size: 15` on the collider and missed `fitVisual: true` | nothing to fix; the collider tracks the mesh, so widened rows get wider hit targets |
+
+### Known rough edges
+
+- **Result labels render green.** The two Text3D labels are clones of the book's
+  template, and `Text3D` takes its colour from a *material*, not a per-component
+  `textFill` — and that material is shared with the book's formula glyphs.
+  Recolouring it would repaint every formula. Fix is a cloned material, same
+  approach already used in `MatematexProof`.
+- **The keyboard button may be inert in Preview.** `SearchQueryButton` calls the
+  Spectacles XR keyboard via `global.textInputSystem`, usually absent on desktop;
+  the script logs and continues. Use the chips to test. Voice/ASR is not built.
+- **These are SIK `PinchButton`s, not Spectacles UI Kit.** The `RectangleButton` /
+  `TextInputField` migration in §2 above is still the intended end state.
+
+**Also landed:** #66 restored from its matrix-free workaround to the real
+`\det\begin{pmatrix}…\end{pmatrix}` form, now that the bridge renders `mtable`.
+
+
+---
+
+## 8. Field-of-view budget (2026-08-05)
+
+**The desktop preview shows about twice the vertical extent Spectacles does.**
+Lens Studio's preview camera runs a ~63.5° vertical FOV; Spectacles is ~46°
+*diagonal*, roughly 33° vertical. Content sits ~101 world units away
+(parent z=-100 + `containerWorldZ` 39, camera z=+40), which gives:
+
+| | vertical half-extent |
+|---|---|
+| Lens Studio preview | **±62 units** |
+| Spectacles | **±30 units** |
+
+The original splash was **149 units tall** — even the `MATEMATEX` title at y=+40
+sat off the display on device, while looking perfectly composed on the desktop.
+This is the worst kind of bug: invisible in the only view most of the UI gets
+built in.
+
+### What changed
+
+- Splash trimmed to **46 units** (y +25 … −21): title, subtitle, a one-line
+  blurb, TOC header, four chapter rows. The three-line catalogue blurb collapsed
+  to one; the hint line dropped (the buttons say it).
+- **New About page** holds what was pushed off the bottom — content sources,
+  licences, copyright. Reached by an `About` button on the splash; pinching it
+  again returns. Prev/next are hidden there, so the toggle is the only exit and
+  must not hide itself.
+- **Chapter buttons are positioned by the script**, from the same
+  `CHAPTER_BUTTON_Y` array the TOC rows use. They had drifted out of alignment
+  the moment the splash was re-flowed; now they can't.
+- **`SAFE_HALF_HEIGHT = 27`** is checked at runtime in `renderLines()`, which
+  logs a warning naming the page and its span. Verified it fires by temporarily
+  lowering it to 18.
+
+### Rule of thumb
+
+Anything laid out by hand in world units must stay inside **±27** at the current
+viewing distance. If the container moves closer or further, that budget scales
+with it — the constant assumes ~101 units.

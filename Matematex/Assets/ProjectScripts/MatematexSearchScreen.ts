@@ -106,6 +106,9 @@ export class MatematexSearchScreen extends BaseScriptComponent {
     }
 
     private bindButtonsOnStart(): void {
+        // Fill any array input left empty by discovering our own children.
+        this.autoWireFromChildren();
+
         // Query field — open XR keyboard on pinch
         if (this.queryButton) {
             this.bindPinch(this.queryButton, () => this.openKeyboard(), 'queryButton');
@@ -139,6 +142,76 @@ export class MatematexSearchScreen extends BaseScriptComponent {
 
         // Initial render — show empty state with the default chips' help text.
         this.refresh();
+    }
+
+    // ─── Auto-wiring ────────────────────────────────────────────────────────
+
+    /** Populate any EMPTY array input from our own children, by name.
+     *
+     *  `SearchChip1..N` → topicChips
+     *  `SearchRow1..N`  → resultRowButtons AND resultRowLabelObjs
+     *
+     *  Why this exists: those three inputs are arrays, and arrays can only be
+     *  filled by hand in the Inspector — the Lens Studio MCP bridge has no array
+     *  value type, so a generated scene cannot wire them. That left a dozen
+     *  drag-and-drop steps whose only rule was "match the numbers", which is
+     *  exactly the kind of thing a computer should do.
+     *
+     *  A hand-assigned array always wins; this only fills gaps. Rows serve as
+     *  their own label objects because a row's caption lives on its child text
+     *  component, which {@link getTextComp} already looks through to. */
+    private autoWireFromChildren(): void {
+        const self = this.getSceneObject();
+        if (!self) return;
+
+        const chips: SceneObject[] = [];
+        const rows: SceneObject[] = [];
+        const count = (self as any).getChildrenCount?.() || 0;
+        for (let i = 0; i < count; i++) {
+            const child = (self as any).getChild(i) as SceneObject;
+            if (!child || !child.name) continue;
+            if (/^SearchChip\d+$/.test(child.name)) chips.push(child);
+            else if (/^SearchRow\d+$/.test(child.name)) rows.push(child);
+        }
+
+        // Sort numerically — "SearchRow10" must not sort before "SearchRow2".
+        const byIndex = (a: SceneObject, b: SceneObject) =>
+            parseInt(a.name.replace(/\D+/g, ''), 10) - parseInt(b.name.replace(/\D+/g, ''), 10);
+        chips.sort(byIndex);
+        rows.sort(byIndex);
+
+        if (!this.topicChips || this.topicChips.length === 0) {
+            const found = chips.map(o => this.findPinchButton(o)).filter(b => !!b) as PinchButton[];
+            if (found.length > 0) {
+                this.topicChips = found;
+                print(`[MatematexSearch] auto-wired ${found.length} topic chips`);
+            }
+        }
+        if (!this.resultRowButtons || this.resultRowButtons.length === 0) {
+            const found = rows.map(o => this.findPinchButton(o)).filter(b => !!b) as PinchButton[];
+            if (found.length > 0) {
+                this.resultRowButtons = found;
+                print(`[MatematexSearch] auto-wired ${found.length} result rows`);
+            }
+        }
+        if (!this.resultRowLabelObjs || this.resultRowLabelObjs.length === 0) {
+            if (rows.length > 0) this.resultRowLabelObjs = rows;
+        }
+    }
+
+    /** A capsule button carries several ScriptComponents (Interactable,
+     *  PinchButton, audio + visual feedback). Identify the PinchButton by the
+     *  event it exposes rather than by index, which is order-dependent. */
+    private findPinchButton(obj: SceneObject): PinchButton | null {
+        try {
+            const comps: any[] = (obj as any).getComponents('Component.ScriptComponent') || [];
+            for (const c of comps) {
+                if (c && c.onButtonPinched && typeof c.onButtonPinched.add === 'function') {
+                    return c as PinchButton;
+                }
+            }
+        } catch (e) { /* ignore */ }
+        return null;
     }
 
     private bindPinch(btn: PinchButton, handler: () => void, label: string): void {
@@ -220,11 +293,14 @@ export class MatematexSearchScreen extends BaseScriptComponent {
     }
 
     private close(): void {
-        if (!this.bookOfMath) return;
-        // Re-enter splash via the public showScreen API on the parent.
-        // (Screen enum is a const enum, so we pass the string literal it
-        // erases to. Keep this in sync with MatematexBookOfMath's enum.)
-        (this.bookOfMath as any).showScreen('splash');
+        if (!this.bookOfMath) {
+            print('[MatematexSearch] close: no bookOfMath assigned — cannot leave the search screen');
+            return;
+        }
+        // Typed call, not `(book as any).showScreen('splash')`. This is the only
+        // way out of the search screen, so it must not depend on a string
+        // literal staying in sync with a const enum it cannot see.
+        this.bookOfMath.goToSplash();
     }
 
     // ─── XR keyboard ────────────────────────────────────────────────────────
