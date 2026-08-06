@@ -21,7 +21,10 @@ import {
     COLOR_BLUE, COLOR_RED, COLOR_GREEN, COLOR_AMBER,
     COLOR_BLUE_FILL, COLOR_RED_FILL, COLOR_GREEN_FILL, COLOR_AMBER_FILL,
 } from './MatematexProof';
-import { rectPieces, dimension, rightAngle, angleArc, PIECE_COLORS } from './MathProofTemplates';
+import {
+    rectPieces, dimension, rightAngle, angleArc, PIECE_COLORS,
+    matrixGrid, GridCell, unitSquareImage,
+} from './MathProofTemplates';
 
 // ─── Pythagoras (formula #1: a² + b² = c²) ──────────────────────────────
 //
@@ -169,9 +172,11 @@ const PROOF_DISTANCE: VisualProof = {
         rightAngle([4, 0, 0], [-1, 0, 0], [0, 1, 0], 0.4),
         { kind: 'line', p1: [0, 0, 0], p2: [4, 3, 0], color: COLOR_AMBER, thickness: 0.07 },
 
-        { kind: 'label', position: [-0.5, -0.5, 0], text: '(x1, y1)', scale: 0.7, color: COLOR_INK },
+        { kind: 'label', position: [-0.7, -0.55, 0], text: '(x1, y1)', scale: 0.7, color: COLOR_INK },
         { kind: 'label', position: [4.6, 3.3, 0],   text: '(x2, y2)', scale: 0.7, color: COLOR_INK },
-        { kind: 'label', position: [2.0, -0.7, 0],  text: 'x2 − x1',  scale: 0.75, color: COLOR_BLUE },
+        // Clear of the corner label above it: both are wide, and at their old
+        // y they sat 0.2 units apart — effectively on the same line.
+        { kind: 'label', position: [2.0, -1.6, 0],  text: 'x2 − x1',  scale: 0.75, color: COLOR_BLUE },
         { kind: 'label', position: [5.0, 1.5, 0],   text: 'y2 − y1',  scale: 0.75, color: COLOR_BLUE },
         { kind: 'label', position: [1.6, 2.0, 0],   text: 'd',        scale: 0.95, color: COLOR_AMBER },
     ],
@@ -729,7 +734,7 @@ const PROOF_PARTS: VisualProof = {
 const AS_N = 6;
 const PROOF_ARITHMETIC_SERIES: VisualProof = {
     title: 'Arithmetic Series',
-    caption: 'two copies of the staircase interlock into an n by (a1+a_n) block',
+    caption: 'two copies of the staircase interlock into an n by (a1 + an) block',
     family: 'A',
     claim: { total: AS_N * (1 + AS_N) },
     primitives: [
@@ -740,10 +745,10 @@ const PROOF_ARITHMETIC_SERIES: VisualProof = {
             x: i, y: i + 1, w: 1, h: AS_N - i, color: 1,
         }))),
         ...dimension([0, 0, 0], [AS_N, 0, 0], 'n', [0, -0.8, 0]),
-        ...dimension([AS_N, 0, 0], [AS_N, AS_N + 1, 0], 'a1 + a_n', [1.0, 0, 0], 0.42),
-        { kind: 'label', position: [AS_N * 0.30, AS_N * 0.28, 0], text: 'S_n',
+        ...dimension([AS_N, 0, 0], [AS_N, AS_N + 1, 0], 'a1 + an', [1.0, 0, 0], 0.42),
+        { kind: 'label', position: [AS_N * 0.30, AS_N * 0.28, 0], text: 'S',
           scale: 0.55, color: COLOR_BLUE },
-        { kind: 'label', position: [AS_N * 0.70, AS_N * 0.78, 0], text: 'S_n',
+        { kind: 'label', position: [AS_N * 0.70, AS_N * 0.78, 0], text: 'S',
           scale: 0.55, color: COLOR_GREEN },
     ],
 };
@@ -1336,7 +1341,7 @@ const PROOF_EXTERIOR_ANGLE: VisualProof = {
 const GS_TERMS = [2.000000, 1.200000, 0.720000, 0.432000, 0.259200];
 const PROOF_GEOMETRIC_SUM: VisualProof = {
     title: 'Geometric Series Sum',
-    caption: 'each term is r times the last; laid end to end they reach S_n',
+    caption: 'each term is r times the last; they reach a(1 − r to the n)/(1 − r)',
     family: 'A',
     claim: { total: 4.611200 },
     primitives: [
@@ -1345,7 +1350,7 @@ const PROOF_GEOMETRIC_SUM: VisualProof = {
             return { x, y: 0, w, h: 1, color: i % 2, label: i < 3 ? ['a', 'ar', 'ar²'][i] : undefined,
                      labelScale: 0.3 };
         })),
-        ...dimension([0, 0, 0], [4.611200, 0, 0], 'S_n = a(1-r^n)/(1-r)', [0, -0.75, 0], 0.3),
+        ...dimension([0, 0, 0], [4.611200, 0, 0], 'a + ar + ar² + ... = S', [0, -0.75, 0], 0.3),
     ],
 };
 
@@ -1656,7 +1661,7 @@ const IG_TERMS = [2.000000, 1.200000, 0.720000, 0.432000, 0.259200, 0.155520];
 const IG_S = 5.000000, IG_REM = 0.233280;
 const PROOF_INFINITE_GEOMETRIC: VisualProof = {
     title: 'Infinite Geometric Series',
-    caption: 'what is left after n terms is the whole shape scaled by r^n',
+    caption: 'the tail after n terms is the whole strip, scaled down n times',
     family: 'A',
     claim: { total: IG_S },
     primitives: [
@@ -2041,20 +2046,24 @@ const PROOF_TRANSPOSE_PRODUCT: VisualProof = {
         { kind: 'arrow', from: [-1.5, 2.8, 0], to: [-0.25, 2.8, 0], color: COLOR_INK, thickness: 0.05, headSize: 0.3 },
         { kind: 'arrow', from: [1.85, 2.8, 0], to: [3.15, 2.8, 0], color: COLOR_INK, thickness: 0.05, headSize: 0.3 },
         { kind: 'arrow', from: [5.25, 2.8, 0], to: [6.5, 2.8, 0], color: COLOR_INK, thickness: 0.05, headSize: 0.3 },
-        { kind: 'label', position: [-1.95, 2.8, 0], text: 'R^p', scale: 0.32, color: COLOR_INK },
-        { kind: 'label', position: [2.5, 2.8, 0], text: 'R^n', scale: 0.32, color: COLOR_INK },
-        { kind: 'label', position: [6.95, 2.8, 0], text: 'R^m', scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [-1.95, 2.8, 0], text: 'p', scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [2.5, 2.8, 0], text: 'n', scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [6.95, 2.8, 0], text: 'm', scale: 0.32, color: COLOR_INK },
 
-        ...tpBox(0, 0, 1.6, 1.2, 'B^T', 0),
-        ...tpBox(3.4, 0, 1.6, 1.2, 'A^T', 1),
+        ...tpBox(0, 0, 1.6, 1.2, "B'", 0),
+        ...tpBox(3.4, 0, 1.6, 1.2, "A'", 1),
         { kind: 'arrow', from: [-0.25, 0.6, 0], to: [-1.5, 0.6, 0], color: COLOR_RED, thickness: 0.05, headSize: 0.3 },
         { kind: 'arrow', from: [3.15, 0.6, 0], to: [1.85, 0.6, 0], color: COLOR_RED, thickness: 0.05, headSize: 0.3 },
         { kind: 'arrow', from: [6.5, 0.6, 0], to: [5.25, 0.6, 0], color: COLOR_RED, thickness: 0.05, headSize: 0.3 },
-        { kind: 'label', position: [-1.95, 0.6, 0], text: 'R^p', scale: 0.32, color: COLOR_INK },
-        { kind: 'label', position: [2.5, 0.6, 0], text: 'R^n', scale: 0.32, color: COLOR_INK },
-        { kind: 'label', position: [6.95, 0.6, 0], text: 'R^m', scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [-1.95, 0.6, 0], text: 'p', scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [2.5, 0.6, 0], text: 'n', scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [6.95, 0.6, 0], text: 'm', scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [2.5, 4.7, 0], text: 'p, n, m are the dimensions', scale: 0.26, color: COLOR_INK },
         { kind: 'label', position: [2.5, 4.0, 0], text: 'AB reads right to left', scale: 0.3, color: COLOR_INK },
-        { kind: 'label', position: [2.5, -0.85, 0], text: '(AB)^T = B^T A^T', scale: 0.36, color: COLOR_RED },
+        { kind: 'label', position: [2.5, -0.85, 0], text: "(AB)' = B' A'", scale: 0.36, color: COLOR_RED },
+        // The tick is small and it is the whole subject of the figure, so it
+        // gets said in words rather than left to be noticed.
+        { kind: 'label', position: [2.5, -1.6, 0], text: "' means transpose", scale: 0.28, color: COLOR_INK },
     ],
 };
 
@@ -2106,12 +2115,511 @@ const PROOF_SVD: VisualProof = {
             kind: 'arrow', from: [x, 0, 0], to: [x + 1.4, 0, 0],
             color: COLOR_INK, thickness: 0.05, headSize: 0.32,
         })),
-        { kind: 'label', position: [3.3, 0.65, 0], text: 'V^T', scale: 0.36, color: COLOR_INK },
+        { kind: 'label', position: [3.3, 0.65, 0], text: "V'", scale: 0.36, color: COLOR_INK },
+        { kind: 'label', position: [7.5, -2.6, 0], text: "' means transpose", scale: 0.26, color: COLOR_INK },
         { kind: 'label', position: [8.3, 0.65, 0], text: 'Σ', scale: 0.36, color: COLOR_INK },
         { kind: 'label', position: [13.3, 0.65, 0], text: 'U', scale: 0.36, color: COLOR_INK },
         { kind: 'label', position: [0, -1.75, 0], text: 'unit circle', scale: 0.28, color: COLOR_BLUE },
         { kind: 'label', position: [10, -1.75, 0], text: 'σ1, σ2', scale: 0.3, color: COLOR_GREEN },
         { kind: 'label', position: [15, -1.75, 0], text: 'the image', scale: 0.28, color: COLOR_AMBER },
+    ],
+};
+
+// #61  (AB)ᵢⱼ = Σₖ aᵢₖ bₖⱼ   — count the two-step routes
+//
+// The grammar first recorded this as **none**, on the grounds that the formula
+// IS the definition of the product. That was too quick. Read A and B as edge
+// tables of a three-layer network — aᵢₖ edges from layer i to layer k, bₖⱼ from
+// k to j — and the sum is a genuine theorem: (AB)ᵢⱼ counts the routes from i to
+// j. Every route uses exactly one middle node, so the routes partition by k,
+// and each part has aᵢₖ·bₖⱼ members. That is a bijection, it is falsifiable,
+// and the test enumerates every route to check it.
+//
+// Drawn for i = 1, j = 2, with all three middle nodes live so the sum has three
+// terms to add rather than one term and two zeroes.
+const MM_A: number[][] = [[1, 1, 1], [0, 1, 1], [1, 0, 1]];
+const MM_B: number[][] = [[0, 1, 1], [1, 1, 1], [1, 1, 0]];
+const MM_I = 0, MM_J = 1;                  // 0-based: the row and column drawn
+const MM_COL = [COLOR_BLUE, COLOR_GREEN, COLOR_AMBER];
+const MM_FILL = [COLOR_BLUE_FILL, COLOR_GREEN_FILL, COLOR_AMBER_FILL];
+const MM_Y = [2.6, 0, -2.6];
+/** One node of the network. A circle, not a quad — the family-I invariant
+ *  counts filled POLYGONS, so drawing nodes as circles keeps the cell count
+ *  meaning "terms of the sum" rather than "things on screen". */
+const mmNode = (x: number, y: number, text: string, lit: boolean): ProofPrimitive[] => [
+    { kind: 'circle', center: [x, y, 0], radius: 0.42, segments: 20,
+      fill: lit ? COLOR_BLUE_FILL : undefined, stroke: COLOR_INK, strokeThickness: 0.04 },
+    { kind: 'label', position: [x, y, 0], text, scale: 0.28, color: COLOR_INK },
+];
+const PROOF_MATRIX_MULT: VisualProof = {
+    title: 'Matrix Multiplication',
+    caption: 'each middle node gives one route from i to j; the sum counts them all',
+    family: 'I',
+    claim: { cells: 3, paths: 3 },
+    primitives: [
+        { kind: 'label', position: [-5, 4.1, 0], text: 'i', scale: 0.34, color: COLOR_INK },
+        { kind: 'label', position: [0, 4.1, 0], text: 'k', scale: 0.34, color: COLOR_INK },
+        { kind: 'label', position: [5, 4.1, 0], text: 'j', scale: 0.34, color: COLOR_INK },
+
+        // The six edges of the three routes, coloured by which middle node they
+        // pass through — the colour IS the partition.
+        ...[0, 1, 2].flatMap((k): ProofPrimitive[] => [
+            { kind: 'line', p1: [-4.6, MM_Y[MM_I], 0], p2: [-0.42, MM_Y[k], 0],
+              color: MM_COL[k], thickness: 0.055 },
+            { kind: 'line', p1: [0.42, MM_Y[k], 0], p2: [4.6, MM_Y[MM_J], 0],
+              color: MM_COL[k], thickness: 0.055 },
+        ]),
+
+        ...[0, 1, 2].flatMap(r => mmNode(-5, MM_Y[r], `${r + 1}`, r === MM_I)),
+        ...[0, 1, 2].flatMap(k => mmNode(0, MM_Y[k], `${k + 1}`, true)),
+        ...[0, 1, 2].flatMap(c => mmNode(5, MM_Y[c], `${c + 1}`, c === MM_J)),
+
+        // One cell per middle node: the term it contributes.
+        ...[0, 1, 2].flatMap((k): ProofPrimitive[] => [
+            { kind: 'polygon',
+              points: [[-5.2 + k * 2.9, -6.6, 0], [-2.6 + k * 2.9, -6.6, 0],
+                       [-2.6 + k * 2.9, -5.0, 0], [-5.2 + k * 2.9, -5.0, 0]] as Vec3[],
+              fill: MM_FILL[k], stroke: MM_COL[k], strokeThickness: 0.05 },
+            { kind: 'label', position: [-3.9 + k * 2.9, -5.8, 0],
+              text: `a1${k + 1} b${k + 1}2`, scale: 0.26, color: MM_COL[k] },
+        ]),
+        { kind: 'label', position: [6.2, -5.8, 0], text: '= (AB)12', scale: 0.32, color: COLOR_INK },
+    ],
+};
+
+// #72  tr(AB) = tr(BA)   — nine products, added two ways
+//
+// Also recorded as **none** ("symbolic index shuffle"), and also too quick.
+// tr(AB) = Σᵢ Σⱼ aᵢⱼ bⱼᵢ and tr(BA) = Σⱼ Σᵢ bⱼᵢ aᵢⱼ are sums over the SAME nine
+// products — the grid below — taken by rows in one case and by columns in the
+// other. Counting one finite set two ways is family I exactly, and it is the
+// textbook proof, not a picture stuck onto one.
+const TR_N = 3, TR_W = 2.3, TR_H = 1.5;
+const TR_X = -(TR_N * TR_W) / 2, TR_TOP = (TR_N * TR_H) / 2;
+const PROOF_TRACE_PRODUCT: VisualProof = {
+    title: 'Trace of a Product',
+    caption: 'the same nine products: add along rows, or add down columns',
+    family: 'I',
+    claim: { cells: 9 },
+    primitives: [
+        { kind: 'label', position: [0, TR_TOP + 1.0, 0], text: 'row i adds to (AB)ii',
+          scale: 0.32, color: COLOR_BLUE },
+
+        ...matrixGrid(TR_X, TR_TOP, TR_N, TR_N, TR_W, TR_H,
+            Array.from({ length: TR_N * TR_N }, (_, n) => {
+                const r = Math.floor(n / TR_N), c = n % TR_N;
+                return { row: r, col: c, fill: COLOR_AMBER_FILL, stroke: COLOR_AMBER,
+                         label: `a${r + 1}${c + 1} b${c + 1}${r + 1}`,
+                         labelScale: 0.24, labelColor: COLOR_INK };
+            })),
+
+        // Row brackets, right of the grid.
+        ...[0, 1, 2].flatMap((r): ProofPrimitive[] => [
+            { kind: 'line', p1: [-TR_X + 0.25, TR_TOP - r * TR_H - 0.15, 0],
+              p2: [-TR_X + 0.25, TR_TOP - (r + 1) * TR_H + 0.15, 0],
+              color: COLOR_BLUE, thickness: 0.05 },
+            { kind: 'label', position: [-TR_X + 1.75, TR_TOP - (r + 0.5) * TR_H, 0],
+              text: `(AB)${r + 1}${r + 1}`, scale: 0.28, color: COLOR_BLUE },
+        ]),
+
+        // Column brackets, below it.
+        ...[0, 1, 2].flatMap((c): ProofPrimitive[] => [
+            { kind: 'line', p1: [TR_X + c * TR_W + 0.15, -TR_TOP - 0.25, 0],
+              p2: [TR_X + (c + 1) * TR_W - 0.15, -TR_TOP - 0.25, 0],
+              color: COLOR_RED, thickness: 0.05 },
+            { kind: 'label', position: [TR_X + (c + 0.5) * TR_W, -TR_TOP - 0.85, 0],
+              text: `(BA)${c + 1}${c + 1}`, scale: 0.28, color: COLOR_RED },
+        ]),
+
+        { kind: 'label', position: [0, -TR_TOP - 1.7, 0], text: 'column j adds to (BA)jj',
+          scale: 0.32, color: COLOR_RED },
+        { kind: 'label', position: [0, -TR_TOP - 2.6, 0], text: 'tr(AB) = tr(BA)',
+          scale: 0.4, color: COLOR_INK },
+    ],
+};
+
+// #68  det A = Σⱼ (−1)^(1+j) a₁ⱼ M₁ⱼ   — the six terms, split three ways
+//
+// The old verdict was "symbolic recursion". But the Leibniz formula gives det A
+// as a sum over the n! ways of picking one entry from each row and column, and
+// those terms PARTITION by which column row 1 uses. Each part is a₁ⱼ times the
+// determinant of what is left when row 1 and column j are struck out — a minor.
+// A partition of a finite set of terms is family I, and for n = 3 the test can
+// enumerate all six and check the split exactly.
+//
+// Numeric rather than symbolic, so the reader can add it up themselves.
+const CF_A: number[][] = [[2, 1, 3], [0, 4, 1], [5, 2, 1]];
+const CF_W = 1.6, CF_H = 1.3, CF_GAP = 1.6;
+const CF_SPAN = 3 * CF_W + CF_GAP;
+/** The grid for expanding along column `j`: pivot lit, its row and column
+ *  struck to the neutral wash, the surviving 2×2 minor in blue. */
+const cfGrid = (j: number): ProofPrimitive[] => {
+    const x0 = -1.5 * CF_SPAN + j * CF_SPAN + CF_GAP / 2;
+    const cells: GridCell[] = [];
+    for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+            const pivot = r === 0 && c === j;
+            const struck = r === 0 || c === j;
+            cells.push({
+                row: r, col: c, label: `${CF_A[r][c]}`,
+                fill: pivot ? COLOR_AMBER_FILL : struck ? undefined : COLOR_BLUE_FILL,
+                stroke: pivot ? COLOR_AMBER : struck ? COLOR_INK : COLOR_BLUE,
+                labelColor: pivot ? COLOR_AMBER : struck ? COLOR_INK : COLOR_BLUE,
+                labelScale: 0.32,
+            });
+        }
+    }
+    const sign = j % 2 === 0 ? '+' : '−';
+    const minor = CF_MINOR[j], term = CF_TERM[j];
+    return [
+        ...matrixGrid(x0, 1.95, 3, 3, CF_W, CF_H, cells),
+        { kind: 'label', position: [x0 + 1.5 * CF_W, 2.55, 0],
+          text: `${sign} a1${j + 1}`, scale: 0.34, color: COLOR_AMBER },
+        { kind: 'label', position: [x0 + 1.5 * CF_W, -2.55, 0],
+          text: `minor ${minor}`, scale: 0.3, color: COLOR_BLUE },
+        { kind: 'label', position: [x0 + 1.5 * CF_W, -3.3, 0],
+          text: `${sign} ${CF_A[0][j]} · ${minor} = ${term}`, scale: 0.3, color: COLOR_INK },
+    ] as ProofPrimitive[];
+};
+/** The 2×2 minors and the signed terms, computed rather than typed — a hand-
+ *  typed determinant that disagrees with the drawn entries is exactly the kind
+ *  of error a picture cannot show. */
+const CF_MINOR: number[] = [0, 1, 2].map(j => {
+    const cols = [0, 1, 2].filter(c => c !== j);
+    return CF_A[1][cols[0]] * CF_A[2][cols[1]] - CF_A[1][cols[1]] * CF_A[2][cols[0]];
+});
+const CF_TERM: number[] = [0, 1, 2].map(j => (j % 2 === 0 ? 1 : -1) * CF_A[0][j] * CF_MINOR[j]);
+const CF_DET = CF_TERM[0] + CF_TERM[1] + CF_TERM[2];
+const PROOF_COFACTOR: VisualProof = {
+    title: 'Cofactor Expansion',
+    caption: 'the six permutation terms split by where row 1 lands',
+    family: 'I',
+    claim: { cells: 27, det: CF_DET },
+    primitives: [
+        ...cfGrid(0), ...cfGrid(1), ...cfGrid(2),
+        { kind: 'label', position: [0, -4.4, 0],
+          text: `det A = ${CF_TERM[0]} + ${CF_TERM[1]} ${CF_TERM[2] < 0 ? '−' : '+'} ` +
+                `${Math.abs(CF_TERM[2])} = ${CF_DET}`,
+          scale: 0.36, color: COLOR_INK },
+    ],
+};
+
+// #63  A A⁻¹ = A⁻¹ A = I   — the same undoing, from either side
+//
+// Recorded as **none** ("definition"), but the definition only asks for a
+// matrix that undoes A on ONE side. That the same matrix also undoes it on the
+// other is the theorem, and it is exactly what two rows of this figure show:
+// square → A → parallelogram → A⁻¹ → square on top, and the two maps swapped
+// underneath, ending at the same square. The marked corner makes the return
+// visible; a shape alone would only show that the areas came back.
+const INV_A: [number, number, number, number] = [2, 1, 1, 1.5];
+const INV_AI: [number, number, number, number] = [0.75, -0.5, -0.5, 1];
+const INV_ID: [number, number, number, number] = [1, 0, 0, 1];
+const INV_S = 1.15;
+const INV_X = [-7, 0, 7];
+/** One stage, centred on its own centroid so the row of shapes sits on a line
+ *  however lopsided the parallelogram is. The red dot is the image of the
+ *  corner (1,1) — always vertex 2 of `unitSquareImage`. */
+const invStage = (m: [number, number, number, number], cx: number, cy: number,
+                  fill: Color, stroke: Color, text: string): ProofPrimitive[] => {
+    const raw = unitSquareImage(m, INV_S, 0, 0);
+    const gx = raw.reduce((s, p) => s + p[0], 0) / 4;
+    const gy = raw.reduce((s, p) => s + p[1], 0) / 4;
+    const pts = raw.map(p => [p[0] - gx + cx, p[1] - gy + cy, 0] as Vec3);
+    return [
+        { kind: 'polygon', points: pts, fill, stroke, strokeThickness: 0.06 },
+        { kind: 'circle', center: pts[2], radius: 0.17, segments: 12,
+          fill: COLOR_RED, stroke: COLOR_RED, strokeThickness: 0.02 },
+        { kind: 'label', position: [cx, cy - 2.5, 0], text, scale: 0.3, color: stroke },
+    ];
+};
+const invArrow = (i: number, cy: number, text: string): ProofPrimitive[] => {
+    const x0 = INV_X[i] + 2.1, x1 = INV_X[i + 1] - 2.1;
+    return [
+        { kind: 'arrow', from: [x0, cy, 0], to: [x1, cy, 0],
+          color: COLOR_INK, thickness: 0.05, headSize: 0.3 },
+        { kind: 'label', position: [(x0 + x1) / 2, cy + 0.75, 0], text, scale: 0.34,
+          color: COLOR_INK },
+    ];
+};
+const PROOF_MATRIX_INVERSE: VisualProof = {
+    title: 'Matrix Inverse',
+    caption: 'either order returns the square, and the marked corner with it',
+    family: 'K',
+    claim: { detA: 2, detAinv: 0.5 },
+    primitives: [
+        ...invStage(INV_ID, INV_X[0], 3.6, COLOR_BLUE_FILL, COLOR_BLUE, 'unit square'),
+        ...invStage(INV_A, INV_X[1], 3.6, COLOR_AMBER_FILL, COLOR_AMBER, 'area = det A = 2'),
+        ...invStage(INV_ID, INV_X[2], 3.6, COLOR_BLUE_FILL, COLOR_BLUE, 'back again'),
+        ...invArrow(0, 3.6, 'A'), ...invArrow(1, 3.6, 'inv(A)'),
+
+        ...invStage(INV_ID, INV_X[0], -3.6, COLOR_BLUE_FILL, COLOR_BLUE, 'unit square'),
+        ...invStage(INV_AI, INV_X[1], -3.6, COLOR_GREEN_FILL, COLOR_GREEN, 'area = 1/det A = 0.5'),
+        ...invStage(INV_ID, INV_X[2], -3.6, COLOR_BLUE_FILL, COLOR_BLUE, 'back again'),
+        ...invArrow(0, -3.6, 'inv(A)'), ...invArrow(1, -3.6, 'A'),
+
+        // Clear of the bottom row's stage captions, which sit at −6.1.
+        { kind: 'label', position: [0, -7.4, 0], text: 'A inv(A) = inv(A) A = I',
+          scale: 0.4, color: COLOR_INK },
+    ],
+};
+
+// #70  det(A − λI) = 0   — where the square gets flattened
+//
+// Recorded as **none** ("symbolic"), but the statement being made is that λ is
+// an eigenvalue exactly when A − λI is singular, and singular has a picture:
+// the unit square's image collapses to a segment. Sweep λ and watch the area.
+// It is positive, hits zero, goes negative, hits zero again — and the two
+// zeroes are the eigenvalues. The parabola underneath is that same area plotted
+// against λ, so the roots the algebra finds are the collapses the figure shows.
+const CH_A: [number, number] = [2, 1];      // A = [[2,1],[1,2]], symmetric
+const CH_LAMBDAS = [0, 1, 2, 3];
+const CH_S = 1.0, CH_STEP = 5.6;
+const chDet = (l: number) => (CH_A[0] - l) * (CH_A[0] - l) - CH_A[1] * CH_A[1];
+const chStage = (i: number): ProofPrimitive[] => {
+    const l = CH_LAMBDAS[i], cx = (i - 1.5) * CH_STEP;
+    const m: [number, number, number, number] = [CH_A[0] - l, CH_A[1], CH_A[1], CH_A[0] - l];
+    const raw = unitSquareImage(m, CH_S, 0, 0);
+    const gx = raw.reduce((s, p) => s + p[0], 0) / 4;
+    const gy = raw.reduce((s, p) => s + p[1], 0) / 4;
+    const d = chDet(l), flat = Math.abs(d) < 1e-9;
+    const col = flat ? COLOR_RED : d > 0 ? COLOR_AMBER : COLOR_GREEN;
+    const fill = flat ? undefined : d > 0 ? COLOR_AMBER_FILL : COLOR_GREEN_FILL;
+    return [
+        // The unit square being fed in, faint, at the left of each stage.
+        { kind: 'polygon',
+          points: [[cx - 3.5, -0.5, 0], [cx - 2.5, -0.5, 0],
+                   [cx - 2.5, 0.5, 0], [cx - 3.5, 0.5, 0]] as Vec3[],
+          fill: COLOR_BLUE_FILL, stroke: COLOR_BLUE, strokeThickness: 0.04 },
+        { kind: 'arrow', from: [cx - 2.3, 0, 0], to: [cx - 1.6, 0, 0],
+          color: COLOR_INK, thickness: 0.04, headSize: 0.24 },
+        { kind: 'polygon', points: raw.map(p => [p[0] - gx, p[1] - gy, 0] as Vec3)
+                                      .map(p => [p[0] + cx, p[1], 0] as Vec3),
+          fill, stroke: col, strokeThickness: 0.07 },
+        { kind: 'label', position: [cx, -2.4, 0], text: `λ = ${l}`, scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [cx, -3.1, 0], text: `det = ${d}`, scale: 0.3, color: col },
+    ];
+};
+// The parabola det(A − λI) = λ² − 4λ + 3, drawn under the sweep.
+const CH_PX0 = -10.6, CH_PXS = 4.4, CH_PY0 = -7.0, CH_PYS = 0.6;
+const chPlot = (l: number): Vec3 => [CH_PX0 + l * CH_PXS, CH_PY0 + chDet(l) * CH_PYS, 0];
+const PROOF_CHAR_POLY: VisualProof = {
+    title: 'Characteristic Polynomial',
+    caption: 'the square flattens exactly where the determinant crosses zero',
+    family: 'K',
+    claim: { det0: chDet(0), det1: chDet(1), det2: chDet(2), det3: chDet(3),
+             lambda1: 1, lambda2: 3 },
+    primitives: [
+        ...CH_LAMBDAS.flatMap((_, i) => chStage(i)),
+
+        { kind: 'line', p1: [CH_PX0 - 0.6, CH_PY0, 0], p2: [CH_PX0 + 4.6 * CH_PXS, CH_PY0, 0],
+          color: COLOR_INK, thickness: 0.035 },
+        ...Array.from({ length: 48 }, (_, k): ProofPrimitive => ({
+            kind: 'line',
+            p1: chPlot(-0.3 + (k / 48) * 4.6), p2: chPlot(-0.3 + ((k + 1) / 48) * 4.6),
+            color: COLOR_BLUE, thickness: 0.055,
+        })),
+        ...[1, 3].flatMap((l): ProofPrimitive[] => [
+            { kind: 'circle', center: chPlot(l), radius: 0.18, segments: 12,
+              fill: COLOR_RED, stroke: COLOR_RED, strokeThickness: 0.02 },
+            { kind: 'label', position: [chPlot(l)[0], CH_PY0 - 0.85, 0], text: `λ = ${l}`,
+              scale: 0.3, color: COLOR_RED },
+        ]),
+        { kind: 'label', position: [CH_PX0 + 4.9 * CH_PXS, CH_PY0 + 0.5, 0],
+          text: 'det(A − λI)', scale: 0.3, color: COLOR_BLUE },
+    ],
+};
+
+// #79  A = Q Λ Qᵀ   — a symmetric matrix stretches along one frame
+//
+// Recorded as **none**, which sat badly next to #80: the SVD is the harder
+// statement and it has a figure. This is that figure with one thing changed,
+// and the change is the content. The SVD needs two DIFFERENT rotations; a
+// symmetric matrix needs only one, used forward and backward. So the drawn
+// eigenframe leaves at 45°, is turned onto the axes, is stretched by 3 and 1,
+// and is turned back to 45° — and the image ellipse's axes end up lying along
+// the very frame it started from. That is what "eigenvector" means, drawn.
+const EG_TH = Math.PI / 4, EG_L1 = 3, EG_L2 = 1, EG_R = 0.7, EG_STEP = 6.2;
+const egRot = (p: [number, number], a: number): [number, number] =>
+    [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a)];
+/** The four stages as maps, each the composition applied so far. */
+const EG_STAGE: ((p: [number, number]) => [number, number])[] = [
+    p => p,
+    p => egRot(p, -EG_TH),
+    p => { const q = egRot(p, -EG_TH); return [q[0] * EG_L1, q[1] * EG_L2]; },
+    p => { const q = egRot(p, -EG_TH); return egRot([q[0] * EG_L1, q[1] * EG_L2], EG_TH); },
+];
+const EG_V1: [number, number] = [Math.cos(EG_TH) * EG_R, Math.sin(EG_TH) * EG_R];
+const EG_V2: [number, number] = [-Math.sin(EG_TH) * EG_R, Math.cos(EG_TH) * EG_R];
+const egStage = (i: number): ProofPrimitive[] => {
+    const f = EG_STAGE[i], cx = (i - 1.5) * EG_STEP;
+    const at = (t: number): Vec3 => {
+        const p = f([Math.cos(t) * EG_R, Math.sin(t) * EG_R]);
+        return [p[0] + cx, p[1], 0];
+    };
+    const ray = (v: [number, number], color: Color): ProofPrimitive => {
+        const p = f(v);
+        return { kind: 'line', p1: [cx, 0, 0], p2: [p[0] + cx, p[1], 0], color, thickness: 0.075 };
+    };
+    const dot = f([Math.cos(0.35) * EG_R, Math.sin(0.35) * EG_R]);
+    return [
+        ...Array.from({ length: 48 }, (_, k): ProofPrimitive => ({
+            kind: 'line', p1: at((k / 48) * Math.PI * 2), p2: at(((k + 1) / 48) * Math.PI * 2),
+            color: i === 0 || i === 1 ? COLOR_BLUE : COLOR_AMBER, thickness: 0.055,
+        })),
+        ray(EG_V1, COLOR_GREEN), ray(EG_V2, COLOR_RED),
+        { kind: 'circle', center: [dot[0] + cx, dot[1], 0], radius: 0.14, segments: 10,
+          fill: COLOR_INK, stroke: COLOR_INK, strokeThickness: 0.02 },
+    ];
+};
+const PROOF_SPECTRAL: VisualProof = {
+    title: 'Spectral Decomposition',
+    caption: 'symmetric means one frame does both turns - and it is the eigenframe',
+    family: 'K',
+    claim: { lambda1: EG_L1, lambda2: EG_L2, theta: EG_TH },
+    primitives: [
+        ...[0, 1, 2, 3].flatMap(i => egStage(i)),
+        ...[0, 1, 2].flatMap((i): ProofPrimitive[] => {
+            const x0 = (i - 1.5) * EG_STEP + 2.4, x1 = (i - 0.5) * EG_STEP - 2.4;
+            return [
+                { kind: 'arrow', from: [x0, 0, 0], to: [x1, 0, 0],
+                  color: COLOR_INK, thickness: 0.05, headSize: 0.3 },
+                { kind: 'label', position: [(x0 + x1) / 2, 0.8, 0],
+                  text: ["Q'", 'Λ', 'Q'][i], scale: 0.36, color: COLOR_INK },
+            ];
+        }),
+        // Kept short: the stages are EG_STEP apart, so a caption wider than
+        // that runs into its neighbour and the row reads as one long sentence.
+        { kind: 'label', position: [0, -3.1, 0], text: "' means transpose",
+          scale: 0.26, color: COLOR_INK },
+        { kind: 'label', position: [-1.5 * EG_STEP, -2.2, 0], text: 'the eigenframe',
+          scale: 0.28, color: COLOR_GREEN },
+        { kind: 'label', position: [-0.5 * EG_STEP, -2.2, 0], text: 'onto the axes',
+          scale: 0.28, color: COLOR_INK },
+        { kind: 'label', position: [0.5 * EG_STEP, -2.2, 0], text: 'stretch 3 and 1',
+          scale: 0.28, color: COLOR_AMBER },
+        { kind: 'label', position: [1.5 * EG_STEP, -2.2, 0], text: 'axes on the frame',
+          scale: 0.28, color: COLOR_AMBER },
+    ],
+};
+
+// #42  (f∘g)'(x) = f'(g(x))·g'(x)   — two amplifiers in series
+//
+// Recorded as **none** for want of a "faithful planar witness", which assumed
+// the figure had to be a graph. It does not. Draw the three variables as three
+// parallel rulers and the derivative is a gearing ratio: a step of dx on the
+// x-ruler drives a step of g'·dx on the u-ruler, which drives f'·(g'·dx) on the
+// y-ruler. The linking lines carry the argument — the run of the second stage
+// IS the rise of the first — and the total amplification is read straight off.
+const CR_GP = 2, CR_FP = 3, CR_DX = 1.2, CR_X0 = -5.5;
+const CR_DU = CR_GP * CR_DX, CR_DY = CR_FP * CR_DU;
+const crRuler = (y: number, name: string): ProofPrimitive[] => [
+    { kind: 'line', p1: [CR_X0 - 1.2, y, 0], p2: [CR_X0 + 9.4, y, 0],
+      color: COLOR_INK, thickness: 0.04 },
+    { kind: 'label', position: [CR_X0 - 1.9, y, 0], text: name, scale: 0.36, color: COLOR_INK },
+];
+const PROOF_CHAIN_RULE: VisualProof = {
+    title: 'Chain Rule',
+    caption: 'two amplifiers in series: the rise of one is the run of the next',
+    family: 'F',
+    claim: { gp: CR_GP, fp: CR_FP, chain: CR_GP * CR_FP },
+    primitives: [
+        ...crRuler(3.2, 'x'), ...crRuler(0, 'u'), ...crRuler(-3.2, 'y'),
+
+        // Linking lines: the left ends stay together, the right ends fan out.
+        { kind: 'line', p1: [CR_X0, 3.2, 0], p2: [CR_X0, -3.2, 0],
+          color: COLOR_INK, thickness: 0.035 },
+        { kind: 'line', p1: [CR_X0 + CR_DX, 3.2, 0], p2: [CR_X0 + CR_DU, 0, 0],
+          color: COLOR_BLUE, thickness: 0.045 },
+        { kind: 'line', p1: [CR_X0 + CR_DU, 0, 0], p2: [CR_X0 + CR_DY, -3.2, 0],
+          color: COLOR_GREEN, thickness: 0.045 },
+
+        // The three steps. Tagged so the test can measure what is drawn rather
+        // than trust the labels — a mislabelled ruler is invisible otherwise.
+        { kind: 'line', p1: [CR_X0, 3.2, 0], p2: [CR_X0 + CR_DX, 3.2, 0],
+          color: COLOR_RED, thickness: 0.11, piece: 'dx' },
+        { kind: 'line', p1: [CR_X0, 0, 0], p2: [CR_X0 + CR_DU, 0, 0],
+          color: COLOR_RED, thickness: 0.11, piece: 'du' },
+        { kind: 'line', p1: [CR_X0, -3.2, 0], p2: [CR_X0 + CR_DY, -3.2, 0],
+          color: COLOR_RED, thickness: 0.11, piece: 'dy' },
+
+        { kind: 'label', position: [CR_X0 + CR_DX / 2, 3.75, 0], text: 'dx',
+          scale: 0.32, color: COLOR_RED },
+        { kind: 'label', position: [CR_X0 + CR_DU / 2, 0.55, 0], text: 'du = 2 dx',
+          scale: 0.32, color: COLOR_RED },
+        { kind: 'label', position: [CR_X0 + CR_DY / 2, -2.65, 0], text: 'dy = 3 du',
+          scale: 0.32, color: COLOR_RED },
+        { kind: 'label', position: [CR_X0 + 6.6, 1.7, 0], text: "g' = 2",
+          scale: 0.34, color: COLOR_BLUE },
+        { kind: 'label', position: [CR_X0 + 8.4, -1.5, 0], text: "f' = 3",
+          scale: 0.34, color: COLOR_GREEN },
+        { kind: 'label', position: [CR_X0 + 3.6, -4.4, 0], text: 'dy/dx = 3 · 2 = 6',
+          scale: 0.4, color: COLOR_INK },
+    ],
+};
+
+// #53  lim f/g = lim f'/g'   — the ratio of two vanishing heights
+//
+// Recorded as **none** ("symbolic"). It is not: both curves pass through the
+// same zero, and near that zero each one is its own tangent line. So the ratio
+// of the two heights at a + h is the ratio of two straight lines through one
+// point — which is the ratio of their slopes, whatever h is. Drawn honestly as
+// a limit: at h = 1.4 the ratio is 3.15 and the curves have left their
+// tangents; at h = 0.4 it is 2.28; the value it is heading for is 2 = f'/g'.
+const LH_F = (x: number) => 2 * x + 0.35 * x * x;
+const LH_G = (x: number) => x - 0.15 * x * x;
+const LH_FP = 2, LH_GP = 1;
+const LH_X0 = -7.0, LH_Y0 = -2.5, LH_XS = 4.5, LH_YS = 0.8, LH_XMAX = 1.8;
+const LH_H = [1.4, 0.4];
+const lhP = (x: number, y: number): Vec3 => [LH_X0 + x * LH_XS, LH_Y0 + y * LH_YS, 0];
+const lhCurve = (fn: (x: number) => number, color: Color, thickness: number): ProofPrimitive[] =>
+    Array.from({ length: 36 }, (_, k): ProofPrimitive => {
+        const a = (k / 36) * LH_XMAX, b = ((k + 1) / 36) * LH_XMAX;
+        return { kind: 'line', p1: lhP(a, fn(a)), p2: lhP(b, fn(b)), color, thickness };
+    });
+const PROOF_LHOPITAL: VisualProof = {
+    title: "L'Hopital's Rule",
+    caption: 'both heights vanish together, so their ratio becomes the slopes ratio',
+    family: 'D',
+    claim: { fp: LH_FP, gp: LH_GP, limit: LH_FP / LH_GP },
+    primitives: [
+        { kind: 'line', p1: lhP(-0.15, 0), p2: lhP(LH_XMAX + 0.15, 0),
+          color: COLOR_INK, thickness: 0.04 },
+        { kind: 'line', p1: lhP(0, -0.4), p2: lhP(0, LH_F(LH_XMAX) + 0.4),
+          color: COLOR_INK, thickness: 0.04 },
+
+        // The tangents, thin: what the curves become near a.
+        ...lhCurve(x => LH_FP * x, COLOR_BLUE_FILL, 0.05),
+        ...lhCurve(x => LH_GP * x, COLOR_GREEN_FILL, 0.05),
+        ...lhCurve(LH_F, COLOR_BLUE, 0.075),
+        ...lhCurve(LH_G, COLOR_GREEN, 0.075),
+
+        // The two heights, at a large h and a small one.
+        ...LH_H.flatMap((h): ProofPrimitive[] => [
+            { kind: 'line', p1: lhP(h, 0), p2: lhP(h, LH_F(h)), color: COLOR_BLUE, thickness: 0.13 },
+            { kind: 'line', p1: lhP(h + 0.06, 0), p2: lhP(h + 0.06, LH_G(h)),
+              color: COLOR_GREEN, thickness: 0.13 },
+            { kind: 'label', position: lhP(h, -0.55), text: `h = ${h}`, scale: 0.28, color: COLOR_INK },
+        ]),
+
+        { kind: 'label', position: lhP(LH_XMAX + 0.22, LH_F(LH_XMAX)), text: 'f',
+          scale: 0.34, color: COLOR_BLUE },
+        { kind: 'label', position: lhP(LH_XMAX + 0.22, LH_G(LH_XMAX)), text: 'g',
+          scale: 0.34, color: COLOR_GREEN },
+        { kind: 'label', position: lhP(-0.1, -0.9), text: 'a', scale: 0.32, color: COLOR_INK },
+
+        // The ledger goes UNDER the plot, not beside it: at the right of the
+        // frame the curves are still climbing and the f and g labels are there.
+        { kind: 'label', position: [-2.6, -4.1, 0],
+          text: `h = ${LH_H[0]}:  f/g = ${(LH_F(LH_H[0]) / LH_G(LH_H[0])).toFixed(2)}`,
+          scale: 0.3, color: COLOR_INK },
+        { kind: 'label', position: [-2.6, -5.0, 0],
+          text: `h = ${LH_H[1]}:  f/g = ${(LH_F(LH_H[1]) / LH_G(LH_H[1])).toFixed(2)}`,
+          scale: 0.3, color: COLOR_INK },
+        { kind: 'label', position: [-2.6, -5.9, 0], text: 'h → 0:  f/g → 2',
+          scale: 0.3, color: COLOR_RED },
+        { kind: 'label', position: [-2.6, -7.0, 0], text: "f'(a) / g'(a) = 2 / 1", scale: 0.32,
+          color: COLOR_RED },
     ],
 };
 
@@ -2180,9 +2688,18 @@ export const PROOFS: { [id: number]: VisualProof } = {
     78: PROOF_RANK_NULLITY,
     80: PROOF_SVD,
     74: PROOF_CROSS_PRODUCT,
-    // Future: 18 (Euler polyhedron) needs out-of-plane primitives — the
-    // renderer is XY-planar today, so a polyhedron would have to be drawn in
-    // an oblique projection by hand. Scoped with Phase 7.2.
+    42: PROOF_CHAIN_RULE,
+    53: PROOF_LHOPITAL,
+    61: PROOF_MATRIX_MULT,
+    63: PROOF_MATRIX_INVERSE,
+    68: PROOF_COFACTOR,
+    70: PROOF_CHAR_POLY,
+    72: PROOF_TRACE_PRODUCT,
+    79: PROOF_SPECTRAL,
+    // The thirteen that stay empty are definitions (#35 #51 #59 #62 #64 #71),
+    // notational restatements (#30 #36 #44 #47) and physical postulates
+    // (#57 #58 #60). A figure hung on a definition teaches the reader that
+    // figures are decoration, so those get none. See matematex-proof-grammar.md.
 };
 
 /** Formula ids that have a visual proof, for UI that needs to know whether to

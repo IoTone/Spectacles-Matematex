@@ -247,6 +247,10 @@ export class MatematexBookOfMath extends BaseScriptComponent {
     private templateScale: vec3 = new vec3(1, 1, 1);
     private searchIndex: MathSearchIndex | null = null;
     private proofContainer: SceneObject | null = null;
+    // Reused one-shot for the proof-build frame timer — see renderProofScreen.
+    private _proofFrameEvt: any = null;
+    private _proofFrameStart: number = 0;
+    private _proofFrameId: number = 0;
     // Holds the rendered formula so it can be centred and, if needed, shrunk to
     // fit — without disturbing the labels, which stay on `container`.
     private formulaFit: SceneObject | null = null;
@@ -830,10 +834,16 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
         // Time the build. Every polygon becomes its own SceneObject with its own
         // mesh and material, so a heavy figure is a one-frame spike at the
-        // moment the Proof button is pinched — #7 is 387 objects against a
+        // moment the Proof button is pinched — #7 is 388 objects against a
         // catalogue median of 24. If this number is large, mesh batching is the
         // fix, and knowing it beats guessing at it.
-        const t0 = getTime();
+        //
+        // Date.now(), not getTime(): getTime() is the FRAME clock and does not
+        // advance inside a frame, so the first version of this reported #7 as
+        // "388 objects in 0ms" — a number that looks like great news and means
+        // the stopwatch never started. The validation pass at line 994 was
+        // already using Date.now() correctly.
+        const t0 = Date.now();
         try {
             this.proofContainer = renderProof(proof, {
                 parent: this.container,
@@ -848,10 +858,26 @@ export class MatematexBookOfMath extends BaseScriptComponent {
                 // Headroom for the name label at +20 and the caption at −20.
                 fitBox: { halfWidth: SAFE_HALF_WIDTH - 4, halfHeight: SAFE_HALF_HEIGHT - 9 },
             });
-            const ms = (getTime() - t0) * 1000;
             const objs = this.proofContainer ? this.proofContainer.getChildrenCount() : 0;
             print(`[MatematexBook] Proof screen for #${formula.id}: ` +
-                  `${objs} objects in ${ms.toFixed(0)}ms`);
+                  `${objs} objects, built in ${Date.now() - t0}ms`);
+
+            // Build cost is not the whole hitch: meshes are uploaded and
+            // materials bound after renderProof returns, and what the wearer
+            // feels is the frame, not the function. Fire once on the next
+            // update to catch it. The event is created lazily and REUSED —
+            // a fresh one-shot per proof view would accumulate a dead event
+            // for every proof the reader ever opens.
+            this._proofFrameStart = t0;
+            this._proofFrameId = formula.id;
+            if (!this._proofFrameEvt) {
+                this._proofFrameEvt = this.createEvent('DelayedCallbackEvent') as any;
+                this._proofFrameEvt.bind(() => {
+                    print(`[MatematexBook] Proof screen for #${this._proofFrameId}: ` +
+                          `frame took ${Date.now() - this._proofFrameStart}ms end to end`);
+                });
+            }
+            this._proofFrameEvt.reset(0);
         } catch (e: any) {
             print(`[MatematexBook] Proof screen failed: ${e.message || e}`);
         }

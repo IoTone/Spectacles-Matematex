@@ -902,6 +902,90 @@ unit circle (#40, #49, #50), vector parallelogram (#34, #73, #74, #75) — and
 parameterised templates for those would cover roughly 25–30 of the 80, reducing
 each to instantiation plus label placement. The remainder splits into bespoke
 proofs (#13 incircle, #21 completing the square, #45 FTC) and formulas with **no
-sensible visual proof at all**: #57–60 are definitions or PDEs, #78–80 are real
-theorems whose proofs are symbolic. Drawing anything for those would be
-decoration, not argument.
+sensible visual proof at all**: #57–60 are definitions or PDEs. Drawing anything
+for those would be decoration, not argument.
+
+That last list was drawn too wide on the first pass — it named #78–80 as
+symbolic, and all three now have figures. See Phase 7.3.
+
+
+## Phase 7.3 — closing the linear-algebra gap
+
+The catalogue stopped at 59 proofs with 21 formulas recorded as *no witness*.
+Nine of those 21 were linear algebra, which is not a plausible distribution: a
+single chapter does not hold a disproportionate share of the unprovable
+statements in mathematics. Re-reading them found **eight with genuine content**,
+and one outright contradiction — the grammar's family-I section already listed
+#61 as a member while its classification table filed the same formula as
+**none**.
+
+| # | was | now | witness |
+|---|---|---|---|
+| 42 | Chain Rule | F | three rulers geared together — the rise of one stage is the run of the next |
+| 53 | L'Hôpital's Rule | D | two curves through one zero; near it each is its tangent, so the height ratio is the slope ratio |
+| 61 | Matrix Multiplication | I | read A and B as edge tables: (AB)ᵢⱼ counts the routes i→k→j, partitioned by the middle node |
+| 63 | Matrix Inverse | K | the unit square returns from either order — which is the theorem, since the definition only asks for one side |
+| 68 | Cofactor Expansion | I | the 3! Leibniz terms split into three groups of two by which column row 1 uses |
+| 70 | Characteristic Polynomial | K | sweep λ and the square's image flattens exactly where the determinant crosses zero |
+| 72 | Trace of Product | I | nine products in a grid, added by rows (tr AB) and by columns (tr BA) |
+| 79 | Spectral Decomposition | K | the SVD's figure with one rotation replaced by the other's transpose — and that difference is the content |
+
+The thirteen that remain empty are definitions (#35 #51 #59 #62 #64 #71),
+notational restatements (#30 #36 #44 #47) and physical postulates (#57 #58 #60).
+**#64 Transpose stays empty on purpose**: a reflection across the diagonal draws
+beautifully and asserts nothing, and the discipline that a figure hung on a
+definition teaches the reader that figures are decoration is worth more than a
+round number.
+
+### What went wrong the first time
+
+Two mistakes, made in opposite directions, and both now guarded by step 5 of the
+decision procedure — *before recording none, state the theorem in words without
+the notation; if the sentence could be false, there is something to draw*:
+
+- **Reading the notation instead of the claim.** `tr(AB) = tr(BA)` was written
+  off as a "symbolic index shuffle"; it says two sums over the same nine
+  products agree, which is family I in its purest form. `det A = Σ (−1)^(i+j)
+  aᵢⱼ Mᵢⱼ` was written off as "symbolic recursion"; it is a partition of a
+  finite set of terms.
+- **Assuming a shape for the figure, then concluding none existed.** The chain
+  rule was refused for want of a "faithful planar witness", which presumed the
+  figure had to be a graph of a composed function. Three parallel rulers do it
+  in one picture, and the linking lines carry the argument.
+
+### New invariants
+
+- **`matrixGrid` / `unitSquareImage`** in `MathProofTemplates.ts`. Cells are
+  separate quads rather than one rectangle with rules drawn across it, because
+  the argument in every matrix proof is about *which cells group with which* and
+  a grouping can only be coloured if the cells are real objects.
+  `unitSquareImage` emits corners in the order 0, e₁, e₁+e₂, e₂ so the drawn
+  winding carries the **sign** of the determinant — #70's whole point is that
+  the sign flips between the two roots, and a figure that lost it would look
+  identical.
+- **#61, #68, #72** are checked by exhaustive enumeration: every route in the
+  3×3 network, every one of the 3! permutation terms, and — for #72 — the nine
+  drawn cell labels are *parsed* and required to be exactly {aᵢⱼ bⱼᵢ}. A grid
+  quietly drawing aᵢⱼ bᵢⱼ would be completely convincing and completely wrong.
+- **#63 and #70** are measured off the drawn polygons by shoelace rather than
+  trusting their labels, so a stage built from mistyped columns fails.
+- **Caret and underscore gate.** Reported as "#65's labels don't convert to
+  LaTeX layout". They never could: proof labels are literal Text3D characters
+  with no markup layer. The earlier fix, made when `e^(−r²)` was reported in
+  #55, banned only `^{` and `^(` — so `A^T` passed and shipped in #65, #79 and
+  #80. The rule is now the whole class, and 22 strings across 8 figures were
+  rewritten: transposes to primes, `A^-1` to `inv(A)`, `S_n`/`a_n` to `S`/`an`,
+  and #25's closed form moved into its caption as words. Figures using a prime
+  carry a `' means transpose` legend, since the tick is small and in #65 it is
+  the entire subject.
+- **Label overlap gate** (`proof-data.test.ts`, all 67 figures). Two labels in
+  one place render as an unreadable smear and every other check passes: correct
+  maths, correct figure, correct text. It uses the narrow font-width estimate
+  — 0.55 units per character against the 1.25 worst case used for the title
+  budget — so it fails only on pairs that collide under any plausible metric.
+  Spatial figures are exempt; their labels are anchored in 3D and turned before
+  drawing, so an overlap in the authored XY says nothing about the screen. It
+  found a pre-existing defect in **#10**, whose corner label and dimension label
+  sat 0.2 units apart vertically with several units of text each.
+
+**Catalogue: 67 proofs, 13 recorded as no witness.**

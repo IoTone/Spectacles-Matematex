@@ -121,6 +121,46 @@ for (const id of ids) {
     }
 }
 
+// ── Labels sitting on top of each other ─────────────────────────────────
+// Two labels in the same place render as one unreadable smear, and it is the
+// one defect that survives every other check: the maths is right, the figure
+// is right, the text is right, and the reader still cannot read it. With 67
+// figures it is not something to catch by looking.
+//
+// The width model is deliberately the NARROW one — 0.55 units per character at
+// scale 1.0, against the ~1.25 worst case calibrated for the title budget. The
+// real font sits between them, so a pair that overlaps even at 0.55 overlaps at
+// any plausible metric, and this fails only on labels that genuinely collide
+// rather than on every pair that happens to sit close. A separate wide-model
+// sweep is the right tool for a fit-and-finish pass; this is the hard gate.
+//
+// Spatial figures are skipped. Their labels are anchored in 3D and the whole
+// proof is turned before drawing, so an XY overlap in the authored data says
+// nothing about what ends up on screen.
+{
+    const CHAR_W = 0.55, LINE_H = 0.55;
+    for (const id of Object.keys(PROOFS).map(Number).sort((a, b) => a - b)) {
+        const proof: VisualProof = (PROOFS as any)[id];
+        if (proof.spatial) continue;
+        const boxes = (proof.primitives.filter(p => p.kind === 'label') as any[]).map(p => {
+            const s = p.scale ?? 1.0;
+            const w = p.text.length * CHAR_W * s, h = LINE_H * s;
+            return { x: p.position[0], y: p.position[1], hw: w / 2, hh: h / 2, t: p.text as string };
+        });
+        for (let i = 0; i < boxes.length; i++) {
+            for (let j = i + 1; j < boxes.length; j++) {
+                const a = boxes[i], b = boxes[j];
+                const ox = a.hw + b.hw - Math.abs(a.x - b.x);
+                const oy = a.hh + b.hh - Math.abs(a.y - b.y);
+                check(!(ox > 0.05 && oy > 0.05),
+                      `#${id}: labels ${JSON.stringify(a.t)} and ${JSON.stringify(b.t)} overlap ` +
+                      `by ${ox.toFixed(2)} x ${oy.toFixed(2)} units even at the narrowest ` +
+                      `plausible font width — they will render on top of each other`);
+            }
+        }
+    }
+}
+
 // ── Label glyph coverage ────────────────────────────────────────────────
 // Proof labels are drawn with the TEMPLATE Text3D, whose `font` is null — they
 // render in Lens Studio's built-in default, and there is no font file to check
@@ -153,9 +193,22 @@ for (const id of Object.keys(PROOFS).map(Number)) {
                   `(U+${ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}), ` +
                   `which is not known to render in the default label font`);
         }
-        check(!/\^\{|\^\(/.test(t),
-              `#${id}: ${kind} ${JSON.stringify(t)} uses caret-brace notation, which a ` +
-              `plain-text label renders literally rather than as an exponent`);
+        // Any caret or underscore at all, not just `^{` and `^(`.
+        //
+        // The narrower rule was the first fix, made after "e^(−r²)" was
+        // reported, and it let `A^T` straight through — which then shipped in
+        // #65, #79 and #80 and was reported in turn. A proof label is drawn by
+        // the template Text3D as literal characters: there is no markup layer,
+        // so `^` and `_` are just the characters `^` and `_` on screen. The
+        // rule has to be the whole class.
+        //
+        // What to write instead: superscript 1, 2 and 3 render (they are in the
+        // safe set above), so `ar²` is fine. Nothing else is, so a transpose is
+        // a prime, an inverse is `inv(A)`, and a general exponent is spelled
+        // out — "r to the n" — or moved into the caption where there is room.
+        check(!/[\^_]/.test(t),
+              `#${id}: ${kind} ${JSON.stringify(t)} uses ^ or _, which a plain-text ` +
+              `label renders literally rather than as a superscript or subscript`);
     }
 }
 

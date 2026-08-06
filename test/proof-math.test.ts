@@ -1122,5 +1122,262 @@ function clipConvex(sub: Pt[], clip: Pt[]): Pt[] {
     console.log(`     6 faces, ${edgeCount.size} edges, each shared by exactly 2 — closed`);
 }
 
+// ── #61 (AB)ᵢⱼ counts the two-step routes ──────────────────────────────
+// The figure's whole claim is that the routes from i to j partition by their
+// middle node. Both matrices are 0/1, so the routes can be enumerated in full
+// and compared against the product entry — no sampling, no tolerance.
+{
+    console.log('\n#61 Matrix Multiplication');
+    const A = [[1, 1, 1], [0, 1, 1], [1, 0, 1]];
+    const B = [[0, 1, 1], [1, 1, 1], [1, 1, 0]];
+    const mul = (X: number[][], Y: number[][]) =>
+        X.map((_, i) => Y[0].map((__, j) =>
+            X[i].reduce((s, _v, k) => s + X[i][k] * Y[k][j], 0)));
+    const AB = mul(A, B);
+
+    // Every (i,k,j) with both edges present is one route.
+    const routes: [number, number, number][] = [];
+    for (let i = 0; i < 3; i++) for (let k = 0; k < 3; k++) for (let j = 0; j < 3; j++) {
+        if (A[i][k] === 1 && B[k][j] === 1) routes.push([i, k, j]);
+    }
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            const n = routes.filter(r => r[0] === i && r[2] === j).length;
+            near(n, AB[i][j], `#61: (AB)[${i}][${j}] = ${AB[i][j]} but there are ${n} routes`);
+        }
+    }
+    // And the routes really are partitioned by the middle node — each belongs
+    // to exactly one k, which is what makes the sum over k a count.
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            const byK = [0, 1, 2].map(k => A[i][k] * B[k][j]);
+            near(byK.reduce((s, v) => s + v, 0), AB[i][j],
+                 `#61: the split by middle node does not add to (AB)[${i}][${j}]`);
+        }
+    }
+    const pf = PROOFS[61];
+    near(routes.filter(r => r[0] === 0 && r[2] === 1).length, pf.claim!.paths,
+         '#61: the drawn i=1, j=2 case does not have the number of routes claimed');
+    console.log(`     ${routes.length} routes enumerated, every (AB) entry matches its count`);
+}
+
+// ── #72 the nine products, added two ways ──────────────────────────────
+// Two things must hold, and they are different things. The identity must be
+// true (checked numerically), and the FIGURE must be the identity — so the nine
+// drawn cell labels are parsed and required to be exactly {aᵢⱼ bⱼᵢ}. A grid
+// that quietly drew aᵢⱼ bᵢⱼ would look completely convincing.
+{
+    console.log('\n#72 Trace of a Product');
+    const A = [[1, 2, 0], [3, 1, 4], [2, 0, 1]];
+    const B = [[2, 1, 3], [0, 4, 1], [5, 2, 0]];
+    const trace = (X: number[][], Y: number[][]) =>
+        X.reduce((s, _r, i) => s + X[i].reduce((t, _v, k) => t + X[i][k] * Y[k][i], 0), 0);
+    const trAB = trace(A, B), trBA = trace(B, A);
+    near(trAB, trBA, `#72: tr(AB) = ${trAB} but tr(BA) = ${trBA}`);
+
+    const labels = (PROOFS[72].primitives.filter(p => p.kind === 'label') as any[])
+        .map(p => p.text as string)
+        .filter(t => /^a\d\d b\d\d$/.test(t));
+    check(labels.length === 9, `#72: found ${labels.length} product cells, expected 9`);
+    const want = new Set<string>();
+    for (let i = 1; i <= 3; i++) for (let j = 1; j <= 3; j++) want.add(`a${i}${j} b${j}${i}`);
+    for (const t of labels) {
+        check(want.has(t), `#72: cell ${JSON.stringify(t)} is not one of the products aij bji`);
+        want.delete(t);
+    }
+    check(want.size === 0, `#72: the grid never draws ${[...want].join(', ')}`);
+    console.log(`     tr(AB) = tr(BA) = ${trAB}; all nine cells are aij bji, none repeated`);
+}
+
+// ── #68 the six permutation terms split three ways ─────────────────────
+// The Leibniz sum over all 3! permutations, grouped by where row 1 lands, must
+// reproduce the cofactor expansion the figure draws — including the alternating
+// sign, which is the part a hand-drawn figure gets wrong.
+{
+    console.log('\n#68 Cofactor Expansion');
+    const A = [[2, 1, 3], [0, 4, 1], [5, 2, 1]];
+    const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
+    const parity = (p: number[]) => {
+        let swaps = 0;
+        for (let i = 0; i < p.length; i++) {
+            for (let j = i + 1; j < p.length; j++) if (p[i] > p[j]) swaps++;
+        }
+        return swaps % 2 === 0 ? 1 : -1;
+    };
+    const term = (p: number[]) => parity(p) * A[0][p[0]] * A[1][p[1]] * A[2][p[2]];
+    const det = perms.reduce((s, p) => s + term(p), 0);
+
+    // Group by σ(0) — the column row 1 uses. Three groups of two.
+    for (let j = 0; j < 3; j++) {
+        const group = perms.filter(p => p[0] === j);
+        check(group.length === 2, `#68: ${group.length} terms use column ${j}, expected 2`);
+        const groupSum = group.reduce((s, p) => s + term(p), 0);
+        const cols = [0, 1, 2].filter(c => c !== j);
+        const minor = A[1][cols[0]] * A[2][cols[1]] - A[1][cols[1]] * A[2][cols[0]];
+        const cofactor = (j % 2 === 0 ? 1 : -1) * A[0][j] * minor;
+        near(groupSum, cofactor,
+             `#68: the terms using column ${j} sum to ${groupSum}, but the drawn ` +
+             `cofactor is ${cofactor} — the sign or the minor is wrong`);
+    }
+    near(det, PROOFS[68].claim!.det, '#68: the figure states a determinant the terms do not give');
+    console.log(`     6 permutation terms, 3 groups of 2, det = ${det}`);
+}
+
+// ── #63 the inverse really inverts, both ways round ────────────────────
+// The figure draws six stages; if the matrices behind them were not actually
+// inverse the middle parallelograms would still look fine and the end squares
+// would be wrong by an amount no reader could measure.
+{
+    console.log('\n#63 Matrix Inverse');
+    const A = [[2, 1], [1, 1.5]], Ai = [[0.75, -0.5], [-0.5, 1]];
+    const mul = (X: number[][], Y: number[][]) =>
+        [0, 1].map(i => [0, 1].map(j => X[i][0] * Y[0][j] + X[i][1] * Y[1][j]));
+    for (const [name, P] of [['A A^-1', mul(A, Ai)], ['A^-1 A', mul(Ai, A)]] as [string, number[][]][]) {
+        for (let i = 0; i < 2; i++) {
+            for (let j = 0; j < 2; j++) {
+                near(P[i][j], i === j ? 1 : 0, `#63: ${name} is not the identity at (${i},${j})`);
+            }
+        }
+    }
+    const detOf = (X: number[][]) => X[0][0] * X[1][1] - X[0][1] * X[1][0];
+    near(detOf(A), PROOFS[63].claim!.detA, '#63: the drawn area is not det A');
+    near(detOf(Ai), PROOFS[63].claim!.detAinv, '#63: the drawn area is not 1/det A');
+    near(detOf(A) * detOf(Ai), 1, '#63: the two areas do not multiply to 1');
+
+    // Six drawn quads: the four end squares must have area 1, and the two
+    // middles the determinants claimed. Measured, not asserted.
+    const quads = (PROOFS[63].primitives.filter(p => p.kind === 'polygon') as any[])
+        .map(p => polyArea(p.points as Pt[]));
+    check(quads.length === 6, `#63: expected 6 stages, found ${quads.length}`);
+    const s2 = quads[0];   // the unit square as drawn — the display scale squared
+    near(quads[2] / s2, 1, '#63: the top row does not come back to the unit square');
+    near(quads[5] / s2, 1, '#63: the bottom row does not come back to the unit square');
+    near(quads[1] / s2, detOf(A), '#63: the drawn parallelogram does not have area det A');
+    near(quads[4] / s2, Math.abs(detOf(Ai)), '#63: the drawn parallelogram is not 1/det A');
+    console.log(`     both orders give I; drawn areas 1 → ${(quads[1] / s2).toFixed(3)} → 1`);
+}
+
+// ── #70 the collapses are the roots ────────────────────────────────────
+// Read the determinant off the DRAWN parallelograms by shoelace and check it
+// against λ² − 4λ + 3. A stage drawn from mistyped columns would have the right
+// label and the wrong shape, and this is the only thing that would notice.
+{
+    console.log('\n#70 Characteristic Polynomial');
+    const c = PROOFS[70].claim!;
+    const poly = (l: number) => (2 - l) * (2 - l) - 1;
+    for (const l of [c.lambda1, c.lambda2]) {
+        near(poly(l), 0, `#70: λ = ${l} is claimed as a root but det(A − λI) = ${poly(l)}`);
+    }
+    for (const [l, want] of [[0, c.det0], [1, c.det1], [2, c.det2], [3, c.det3]]) {
+        near(poly(l), want, `#70: the figure labels det = ${want} at λ = ${l}`);
+    }
+
+    // Every stage draws a faint unit square and an image quad, in that order.
+    const quads = (PROOFS[70].primitives.filter(p => p.kind === 'polygon') as any[])
+        .map(p => p.points as Pt[]);
+    check(quads.length === 8, `#70: expected 4 unit squares and 4 images, found ${quads.length}`);
+    const unit = polyArea(quads[0]);
+    for (let i = 0; i < 4; i++) {
+        const drawn = polyArea(quads[i * 2 + 1]) / unit;
+        near(drawn, poly([0, 1, 2, 3][i]),
+             `#70: stage ${i} is drawn with signed area ${drawn.toFixed(4)}`);
+    }
+    console.log(`     drawn signed areas ${[0, 1, 2, 3].map(i =>
+        (polyArea(quads[i * 2 + 1]) / unit).toFixed(2)).join(', ')} — sign flips between the roots`);
+}
+
+// ── #79 Q Λ Qᵀ really is A, and the frame really is the eigenframe ─────
+// The figure asserts two things: that composing the three drawn stages gives
+// back A, and that the image ellipse's axes lie along the frame it started
+// from. The second is the whole reason a symmetric matrix gets this figure and
+// a general one gets the SVD, so it is checked rather than assumed.
+{
+    console.log('\n#79 Spectral Decomposition');
+    const c = PROOFS[79].claim!;
+    const th = c.theta, l1 = c.lambda1, l2 = c.lambda2;
+    const Q = [[Math.cos(th), -Math.sin(th)], [Math.sin(th), Math.cos(th)]];
+    const L = [[l1, 0], [0, l2]];
+    const mul = (X: number[][], Y: number[][]) =>
+        [0, 1].map(i => [0, 1].map(j => X[i][0] * Y[0][j] + X[i][1] * Y[1][j]));
+    const QT = [[Q[0][0], Q[1][0]], [Q[0][1], Q[1][1]]];
+    const A = mul(mul(Q, L), QT);
+
+    // Symmetric, or the figure is drawn for a matrix this argument cannot reach.
+    near(A[0][1], A[1][0], '#79: Q Λ Q^T came out unsymmetric');
+    // The columns of Q are eigenvectors with the claimed eigenvalues.
+    for (const [k, lam] of [[0, l1], [1, l2]] as [number, number][]) {
+        const v = [Q[0][k], Q[1][k]];
+        const Av = [A[0][0] * v[0] + A[0][1] * v[1], A[1][0] * v[0] + A[1][1] * v[1]];
+        near(Av[0], lam * v[0], `#79: column ${k} of Q is not an eigenvector`);
+        near(Av[1], lam * v[1], `#79: column ${k} of Q is not an eigenvector`);
+    }
+    // And A stretches the frame by exactly λ₁ and λ₂ — the axes of the ellipse.
+    near(l1 * l2, A[0][0] * A[1][1] - A[0][1] * A[1][0],
+         '#79: the eigenvalues do not multiply to det A, so the ellipse has the wrong area');
+    console.log(`     A = [[${A[0][0]},${A[0][1]}],[${A[1][0]},${A[1][1]}]] ` +
+                `from Q Λ Q^T; eigenvalues ${l1}, ${l2} on the drawn frame`);
+}
+
+// ── #42 the drawn steps really are amplified ───────────────────────────
+// The three rulers are tagged, so the ratios are measured off the figure. A
+// caption saying "× 2" over a step drawn at 1.7× is exactly the failure this
+// catches, and nothing in the picture would give it away.
+{
+    console.log('\n#42 Chain Rule');
+    const c = PROOFS[42].claim!;
+    const step = (tag: string) => {
+        const l = PROOFS[42].primitives.find(p => p.kind === 'line' && (p as any).piece === tag) as any;
+        check(!!l, `#42: no step tagged ${tag}`);
+        return l ? Math.abs(l.p2[0] - l.p1[0]) : NaN;
+    };
+    const dx = step('dx'), du = step('du'), dy = step('dy');
+    near(du / dx, c.gp, "#42: the u-step is not g' times the x-step");
+    near(dy / du, c.fp, "#42: the y-step is not f' times the u-step");
+    near(dy / dx, c.chain, '#42: the two amplifications do not compose to the claimed rate');
+    near(c.gp * c.fp, c.chain, '#42: the claimed rates do not multiply');
+    console.log(`     drawn steps ${dx} → ${du} → ${dy}: ×${du / dx} then ×${dy / du} = ×${dy / dx}`);
+}
+
+// ── #53 the ratio really is heading for f'/g' ──────────────────────────
+// Family D, so the honest thing to check is that the finite stages the figure
+// labels are genuinely approaching the limit it names — and that the labels
+// hold the numbers the functions actually give.
+{
+    console.log("\n#53 L'Hopital's Rule");
+    const f = (x: number) => 2 * x + 0.35 * x * x;
+    const g = (x: number) => x - 0.15 * x * x;
+    const c = PROOFS[53].claim!;
+    near(f(0), 0, '#53: f does not vanish at a, so there is no 0/0 to resolve');
+    near(g(0), 0, '#53: g does not vanish at a');
+
+    // The derivatives at a, from the functions rather than from the caption.
+    const h = 1e-6;
+    near((f(h) - f(-h)) / (2 * h), c.fp, "#53: f'(a) is not what the figure claims", 1e-4);
+    near((g(h) - g(-h)) / (2 * h), c.gp, "#53: g'(a) is not what the figure claims", 1e-4);
+
+    // Monotone approach: each smaller h must be strictly closer to the limit.
+    const hs = [1.4, 0.4, 0.1, 0.01];
+    const errs = hs.map(x => Math.abs(f(x) / g(x) - c.limit));
+    for (let i = 1; i < hs.length; i++) {
+        check(errs[i] < errs[i - 1],
+              `#53: at h = ${hs[i]} the ratio is no closer to ${c.limit} than at h = ${hs[i - 1]}`);
+    }
+    near(f(1e-7) / g(1e-7), c.limit, '#53: the ratio does not tend to the claimed limit', 1e-5);
+
+    // And the two ratios printed on the figure must be the ones f/g gives.
+    const shown = (PROOFS[53].primitives.filter(p => p.kind === 'label') as any[])
+        .map(p => p.text as string)
+        .map(t => /^h = ([\d.]+):\s+f\/g = ([\d.]+)$/.exec(t))
+        .filter(Boolean) as RegExpExecArray[];
+    check(shown.length === 2, `#53: expected 2 labelled ratios, found ${shown.length}`);
+    for (const m of shown) {
+        const x = parseFloat(m[1]);
+        near(parseFloat(m[2]), Number((f(x) / g(x)).toFixed(2)),
+             `#53: the label at h = ${x} states a ratio f/g does not give`, 5e-3);
+    }
+    console.log(`     ratios ${errs.map((_e, i) => (f(hs[i]) / g(hs[i])).toFixed(3)).join(' → ')} ` +
+                `→ ${c.limit}, strictly closer each time`);
+}
+
 console.log(`\n${failures === 0 ? 'all proofs mathematically sound' : `${failures} problem(s)`}`);
 process.exit(failures > 0 ? 1 : 0);

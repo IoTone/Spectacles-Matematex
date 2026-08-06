@@ -103,6 +103,82 @@ export function rightAngle(corner: Vec3, u: Vec3, v: Vec3, size = 0.32,
     };
 }
 
+/** A cell of a matrix figure. Rows are numbered from the TOP, so authoring
+ *  order matches the way a matrix is written down — an off-by-one here inverts
+ *  a determinant's sign pattern and nothing about the picture gives it away. */
+export interface GridCell {
+    row: number;
+    col: number;
+    label?: string;
+    /** Omit to get the neutral "present but not part of this step" wash. A cell
+     *  is always filled: the family-I invariant counts filled polygons to check
+     *  the figure draws exactly the cells its arithmetic claims, so an unfilled
+     *  cell would silently leave the count. */
+    fill?: Color;
+    stroke?: Color;
+    labelColor?: Color;
+    labelScale?: number;
+}
+
+/** The wash for a cell that is on screen but not part of the step being made —
+ *  a struck-out row, an entry outside the minor. Faint, not absent: the reader
+ *  has to see that the matrix is still whole. */
+export const CELL_DIM: Color = [0.95, 0.95, 0.95, 0.10];
+
+/** Family I over a matrix: an r×c grid of discrete cells.
+ *
+ *  Cells are separate quads rather than one rectangle with rules across it,
+ *  because the argument in every matrix proof is about WHICH cells group with
+ *  which — and a grouping can only be coloured if the cells are real objects.
+ *
+ *  `(x, y)` is the grid's top-left corner. Cell (row, col) occupies
+ *  `[x + col·w, y − (row+1)·h]` to `[x + (col+1)·w, y − row·h]`. */
+export function matrixGrid(x: number, y: number, rows: number, cols: number,
+                           w: number, h: number, cells: GridCell[]): ProofPrimitive[] {
+    const byKey: { [k: string]: GridCell } = {};
+    for (const c of cells) byKey[`${c.row},${c.col}`] = c;
+    const quads: ProofPrimitive[] = [];
+    const labels: ProofPrimitive[] = [];
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const spec = byKey[`${r},${c}`] ?? { row: r, col: c };
+            const x0 = x + c * w, x1 = x0 + w;
+            const y1 = y - r * h, y0 = y1 - h;
+            quads.push({
+                kind: 'polygon',
+                points: [[x0, y0, 0], [x1, y0, 0], [x1, y1, 0], [x0, y1, 0]] as Vec3[],
+                fill: spec.fill ?? CELL_DIM,
+                stroke: spec.stroke ?? COLOR_INK,
+                strokeThickness: 0.035,
+            } as ProofPolygon);
+            if (spec.label) {
+                labels.push({
+                    kind: 'label',
+                    position: [(x0 + x1) / 2, (y0 + y1) / 2, 0],
+                    text: spec.label,
+                    scale: spec.labelScale ?? 0.34,
+                    color: spec.labelColor ?? COLOR_INK,
+                });
+            }
+        }
+    }
+    // Labels last, so no cell's fill can cover a neighbour's text.
+    return [...quads, ...labels];
+}
+
+/** Family K: the image of the unit square under a 2×2 matrix, as a polygon.
+ *
+ *  Corners in the order 0, e1, e1+e2, e2 — so the drawn winding carries the
+ *  SIGN of the determinant, and a matrix that flips orientation draws itself
+ *  backwards rather than looking identical to one that does not. */
+export function unitSquareImage(m: [number, number, number, number], scale: number,
+                                ox: number, oy: number): Vec3[] {
+    const [a, b, c, d] = m;   // columns (a,c) and (b,d)
+    const P = (u: number, v: number): Vec3 =>
+        [ox + (a * u + b * v) * scale, oy + (c * u + d * v) * scale, 0];
+    return [P(0, 0), P(1, 0), P(1, 1), P(0, 1)];
+}
+
 /** An arc marking the angle between two directions at `centre`. */
 export function angleArc(centre: Vec3, from: number, to: number, radius: number,
                          color: Color = COLOR_INK, steps = 10): ProofPrimitive[] {
