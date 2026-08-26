@@ -75,9 +75,9 @@
     - '// @input float minorWeight = "0.12"'
     - '// @input float majorWeight = "0.22"'
     - '// @input float borderWeight = "0.35"'
-    - '// @input vec4 paperColor = "{0.09, 0.10, 0.13, 0.55}" {"hint":"Paper fill RGBA. Alpha 0 draws no paper at all — that is the current transparent look, kept one input away for comparison."}'
-    - '// @input vec4 minorColor = "{0.45, 0.62, 0.95, 0.28}" {"hint":"Minor grid line RGBA."}'
-    - '// @input vec4 majorColor = "{0.50, 0.68, 1.00, 0.50}" {"hint":"Major grid line RGBA."}'
-    - '// @input vec4 borderColor = "{0.70, 0.80, 1.00, 0.75}" {"hint":"Border rule RGBA. This is the element that actually makes it read as a page."}'
+    - '// @input vec4 paperColor = "{0.10, 0.095, 0.085, 0.55}" {"hint":"Paper fill RGBA — a warm near-black. Alpha 0 draws no paper at all, which is the old transparent look, kept one input away for comparison."}'
+    - "// @input vec4 minorColor = \"{0.58, 0.55, 0.50, 0.30}\" {\"hint\":\"Minor grid line RGBA. Neutral warm grey on purpose — see the palette note above. Do not make this blue: that is the proofs' colour.\"}"
+    - '// @input vec4 majorColor = "{0.68, 0.64, 0.58, 0.50}" {"hint":"Major grid line RGBA — every Nth line, heavier and slightly brighter."}'
+    - '// @input vec4 borderColor = "{0.80, 0.76, 0.70, 0.75}" {"hint":"Border rule RGBA. This is the element that actually makes it read as a page."}'
     - '// @input float pageZ = "-0.6" {"hint":"Local Z of the paper. Grid sits 0.05 in front, rule 0.10, so content at z 0 stays on top."}'
     - "// @input float planeZ = \"39\" {\"hint\":\"Local Z this object moves itself to on awake, so the page lands on the same plane as the book's content. Must match MatematexBookOfMath.containerWorldZ.\"}"

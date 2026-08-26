@@ -65,8 +65,8 @@
     - '// @input AssignableType_1 queryButton {"hint":"PinchButton to open the XR keyboard. v1.1: replaced by UIKit TextInputField."}'
     - '// @input SceneObject queryLabelObj {"hint":"SceneObject with a Text3D component to display the current query string."}'
     - "// @input SceneObject resultsLabelObj {\"hint\":\"SceneObject with a Text3D component showing 'N results' or hints. Optional.\"}"
-    - "// @input AssignableType_2[] topicChips {\"hint\":\"Topic chip buttons. Pinching seeds the query with the chip's label. Length should match topicChipLabels.\"}"
-    - '// @input string[] topicChipLabels {"hint":"Labels for each topic chip — these are also used as queries when the chip is pinched. Default: matrix/trig/derivative/integral/series/log."}'
+    - "// @input AssignableType_2[] topicChips {\"hint\":\"Topic chip buttons. Pinching seeds the query with the chip's label, and the label is written onto the chip. Auto-wired from SearchChip1..N children when left empty.\"}"
+    - '// @input string[] topicChipLabels {"hint":"Optional per-chip overrides. Leave EMPTY to use matrix/trig/derivative/integral/series/log — the chips no longer depend on this being filled, which is what used to break them."}'
     - '// @input AssignableType_3[] resultRowButtons {"hint":"Pool of result-row PinchButtons. Each represents one search result; unused rows are hidden. Length determines max visible results."}'
     - '// @input SceneObject[] resultRowLabelObjs {"hint":"SceneObjects (with Text3D children) for each result row label. Length must equal resultRowButtons length."}'
     - '// @input AssignableType_4 closeButton {"hint":"PinchButton — close the search screen and return to splash."}'

@@ -1186,3 +1186,45 @@ the thresholds above are a starting point, not a result — nothing here can be
 tested at a desk, where there is a MouseInteractor and no hands. The prev/next
 buttons therefore stay for now. **Tune against the false-positive rate while
 idle, not the hit rate.**
+
+---
+
+## Phase 7.7 — page-turn gestures, disabled
+
+`MatematexPageTurn` ships with `gestureEnabled` **false** as of v0.1.1. The
+prev/next buttons are the shipping way to turn a page. The component stays in
+the scene, wired and tuned.
+
+**Why.** It fails in both directions at once, and that combination is what makes
+a gesture worse than no gesture. It fires when it should not — hand tracking
+drops about once a second on device, and ordinary conversational movement
+crosses the travel threshold often enough to turn pages while the reader is
+doing something else. It also misses deliberate sweeps often enough that no
+habit forms. The two are linked: every threshold that suppresses a false
+positive costs a true one, and the device logs say the two distributions
+overlap too much to separate with travel and drift alone.
+
+**What the work bought, and is worth keeping.** Four real defects were found and
+fixed along the way, each of which would have to be re-discovered otherwise:
+
+  - A **return stroke** is a perfect mirror-image swipe arriving half a second
+    later. Neither a cooldown nor a single-frame stillness test stops it — a
+    hand reversing direction passes through ZERO VELOCITY at the turn, so
+    "is the hand slow?" succeeds at precisely the wrong instant. Only the
+    DURATION of stillness separates the end of a gesture from the middle of one.
+  - **Tracking loss is where a swipe ends**, not an error: the hand leaves the
+    camera's view or outruns the tracker. Clearing history on the first dropped
+    frame made a completed swipe erase its own evidence.
+  - But holding history ACROSS a gap is worse: the hand vanishes on one side of
+    the view and reappears on the other, and the difference reads as a perfect
+    2.6-screen-width sweep. Hence `maxTravel`.
+  - Frame-to-frame differencing multiplies tracking jitter by the frame rate.
+    Speed must be measured over a baseline or "settled" never becomes true.
+
+**What would move it forward**, in order of expected value: a better gate than
+"the hand moved" (palm orientation, or a deliberately adopted pose —
+`isFacingCamera()` and `getPalmCenter()` are already on the SIK hand); better
+tracking quality (half of every `debugHand` line came back `tracked=false`,
+some of it the reader working at the edge of the tracking volume, which the
+page's own position could address); and the turn ears from the design brief, so
+a missed swipe has an instant fallback rather than a repeat.

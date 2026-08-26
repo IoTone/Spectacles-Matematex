@@ -55,6 +55,12 @@ In the future, we plan to implement:
 - Web Publishing of content
 - Spatial Content libraries
 
+## Using the library elsewhere
+
+**[MATEMATEX.md](MATEMATEX.md)** is the integration guide: which files to copy,
+the minimum viable render, the scene setup, and the six Lens Studio traps that
+each cost a day and none of which produce an error message.
+
 ## Third-party assets
 
 Bundled in the lens and credited on its About page.

@@ -50,7 +50,25 @@ import {
     getTextWidthEm,
     getCharHeightEm,
     getCharItalicEm,
+    getRunCenterEm,
+    FontFamily,
 } from './KaTeXFontMetrics';
+
+/** Font assets for the KaTeX_Size1..Size4 faces, keyed by the family name the
+ *  walker records on each item.
+ *
+ *  Separate from the italic/bold/main arguments because those are a WEIGHT and
+ *  SLANT choice within one family, while these are different faces holding
+ *  different glyphs — "∑" exists in none of Main, Italic or Bold, and a large
+ *  operator laid out against Size2 has to be drawn from Size2 or its size is a
+ *  lie. Anything unset simply falls back, so a caller that does not care about
+ *  big operators can ignore this entirely. */
+export interface SizeFonts {
+    size1?: Font | null;
+    size2?: Font | null;
+    size3?: Font | null;
+    size4?: Font | null;
+}
 
 // ─── LayoutItem types ────────────────────────────────────────
 
@@ -78,6 +96,17 @@ export interface TextLayoutItem extends LayoutBase {
      *  "[" — which is 13 of the 24 failures, and all of them in the harness
      *  rather than in the layout. */
     widthEm: number;
+    /** Which KaTeX face measured this run: 'size1'..'size4', or null for
+     *  Main/Italic.
+     *
+     *  Recorded for exactly the reason `widthEm` is, and it was missing for
+     *  exactly as long. The walker resolves the family from the CSS classes
+     *  and uses it to MEASURE, then threw it away — so the renderer, which has
+     *  to pick a Font asset, had only `{text, italic, bold}` to go on and put
+     *  every glyph in Main. A display integral is laid out against Size2 (2.22
+     *  em tall) and was drawn from Main (0.89 em): correctly spaced for a big
+     *  glyph, drawn as a small one. That is the "short integral". */
+    family?: FontFamily;
 }
 
 export interface LineLayoutItem extends LayoutBase {
@@ -637,9 +666,24 @@ export class MatematexLayoutWalker {
         const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
         const centerX = ctx.cursorX + widthWorld / 2;
 
-        const xHeightEm = 0.43; // standard x-height for KaTeX fonts
-        const baselineToCenterWorld = (xHeightEm / 2) * ctx.emToWorld * ctx.scale;
-        const centerY = ctx.baselineY + baselineToCenterWorld;
+        // Vertical placement, MEASURED rather than assumed.
+        //
+        // The template Text 3D is centre-aligned, so an item's y is the centre
+        // of the drawn box, not its baseline. This used to convert with a fixed
+        // `0.43 / 2` — "the standard x-height for KaTeX fonts" — which is only
+        // correct for a run with no ascender and no descender.
+        //
+        // A named operator breaks that on the first letter: "sin" reaches the
+        // dot of its `i` at 0.668 em, so its centre is 0.334 em above the
+        // baseline, not 0.215. Pinned at 0.215 the whole word was drawn low by
+        // the difference, which is the sagging \sin / \log / \cos on device.
+        //
+        // Taken over the RUN, not per character. A run is one Text 3D object
+        // and needs one height; per-character would land the `i` and the `s` of
+        // "sin" at different heights, which is the failure the fixed constant
+        // was chosen to avoid in the first place.
+        const centerEm = getRunCenterEm(text, ctx.italic, ctx.fontFamily, ctx.bold);
+        const centerY = ctx.baselineY + centerEm * ctx.emToWorld * ctx.scale;
 
         this.items.push({
             kind: 'text',
@@ -650,6 +694,7 @@ export class MatematexLayoutWalker {
             italic: ctx.italic,
             bold: ctx.bold,
             widthEm,
+            family: ctx.fontFamily,
         });
 
         ctx.cursorX += widthWorld;
@@ -1089,13 +1134,14 @@ export class MatematexSceneRenderer {
         italicFont: Font | null,
         boldFont: Font | null = null,
         mainFont: Font | null = null,
+        sizeFonts: SizeFonts | null = null,
     ): SceneObject[] {
         this.clear();
 
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (item.kind === 'text') {
-                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale, italicFont, boldFont, mainFont);
+                this.createText(item, parent, baseTextSize, color, templateTextComp, templateScale, italicFont, boldFont, mainFont, sizeFonts);
             } else if (item.kind === 'line') {
                 this.createLine(item, parent, color, lineMaterial);
             } else if (item.kind === 'svg') {
@@ -1121,6 +1167,7 @@ export class MatematexSceneRenderer {
         italicFont: Font | null = null,
         boldFont: Font | null = null,
         mainFont: Font | null = null,
+        sizeFonts: SizeFonts | null = null,
     ): void {
         if (!templateTextComp) {
             if (this.created.length === 0) {
@@ -1157,11 +1204,28 @@ export class MatematexSceneRenderer {
         // parens rendered in Lens Studio's default face while being spaced by
         // KaTeX's metrics, which is what made `2ab` collide and `|a|` foul its
         // bars. Italics were already correct; uprights never were.
-        if (item.bold && boldFont) {
+        // FAMILY FIRST. A run measured against KaTeX_Size2 must be drawn from
+        // KaTeX_Size2 — it is a different face with different glyphs, not a
+        // weight of Main. A display integral is laid out 2.22 em tall and, drawn
+        // from Main, comes out 0.89 em: correctly spaced for a big glyph and
+        // drawn as a small one, which is the short integral on screen. "∑",
+        // "∏" and "∮" are not in Main at ALL, so without this they fall through
+        // to whatever face Lens Studio picks and stop being the right character.
+        const sizeFont = item.family && sizeFonts
+            ? (sizeFonts as any)[item.family] as Font | null | undefined
+            : null;
+
+        if (sizeFont) {
+            try { comp.font = sizeFont; } catch (e) { /* ignore */ }
+        } else if (item.bold && boldFont) {
             try { comp.font = boldFont; } catch (e) { /* ignore */ }
         } else if (item.italic && italicFont) {
             try { comp.font = italicFont; } catch (e) { /* ignore */ }
         } else if (mainFont) {
+            // Bold with no bold face assigned lands here deliberately: the
+            // right FAMILY without the weight beats the wrong family, and
+            // \mathbf in Lens Studio's default face is how the norm bars in
+            // #74 ended up as slanted relation glyphs.
             try { comp.font = mainFont; } catch (e) { /* ignore */ }
         }
 

@@ -70,7 +70,7 @@
       {}
   InputLines:
     - '// @input AssignableType bookOfMath {"hint":"The MatematexBookOfMath component whose pages this turns."}'
-    - '// @input bool gestureEnabled = "true" {"hint":"Master switch. Off leaves the buttons as the only way to turn a page."}'
+    - '// @input bool gestureEnabled = "false" {"hint":"OFF by default as of v0.1.1 — the detector fires when it should not AND misses deliberate sweeps; see the note at the top of this file. Prev/next are the shipping way to turn a page. Tick to resume testing."}'
     - '// @input float travelThreshold = "0.22" {"hint":"How far the hand must travel horizontally, as a fraction of the screen. Lower = easier to trigger AND easier to trigger by accident."}'
     - '// @input float driftRatio = "1.2" {"hint":"Vertical drift allowed, as a multiple of horizontal travel. A real arm sweep ARCS, and the device log rejected honest 0.22-0.30 sweeps at 0.8. 1.2 is about 50 degrees, which is safe now that maxTravel catches the wild ones."}'
     - '// @input float maxDuration = "0.6" {"hint":"Seconds of history the detector looks back over. A sweep must complete inside this window; anything slower is a reach."}'
@@ -81,6 +81,6 @@
     - '// @input float maxDisarm = "2.0" {"hint":"Hard ceiling: re-arm this many seconds after a turn even if the hand never settles. A detector that never re-arms is worse than one that occasionally turns twice — it kills the feature silently."}'
     - "// @input float speedBaseline = \"0.15\" {\"hint\":\"Seconds over which speed is measured. Frame-to-frame differencing multiplies tracking jitter by the frame rate; this is the smoothing that makes 'settled' mean anything.\"}"
     - "// @input float maxTravel = \"0.80\" {\"hint\":\"Largest sweep accepted, in screen widths. Above this it is not an arm, it is the tracker losing the hand and re-acquiring it somewhere else — the device log showed phantom 2.6-screen-width 'swipes' doing exactly that.\"}"
-    - "// @input bool invertDirection = \"false\" {\"hint\":\"Flip forward and back. Only needed if the camera's screen-space x runs the other way than expected; a swipe that pages the wrong direction is one field away from fixed.\"}"
+    - "// @input bool invertDirection = \"false\" {\"hint\":\"Flip forward and back. The base mapping is the one measured on device — right-to-left pages forward. Tick this only if a future SDK flips the camera's screen-space x again.\"}"
     - "// @input bool debugHand = \"false\" {\"hint\":\"Print the hand's state twice a second — tracked, pinching, position. Very noisy; turn it on only when swipes do not register at all, because it answers 'is the hand being seen', which no other log does.\"}"
     - '// @input bool debugLog = "false" {"hint":"Diagnostics: why strokes were rejected, and why the detector is disarmed. Off by default — a page turn always logs one line regardless, which is the part worth reading. Rejections are aggregated, not printed per frame."}'

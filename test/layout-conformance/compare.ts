@@ -35,10 +35,29 @@ function usePen(ref: RefItem[]): boolean {
     return ref.length > 0 && ref[0].xPen != null;
 }
 
-// Our y is the visual centre derived from a fixed 0.43em x-height
-// (MatematexBridge.emitText). Undo that to recover the baseline the browser
-// probes measure directly.
+// The baseline comes from the dump, which computes it with the same metric the
+// walker placed the run by.
+//
+// This used to be `it.y - 0.215 * it.scale`, the constant emitText added. Worth
+// being precise about what that did and did not test, because the obvious
+// reading is wrong:
+//
+//   - It DID test the baseline. Subtracting exactly what the walker added
+//     recovers the baseline the walker intended, and comparing THAT against the
+//     browser is a real check. It passed because the baseline was right.
+//   - It did NOT test the CENTRE, which is what actually positions the object.
+//     The renderer pins a run's centre at `item.y`, so a run whose true ink
+//     centre is 0.334em above the baseline, pinned at 0.215em, is drawn 0.119em
+//     low — and the recovered baseline is still perfect. Named operators sagged
+//     on device while this harness reported PASS, and it was right to.
+//
+// So the y axis here verifies layout, not placement. Placement is downstream of
+// layout and can only be checked against drawn geometry — see the calibration
+// probe, which measures drawn extent against metric extent but only on x.
+// Extending it to y is what would close this gap.
 function ourBaseline(it: OurItem): number {
+    const yb = (it as any).yBaseline;
+    if (yb != null) return yb;
     return it.y - 0.215 * it.scale;
 }
 

@@ -316,10 +316,24 @@ in 15 ms. Column speeds vary (0.6–1.4× base) so the columns never phase-lock.
 
 ### 5.4 Leaving the cover
 
-Forward-swipe, or pinch anywhere on the cover, opens to front matter page i.
-Back-swipe from page i returns to the cover — the book closes. That round trip
-is worth the small amount of work it costs; it is what makes it a book rather
-than a splash screen.
+**As shipped:** the NEXT button stays live on the cover, and that is a
+deliberate retreat from "a cover has no buttons on it" (§1.2). While the swipe
+existed the cover was opened by sweeping it; when gestures were disabled
+(§6.5), hiding every control here left the lens opening on a screen with no way
+out. A principle that bricks the app is not a principle worth keeping.
+
+PREV stays hidden on the cover: nothing precedes it, and `navigate()` would
+wrap round to page 80 — a confusing thing for a button on a cover to do.
+
+**Still unbuilt:** pinch-anywhere-on-the-cover, which is the affordance this
+section originally described and the one that would let the button go away
+again. It needs a collider plus an Interactable on the cover slab. Back-swipe
+from page i closing the book is likewise waiting on the gesture.
+
+`test/nav-reachability.test.ts` now asserts that every screen has at least one
+live control, so this particular way of stranding a reader cannot come back
+quietly. It transcribes `showScreen`'s enable rules rather than importing them
+— keep the two in step.
 
 ---
 
@@ -391,6 +405,13 @@ contents pages remain the real answer for long jumps.
 ---
 
 ## 6.5 How the gesture actually works
+
+> **Status: built, tuned, and DISABLED as of v0.1.1.** `gestureEnabled` ships
+> false; prev/next are the shipping way to turn a page. It fires when it should
+> not *and* misses deliberate sweeps, and those two failures trade against each
+> other — every threshold that suppresses a false positive costs a true one.
+> The component stays in the scene. See Phase 7.7 in the design spec for what
+> would move it forward. Everything below describes how it works when enabled.
 
 Built as `MatematexPageTurn.ts`. Two pictures carry it: what a sweep has to look
 like, and what it has to survive.

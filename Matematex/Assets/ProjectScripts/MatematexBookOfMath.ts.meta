@@ -58,6 +58,8 @@
     searchButton: false
     searchScreen: false
     showProofs: false
+    size1Font: false
+    size2Font: false
     soundVolume: false
     soundWindowLength: false
     soundWindows: false
@@ -107,6 +109,8 @@
       aboutButton: !<MappingBased.AssignableType_7> 00000000-0000-0000-0000-000000000000
       proofButton: !<MappingBased.AssignableType_8> 00000000-0000-0000-0000-000000000000
       pageSheet: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      size1Font: !<reference.Font> 00000000-0000-0000-0000-000000000000
+      size2Font: !<reference.Font> 00000000-0000-0000-0000-000000000000
       cover: !<MappingBased.AssignableType_9> 00000000-0000-0000-0000-000000000000
       pageTurnTrack: !<reference.AudioTrackAsset> 00000000-0000-0000-0000-000000000000
       soundWindows: 10
@@ -152,6 +156,8 @@
     - '// @input AssignableType_7 aboutButton {"hint":"PinchButton — toggle the About page (sources, licences, credits). Pinching it again returns to the splash. Optional."}'
     - '// @input AssignableType_8 proofButton {"hint":"PinchButton — show the visual proof for the current formula, full size. Only appears on formulas that have one. Pinching it again returns to the formula. Optional."}'
     - '// @input SceneObject pageSheet {"hint":"The MatematexPage SceneObject that draws the grid-paper sheet. Hidden on the cover."}'
+    - '// @input Asset.Font size1Font {"hint":"KaTeX_Size1-Regular — small operators and the smaller scaled delimiters. Also the only shipped face carrying U+2016, which stretchy norm bars are built from."}'
+    - '// @input Asset.Font size2Font {"hint":"KaTeX_Size2-Regular — display-size large operators. Without it \\int is laid out 2.22em tall and drawn 0.89em, and \\sum has no glyph at all."}'
     - '// @input AssignableType_9 cover {"hint":"MatematexCover component — the closed book the lens opens on. Optional: without it the lens opens on the half title instead."}'
     - '// @input Asset.AudioTrackAsset pageTurnTrack {"hint":"The page-turn recording. Optional — without it, turns are silent. The AudioComponent that plays it is created in script, so there is nothing else to wire."}'
     - '// @input int soundWindows = "10" {"hint":"How many one-second windows to pick from in the recording. The source is 11.3s of repeated page turns, so each window is a different turn and no two consecutive pages sound identical."}'

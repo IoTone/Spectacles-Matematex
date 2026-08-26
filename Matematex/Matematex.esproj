@@ -13,16 +13,16 @@ metaInfo:
     []
   tags:
     []
-  lensName: Matematex
+  lensName: Book Of Math
   lensDescriptors:
-    []
+    - GEN_AI_ICON
   lensApplicability:
     - Front
     - Back
   lensClientCompatibilities:
     - Spectacles
   platformBundlesEnabled: false
-  iconHash: ""
+  iconHash: f4568a1a6037604fbdc6f5979a9b9d65
   videoPreviewHash: ""
   fromTemplateName: Default
   fromTemplateUrl: Lens Studio 5.9.1.25051422

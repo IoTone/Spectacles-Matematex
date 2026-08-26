@@ -86,12 +86,73 @@ export function getCharWidthEm(char: string, italic: boolean, family?: FontFamil
     return 0.5;
 }
 
-export function getCharHeightEm(char: string, italic: boolean): number {
+export function getCharHeightEm(char: string, italic: boolean, family?: FontFamily,
+                                bold?: boolean): number {
+    return metricOf(char, HEIGHT, italic, family, bold, 0.5);
+}
+
+/** How far a glyph descends BELOW the baseline, in em. Positive is downward,
+ *  matching KaTeX's own convention.
+ *
+ *  Needed to place a run vertically. A run's visual centre sits at
+ *  `(height − depth) / 2` above the baseline, and using a fixed constant for
+ *  that instead — the old `0.43 / 2` "standard x-height" — is only right for a
+ *  run with no ascender and no descender. "sin" reaches the dot of its `i` at
+ *  0.668 em, so its true centre is 0.334 em, and pinning it at 0.215 em drew
+ *  every named operator low by the difference. */
+export function getCharDepthEm(char: string, italic: boolean, family?: FontFamily,
+                               bold?: boolean): number {
+    return metricOf(char, DEPTH, italic, family, bold, 0);
+}
+
+/** Shared lookup: Size family first, then the slant/weight face, then the same
+ *  slant-before-weight fallback chain getCharWidthEm uses. Factored out because
+ *  three accessors had drifted into three different fallback behaviours, and a
+ *  height looked up against the wrong table is a glyph placed at the wrong
+ *  height. */
+function metricOf(char: string, index: number, italic: boolean,
+                  family: FontFamily | undefined, bold: boolean | undefined,
+                  dflt: number): number {
     const code = char.charCodeAt(0).toString();
-    const table = italic ? MATH_ITALIC : MAIN_REGULAR;
-    const metrics = table[code];
-    if (metrics) return metrics[HEIGHT];
-    return 0.5;
+    if (family) {
+        const sized = FAMILY_TABLES[family];
+        if (sized) {
+            const m = sized[code];
+            if (m) return m[index];
+        }
+    }
+    const metrics = faceFor(italic, !!bold)[code];
+    if (metrics) return metrics[index];
+    for (const fb of [faceFor(!italic, !!bold), faceFor(italic, false),
+                      faceFor(!italic, false)]) {
+        const m = fb[code];
+        if (m) return m[index];
+    }
+    return dflt;
+}
+
+/** The visual centre of a whole run above its baseline, in em.
+ *
+ *  Taken as the max height and max depth OVER THE RUN, not per character. A run
+ *  is emitted as ONE Text 3D object, so it needs one height — computing it per
+ *  character is what would land the `i` and the `s` of "sin" at different
+ *  heights, which is the failure the old fixed constant was chosen to avoid.
+ *  The answer was never to abandon the measurement, only to take it over the
+ *  right unit. */
+export function getRunCenterEm(text: string, italic: boolean, family?: FontFamily,
+                               bold?: boolean): number {
+    if (!text) return 0.215;
+    let maxH = -Infinity, maxD = -Infinity;
+    for (let i = 0; i < text.length; i++) {
+        const c = text.charAt(i);
+        if (c === ' ') continue;
+        const h = getCharHeightEm(c, italic, family, bold);
+        const d = getCharDepthEm(c, italic, family, bold);
+        if (h > maxH) maxH = h;
+        if (d > maxD) maxD = d;
+    }
+    if (!isFinite(maxH)) return 0.215;   // all-space run
+    return (maxH - maxD) / 2;
 }
 
 export function getCharItalicEm(char: string): number {

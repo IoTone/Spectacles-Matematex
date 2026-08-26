@@ -56,15 +56,30 @@ const enum Screen {
     Formula = 'formula', // Single-formula display
 }
 
+/** The lens version, shown on the About page.
+ *
+ *  One constant, in the component that owns the About page, because that is the
+ *  only place it is displayed. If it ever needs to appear somewhere else — a
+ *  cover, a log line — import it from here rather than typing it twice; a
+ *  version that disagrees with itself is worse than no version. */
+export const MATEMATEX_VERSION = 'v0.1.2';
+
 // ─── Field-of-view budget ───────────────────────────────────────────────
 //
 // The desktop preview lies about how much you can see. Lens Studio's preview
 // camera runs a ~63.5° vertical FOV; Spectacles is ~46° DIAGONAL, roughly 33°
-// vertical. At the shipped viewing distance (~101 world units: parent at
-// z=-100 + containerWorldZ 39, camera at z=+40) that works out to:
+// vertical. At the shipped viewing distance (~131 world units: parent at
+// z=-130 + containerWorldZ 39, camera at z=+40) that works out to:
 //
-//     preview      ±62 world units   ← what you see in Lens Studio
-//     Spectacles   ±30 world units   ← what the wearer actually sees
+//     preview      ±80 world units   ← what you see in Lens Studio
+//     Spectacles   ±39 world units   ← what the wearer actually sees
+//
+// The parent group moved back from z −100 to −130 because at 101 units the
+// book was too close to read comfortably AND the ±37 sheet ran off the display
+// top and bottom. At 131 the whole sheet subtends 15.8°, inside the 16.5°
+// half-angle, so the page edges are visible without stepping back. Everything
+// below is in the same world units, so nothing else had to change — the type
+// simply subtends less.
 //
 // So the preview shows about twice the vertical extent of the device. The
 // original splash was 149 units tall — even its title sat off-screen on
@@ -104,8 +119,23 @@ const SAFE_HALF_WIDTH = 24;
 // folio go at the TOP OF THE TYPE AREA, not the top of the sheet — a page
 // number you have to tilt your head to read is not a page number.
 const RUNNING_HEAD_Y = 25;
-const BUTTON_ROW_Y = -24;
-const BUTTON_ROW_X = 14;
+const BUTTON_ROW_Y = -28;
+const BUTTON_ROW_X = 15;
+/** Prev/next sit at the foot of the sheet, below the other controls. */
+const PREV_NEXT_Y = -34;
+/** How far IN FRONT of the content plane the buttons sit.
+ *
+ *  They used to sit wherever the scene put them — z 60 against the container's
+ *  39, i.e. 21 units nearer the reader. That is not a cosmetic difference: a
+ *  nearer plane has a smaller visible half-height, so the same `y` number meant
+ *  a different ANGLE for a button than for a line of text. prev/next at y 32
+ *  worked out to 21.8 degrees off centre against a 16.5 degree limit — the
+ *  forward button was not merely small, it was off the display entirely.
+ *
+ *  Putting them on the content plane plus a small lift makes one set of
+ *  coordinates mean one thing, and keeps the controls reading as floating just
+ *  above the page rather than embedded in it. */
+const BUTTON_PLANE_LIFT = 5;
 /** Text scale for the running head — small enough to be furniture. */
 const FURNITURE_SCALE = 0.22;
 /** The folio is set at twice the running head. A page number is the one piece
@@ -270,6 +300,16 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
     @input
     @allowUndefined
+    @hint("KaTeX_Size1-Regular — small operators and the smaller scaled delimiters. Also the only shipped face carrying U+2016, which stretchy norm bars are built from.")
+    size1Font: Font;
+
+    @input
+    @allowUndefined
+    @hint("KaTeX_Size2-Regular — display-size large operators. Without it \\int is laid out 2.22em tall and drawn 0.89em, and \\sum has no glyph at all.")
+    size2Font: Font;
+
+    @input
+    @allowUndefined
     @hint("MatematexCover component — the closed book the lens opens on. Optional: without it the lens opens on the half title instead.")
     cover: MatematexCover;
 
@@ -383,6 +423,8 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
         // Create label objects
         this.createLabels();
+
+        this.checkCalibration();
 
         // Setup navigation buttons
         this.setupNavigation();
@@ -722,6 +764,59 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         }
     }
 
+    /** Complain when the scene disagrees with the code about calibration.
+     *
+     *  These constants are derived — the derivations live in the @input hints
+     *  above — but their VALUES live in a scene asset, and nothing checked that
+     *  the two agreed. When a code default was corrected, three stale scene
+     *  values kept overriding it and every glyph drew 1.265x oversize while the
+     *  source said otherwise. An unset font was worse: the font-selection chain
+     *  simply took a different branch and rendered maths in whatever face Lens
+     *  Studio felt like, silently.
+     *
+     *  Warnings, not errors: a caller may legitimately want a different scale.
+     *  The point is that a divergence is never invisible again. */
+    private checkCalibration(): void {
+        if (!this.mainFont) {
+            print('[MatematexBook] WARNING: mainFont unassigned — every upright ' +
+                  'glyph (digits, parens, sin/log/cos, norm bars) will draw in ' +
+                  "Lens Studio's default face while being spaced by KaTeX metrics");
+        }
+        if (!this.italicFont) {
+            print('[MatematexBook] WARNING: italicFont unassigned — variables ' +
+                  'will draw in the wrong face');
+        }
+        if (!this.size2Font) {
+            print('[MatematexBook] NOTE: size2Font unassigned — display \\int is ' +
+                  'laid out 2.22em tall but drawn from Main at 0.89em, and \\sum ' +
+                  'has no glyph in Main at all');
+        }
+
+        // The pairing that cannot be checked by inspection: textScaleMultiplier
+        // is emToWorld / 1.2654, the measured Text3D over-draw factor. If one
+        // moves without the other, spacing and glyph size disagree.
+        const expected = this.emToWorld / 1.2654;
+        if (Math.abs(this.textScaleMultiplier - expected) > 0.01) {
+            print(`[MatematexBook] WARNING: textScaleMultiplier ` +
+                  `${this.textScaleMultiplier.toFixed(3)} does not match emToWorld ` +
+                  `${this.emToWorld} — expected ${expected.toFixed(3)}. Glyphs will ` +
+                  `draw ${(this.textScaleMultiplier / expected).toFixed(3)}x the size ` +
+                  `the layout reserved for them.`);
+        }
+        if (Math.abs(this.italicScaleAdjust - 0.7957) > 0.005) {
+            print(`[MatematexBook] WARNING: italicScaleAdjust ` +
+                  `${this.italicScaleAdjust.toFixed(4)} is not 0.7957 (= 935/1175, ` +
+                  `the ratio of the two fonts' hhea spans). Italics will be ` +
+                  `${(this.italicScaleAdjust / 0.7957).toFixed(3)}x the size of uprights.`);
+        }
+        if (Math.abs(this.layoutWidthMargin - 1.0) > 0.005) {
+            print(`[MatematexBook] WARNING: layoutWidthMargin ` +
+                  `${this.layoutWidthMargin.toFixed(3)} is not 1.0 — fraction bars ` +
+                  `will be ${((this.layoutWidthMargin - 1) * 100).toFixed(0)}% too wide. ` +
+                  `1.18 was a compensation for oversize glyphs and is wrong now.`);
+        }
+    }
+
     private setupPageTurnAudio(): void {
         if (!this.pageTurnTrack) return;
         try {
@@ -885,6 +980,12 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         // reads as a no-op.
         this.setButtonLabel(this.proofButton, onProof ? 'Back' : 'Proof');
 
+        // Same treatment for About, and for the same reason: one button is both
+        // the way in and the way out, so it has to say which one it is right
+        // now. "About" while you are ON the About page reads as a no-op, and it
+        // is the only control left on that screen — prev/next hide there.
+        this.setButtonLabel(this.aboutButton, onAbout ? 'Back' : 'About');
+
         // Chapter buttons belong to the contents page — they are its rows'
         // controls. Search stays on both front-matter pages.
         this.setChapterButtonsEnabled(onContents);
@@ -897,8 +998,20 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         // Prev/next belong to the book, not to these full-screen pages —
         // leaving them on floated them over the search chips. `navigate()`
         // already ignores them there, so they were inert as well as in the way.
+        // NEXT stays live on the cover, and that is a deliberate retreat from
+        // "a cover has no buttons on it".
+        //
+        // While the swipe existed, the cover was opened by sweeping it. With
+        // gestures disabled (see MatematexPageTurn's header) hiding every
+        // control here left the lens opening on a screen with NO WAY OUT — the
+        // reader is trapped on the cover from launch. A principle that bricks
+        // the app is not a principle worth keeping.
+        //
+        // PREV stays hidden: nothing precedes the cover, and navigate() would
+        // wrap it round to page 80, which is a confusing thing for a button on
+        // a cover to do.
         this.setSceneObjectEnabled(this.prevButton, !onSearch && !onAbout && !onProof && !onCover);
-        this.setSceneObjectEnabled(this.nextButton, !onSearch && !onAbout && !onProof && !onCover);
+        this.setSceneObjectEnabled(this.nextButton, !onSearch && !onAbout && !onProof);
 
         // The paper is the book's pages. The cover is a different object and
         // must not have a sheet of graph paper hanging behind it.
@@ -983,10 +1096,12 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         this.placeButton(this.searchButton, -BUTTON_ROW_X, BUTTON_ROW_Y);
         this.placeButton(this.aboutButton,   BUTTON_ROW_X, BUTTON_ROW_Y);
         this.placeButton(this.proofButton,   BUTTON_ROW_X, BUTTON_ROW_Y);
-        // Prev/next straddle the top of the type area until the swipe gesture
-        // replaces them. Above the running head, not beside it.
-        this.placeButton(this.prevButton, -BUTTON_ROW_X, RUNNING_HEAD_Y + 7);
-        this.placeButton(this.nextButton,  BUTTON_ROW_X, RUNNING_HEAD_Y + 7);
+        // Prev/next at the FOOT of the sheet, below the other controls. They
+        // were above the running head, which put them off the top of the
+        // display — and with the swipe gesture disabled they are the only way
+        // to turn a page, so being visible is the whole job.
+        this.placeButton(this.prevButton, -BUTTON_ROW_X, PREV_NEXT_Y);
+        this.placeButton(this.nextButton,  BUTTON_ROW_X, PREV_NEXT_Y);
     }
 
     private placeButton(btn: PinchButton | null | undefined, x: number, y: number): void {
@@ -994,9 +1109,11 @@ export class MatematexBookOfMath extends BaseScriptComponent {
         try {
             const obj = (btn as any).getSceneObject?.() || (btn as any).sceneObject;
             if (!obj) return;
-            const t = obj.getTransform();
-            const p = t.getLocalPosition();
-            t.setLocalPosition(new vec3(x, y, p.z));
+            // Z as well as X and Y. Preserving the scene's own z is what left
+            // the buttons on a different plane from the page — see
+            // BUTTON_PLANE_LIFT.
+            obj.getTransform().setLocalPosition(
+                new vec3(x, y, this.containerWorldZ + BUTTON_PLANE_LIFT));
         } catch (e) { /* a button we cannot place is not worth failing the page over */ }
     }
 
@@ -1096,6 +1213,7 @@ export class MatematexBookOfMath extends BaseScriptComponent {
                 this.italicFont || null,
                 this.boldFont || null,
                 this.mainFont || null,
+                { size1: this.size1Font || null, size2: this.size2Font || null },
             );
 
             // Silence is success. Warnings still speak up, and so does the
@@ -1326,7 +1444,8 @@ export class MatematexBookOfMath extends BaseScriptComponent {
 
         this.renderLines('about', [
             { text: 'About',                                   scale: 0.55, y:  24 },
-            { text: 'Matematex · Book of Math',                scale: 0.30, y:  17 },
+            { text: `Matematex · Book of Math · ${MATEMATEX_VERSION}`,
+                                                               scale: 0.30, y:  17 },
             { text: `${MATH_FORMULAS.length} theorems rendered on-device with KaTeX`,
                                                                scale: 0.24, y:  12 },
             { text: 'Content sources (CC / public domain)',    scale: 0.26, y:   5 },

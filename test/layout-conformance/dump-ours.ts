@@ -23,6 +23,7 @@ import {
 } from '../../Matematex/Assets/ProjectScripts/SpaceDOM';
 
 import { MatematexLayoutWalker, LayoutItem } from '../../Matematex/Assets/ProjectScripts/MatematexBridge';
+import { getRunCenterEm } from '../../Matematex/Assets/ProjectScripts/KaTeXFontMetrics';
 
 import { formulasFor, idsFromArgv } from './formulas';
 
@@ -98,6 +99,17 @@ function main(): void {
                 if (it.kind === 'text') {
                     base.text = it.text;
                     base.italic = it.italic;
+                    base.family = (it as any).family || null;
+                    // The BASELINE, computed with the same metric the walker
+                    // placed the run by. compare.ts used to recover this by
+                    // subtracting a hardcoded 0.215 — the identical constant
+                    // emitText used — so the two errors cancelled and the y
+                    // axis was never actually tested. Emit it here instead, so
+                    // there is one source of truth rather than two copies of an
+                    // assumption.
+                    base.yBaseline = round(
+                        it.y - getRunCenterEm(it.text, it.italic,
+                                              (it as any).family, (it as any).bold) * it.scale);
                     if (it.bold) base.bold = true;
                     // Advance width, so the comparator can recover the pen
                     // position (x is the visual centre).

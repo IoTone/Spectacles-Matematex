@@ -1,5 +1,41 @@
 // MatematexPageTurn.ts — Turn pages with your hand.
 //
+// ─────────────────────────────────────────────────────────────────────────
+// DISABLED as of v0.1.1. `gestureEnabled` ships false; prev/next are the
+// shipping way to turn a page.
+//
+// Not removed, because the detector is sound and the tuning is real work that
+// should not be thrown away. It is off because it fails in BOTH directions at
+// once, which is the combination that makes a gesture worse than no gesture:
+//
+//   - It fires when it should not. Hand tracking on this device drops about
+//     once a second, and ordinary conversational hand movement crosses the
+//     travel threshold often enough that pages turn while the reader is doing
+//     something else. Losing your place is a worse failure than a control that
+//     is missing.
+//   - It fails when it should fire. A deliberate sweep is rejected often
+//     enough that the reader cannot build a habit — and a gesture you cannot
+//     rely on is one you stop reaching for after the third try.
+//
+// The two are linked: every threshold that suppresses a false positive costs a
+// true one, and the honest reading of the device logs is that the two
+// distributions overlap too much to separate with the signal available.
+//
+// WHAT WOULD MOVE IT FORWARD, roughly in order of expected value:
+//
+//   1. A better gate than "the hand moved". Palm orientation, or a pose the
+//     reader adopts deliberately, would separate a page turn from a gesticulation
+//     far better than travel and drift can. `isFacingCamera()` and
+//     `getPalmCenter()` are already on the SIK hand.
+//   2. Tracking quality. Half of every debugHand line came back tracked=false.
+//      Some of that is the reader working at the edge of the tracking volume,
+//      which the page's own position could fix.
+//   3. A confirmation affordance — the turn ears in the design brief — so a
+//      missed swipe has an obvious, instant fallback rather than a repeat.
+//
+// To re-enable for testing: tick `gestureEnabled`, and turn on `debugLog`.
+// ─────────────────────────────────────────────────────────────────────────
+//
 // A horizontal sweep of the dominant hand turns the page: right-to-left goes
 // forward, left-to-right goes back. That is the direction the page itself
 // moves, and it is the direction your hand goes when you turn a real page.
@@ -130,8 +166,8 @@ export class MatematexPageTurn extends BaseScriptComponent {
     @hint("The MatematexBookOfMath component whose pages this turns.")
     bookOfMath: MatematexBookOfMath;
 
-    @input('bool', 'true')
-    @hint("Master switch. Off leaves the buttons as the only way to turn a page.")
+    @input('bool', 'false')
+    @hint("OFF by default as of v0.1.1 — the detector fires when it should not AND misses deliberate sweeps; see the note at the top of this file. Prev/next are the shipping way to turn a page. Tick to resume testing.")
     gestureEnabled: boolean;
 
     @input('float', '0.22')
@@ -223,7 +259,9 @@ export class MatematexPageTurn extends BaseScriptComponent {
             return;
         }
         this.createEvent('UpdateEvent').bind(() => this.onUpdate());
-        print('[MatematexPageTurn] watching the dominant hand for page turns');
+        print(this.gestureEnabled
+            ? '[MatematexPageTurn] watching the dominant hand for page turns'
+            : '[MatematexPageTurn] gestures DISABLED — prev/next only (see the file header)');
     }
 
     private onUpdate(): void {

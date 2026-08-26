@@ -1653,6 +1653,21 @@
     - !<own> 485ee7b6-5716-49a0-8376-c7ad44bac179
   Components:
     []
+- !<SceneObject/271911f7-5a27-44f3-b8df-c61a76a2c58a>
+  PrefabRemaps:
+    []
+  Name: MatematexPageExperiment
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> de9581d2-25c6-4cdf-8b8a-e894618f44a9
 - !<SceneObject/280bf559-ed67-490a-a418-371f4e1d280b>
   PrefabRemaps:
     []
@@ -4664,7 +4679,7 @@
   FontSize: 48
   ExtrusionDepth: 0.400000
   ExtrudeDirection: Both
-  Font: !<reference> 00000000-0000-0000-0000-000000000000
+  Font: !<reference> 1156773e-5d2a-4140-89a9-d1160f9f3c6e
   LayoutRect:
     left: -7.500000
     bottom: -2.250000
@@ -5230,6 +5245,21 @@
     - !<own> 0adb3823-8545-4309-84cb-a6f3b9d3bd9a
   Components:
     []
+- !<SceneObject/84249628-8e21-409e-a56b-1f028e237491>
+  PrefabRemaps:
+    []
+  Name: MatematexCover
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> d501a032-b436-4fe3-94bc-a20f9fd38261
 - !<SceneObject/8636cef9-3bb6-408f-9f8b-e1c80edb92c4>
   PrefabRemaps:
     []
@@ -6924,6 +6954,44 @@
     - !<own> e23c6f98-441f-410b-b399-198bf0e88bf3
   Components:
     []
+- !<ScriptComponent/b63e7b40-3a15-4acb-8d84-c0b75341e9b8>
+  PrefabRemaps:
+    []
+  Name: MatematexPageTurn
+  Enabled: true
+  ScriptAsset: !<reference> 2cba21c8-6b21-4018-bdf1-e22c9e2e28f5
+  ScriptInputsDefault:
+    travelThreshold: true
+    backoff: true
+    settleHold: true
+    reverseLockout: true
+    maxDisarm: true
+    speedBaseline: true
+    maxTravel: true
+    invertDirection: true
+    debugHand: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      bookOfMath: !<MappingBased.AssignableType> e79609ab-2772-478c-bd0e-5b599511b31d
+      gestureEnabled: false
+      travelThreshold: 0.220000
+      driftRatio: 1.200000
+      maxDuration: 0.600000
+      backoff: 0.450000
+      settleSpeed: 0.700000
+      settleHold: 0.250000
+      reverseLockout: 1.200000
+      maxDisarm: !<float> 2.000000
+      speedBaseline: 0.150000
+      maxTravel: 0.800000
+      invertDirection: false
+      debugHand: false
+      debugLog: false
+  ScriptTypes:
+    "":
+      {}
 - !<ColliderComponent/b6a618ef-849a-4e8b-b850-c584c1ae7991>
   PrefabRemaps:
     []
@@ -7189,7 +7257,7 @@
   Enabled: true
   Layers: 1
   LocalTransform: !<TransformEntity>
-    Position: {x: 0.000000, y: 0.000000, z: -100.000000}
+    Position: {x: 0.000000, y: 0.000000, z: -130.000000}
     Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
     Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
     HasSegmentScaleCompensation: false
@@ -7485,6 +7553,21 @@
     []
   Components:
     - !<own> c6a8f639-8729-4acb-a01d-9f464f823a1e
+- !<SceneObject/c7245aa6-9930-435e-9e29-b20f38a9fbd8>
+  PrefabRemaps:
+    []
+  Name: MatematexPageTurn
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> b63e7b40-3a15-4acb-8d84-c0b75341e9b8
 - !<Text/c7287f5c-a6ee-42c2-9314-cf26845ea9a6>
   PrefabRemaps:
     []
@@ -8060,6 +8143,9 @@
     - !<own> 00485d89-05a0-4a49-824e-83d4360c0122
     - !<own> 5ea81066-90e0-4825-ada8-ef7611dbdac3
     - !<own> a869d8f4-64e6-4b3e-a414-9bd1e6d67031
+    - !<own> 271911f7-5a27-44f3-b8df-c61a76a2c58a
+    - !<own> c7245aa6-9930-435e-9e29-b20f38a9fbd8
+    - !<own> 84249628-8e21-409e-a56b-1f028e237491
   Components:
     - !<own> e79609ab-2772-478c-bd0e-5b599511b31d
 - !<ColliderComponent/cfbc39d1-06a8-499c-b2f8-5d4e246805d8>
@@ -8235,6 +8321,48 @@
     - !<own> bca75af3-ad57-49f6-b7d2-87262e4c3261
     - !<own> 1906c4b1-b2c4-4f6e-9cf3-d8fea7b9439d
     - !<own> 361ac47c-62e5-4085-adf6-d5cd8d71c72e
+- !<ScriptComponent/d501a032-b436-4fe3-94bc-a20f9fd38261>
+  PrefabRemaps:
+    []
+  Name: MatematexCover
+  Enabled: true
+  ScriptAsset: !<reference> 40880607-b5b0-42cf-8b0d-7690446de0de
+  ScriptInputsDefault:
+    coverHalfWidth: true
+    coverHalfHeight: true
+    coverHalfDepth: true
+    planeZ: true
+    coverColor: true
+    edgeColor: true
+    titleAccentColor: true
+    columns: true
+    perColumn: true
+    fallSpeed: true
+    rainScale: true
+    facesPerDrop: true
+    rainEnabled: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      material: !<reference.Material> d8596ebf-e771-4a92-9430-31cc2a994424
+      templateText: !<reference.SceneObject> 6cff32e6-7661-4a76-bcf7-dcf0f6cfca23
+      coverHalfWidth: !<float> 20.000000
+      coverHalfHeight: !<float> 28.000000
+      coverHalfDepth: !<float> 3.000000
+      planeZ: !<float> 39.000000
+      coverColor: !<Vec4> {x: 0.120000, y: 0.160000, z: 0.300000, w: 0.220000}
+      edgeColor: !<Vec4> {x: 0.650000, y: 0.780000, z: 1.000000, w: 0.850000}
+      titleAccentColor: !<Vec4> {x: 1.000000, y: 0.780000, z: 0.350000, w: 1.000000}
+      columns: 9
+      perColumn: 4
+      fallSpeed: !<float> 9.000000
+      rainScale: 0.500000
+      facesPerDrop: 2
+      rainEnabled: true
+  ScriptTypes:
+    "":
+      {}
 - !<ColliderComponent/d7529557-9f85-414d-a4a7-39730dfc9580>
   PrefabRemaps:
     []
@@ -8648,6 +8776,36 @@
     []
   Components:
     - !<own> 2e3dabaf-7a27-472b-9bc7-39c7756028f3
+- !<ScriptComponent/de9581d2-25c6-4cdf-8b8a-e894618f44a9>
+  PrefabRemaps:
+    []
+  Name: MatematexPage
+  Enabled: true
+  ScriptAsset: !<reference> d57182fa-395b-4450-afcb-a9db7be71867
+  ScriptInputsDefault:
+    majorEvery: true
+    planeZ: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      material: !<reference.Material> d8596ebf-e771-4a92-9430-31cc2a994424
+      halfWidth: !<float> 26.000000
+      halfHeight: !<float> 37.000000
+      pitch: !<float> 4.000000
+      majorEvery: 5
+      minorWeight: 0.120000
+      majorWeight: 0.220000
+      borderWeight: 0.350000
+      paperColor: !<Vec4> {x: 0.100000, y: 0.095000, z: 0.085000, w: 0.550000}
+      minorColor: !<Vec4> {x: 0.580000, y: 0.550000, z: 0.500000, w: 0.300000}
+      majorColor: !<Vec4> {x: 0.680000, y: 0.640000, z: 0.580000, w: 0.500000}
+      borderColor: !<Vec4> {x: 0.800000, y: 0.760000, z: 0.700000, w: 0.750000}
+      pageZ: -0.600000
+      planeZ: !<float> 39.000000
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/de9820c2-c5b3-469e-8520-f82aa0e31e6a>
   PrefabRemaps:
     []
@@ -9145,10 +9303,13 @@
     proofWorldScale: true
     proofOffsetX: true
     proofOffsetY: true
-    proofOffsetZ: true
     containerWorldZ: true
     containerWorldY: true
     useWorldSpace: true
+    soundWindows: true
+    soundWindowLength: true
+    soundVolume: true
+    titleAccentColor: true
     hideTemplate: true
     autoAdvanceSec: true
     calibrationProbe: true
@@ -9173,7 +9334,7 @@
       proofWorldScale: 1.500000
       proofOffsetX: !<float> 0.000000
       proofOffsetY: !<float> -25.000000
-      proofOffsetZ: !<float> -10.000000
+      proofOffsetZ: 0.500000
       containerWorldZ: !<float> 39.000000
       containerWorldY: !<float> 0.000000
       useWorldSpace: false
@@ -9186,6 +9347,15 @@
       searchButton: !<MappingBased.AssignableType_6> c690c3e9-c6cc-4648-aff0-4781ac5f7f32
       aboutButton: !<MappingBased.AssignableType_7> 6effe781-7393-45d9-aaed-d7c944c6f5b7
       proofButton: !<MappingBased.AssignableType_8> 9d7be0a2-d163-4788-89bf-fc5011a2132b
+      pageSheet: !<reference.SceneObject> 271911f7-5a27-44f3-b8df-c61a76a2c58a
+      size1Font: !<reference.Font> 672434e3-cfd8-4ae6-908f-1042ab99189a
+      size2Font: !<reference.Font> bdb75386-2fea-4c83-8bbd-16e651de4ba3
+      cover: !<MappingBased.AssignableType_9> d501a032-b436-4fe3-94bc-a20f9fd38261
+      pageTurnTrack: !<reference.AudioTrackAsset> 53c178fe-dc62-4afc-98c3-491c1d81f141
+      soundWindows: 10
+      soundWindowLength: !<float> 1.000000
+      soundVolume: !<float> 1.000000
+      titleAccentColor: !<Vec4> {x: 1.000000, y: 0.780000, z: 0.350000, w: 1.000000}
       searchScreen: !<reference.SceneObject> 3452f40f-a7b7-4692-825b-8286df4dee06
       hideTemplate: true
       autoAdvanceSec: !<float> 0.000000

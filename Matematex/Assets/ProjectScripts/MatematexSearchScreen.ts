@@ -15,8 +15,9 @@
 //   3. Wire `queryButton` (PinchButton) — pinching opens the XR keyboard.
 //   4. Wire `queryLabelObj` (SceneObject with Text3D) — shows current query text.
 //   5. Wire `resultsLabelObj` (Text3D) — shows "N results".
-//   6. Wire 6 topic chip PinchButtons + matching `topicChipLabels` (default
-//      labels: matrix, trig, derivative, integral, series, log).
+//   6. Topic chips need NOTHING wired: they auto-wire from SearchChip1..N and
+//      write their own captions. Set `topicChipLabels` only to override the
+//      defaults (matrix, trig, derivative, integral, series, log).
 //   7. Wire ~10 result-row PinchButtons + matching `resultRowLabelObjs` (each
 //      has a child Text3D for the row label). These form a button pool.
 //   8. Wire `closeButton` (PinchButton) — returns to splash.
@@ -59,12 +60,12 @@ export class MatematexSearchScreen extends BaseScriptComponent {
 
     @input
     @allowUndefined
-    @hint("Topic chip buttons. Pinching seeds the query with the chip's label. Length should match topicChipLabels.")
+    @hint("Topic chip buttons. Pinching seeds the query with the chip's label, and the label is written onto the chip. Auto-wired from SearchChip1..N children when left empty.")
     topicChips: PinchButton[];
 
     @input
     @allowUndefined
-    @hint("Labels for each topic chip — these are also used as queries when the chip is pinched. Default: matrix/trig/derivative/integral/series/log.")
+    @hint("Optional per-chip overrides. Leave EMPTY to use matrix/trig/derivative/integral/series/log — the chips no longer depend on this being filled, which is what used to break them.")
     topicChipLabels: string[];
 
     // ─── Result rows (button pool) ──────────────────────────────────────────
@@ -114,14 +115,27 @@ export class MatematexSearchScreen extends BaseScriptComponent {
             this.bindPinch(this.queryButton, () => this.openKeyboard(), 'queryButton');
         }
 
-        // Topic chips
-        if (this.topicChips && this.topicChipLabels) {
-            const n = Math.min(this.topicChips.length, this.topicChipLabels.length);
-            for (let i = 0; i < n; i++) {
+        // Topic chips.
+        //
+        // Driven by the CHIPS, not by the labels. It used to be
+        // `Math.min(chips.length, labels.length)` — and `topicChipLabels` is an
+        // array input, which the MCP bridge cannot fill, so on any scene where
+        // nobody dragged six strings in by hand that minimum was ZERO and not a
+        // single chip got bound. The per-item `|| DEFAULT_CHIP_LABELS[i]`
+        // fallback right below was unreachable, which is why it looked correct.
+        //
+        // Chips are also LABELLED here. Nothing wrote their captions before, so
+        // they sat on the page as six identical blank capsules: even once
+        // bound, there was no way to tell which one searched what.
+        if (this.topicChips) {
+            for (let i = 0; i < this.topicChips.length; i++) {
                 const chip = this.topicChips[i];
-                const label = this.topicChipLabels[i] || DEFAULT_CHIP_LABELS[i] || '';
-                if (!chip || !label) continue;
+                if (!chip) continue;
+                const label = (this.topicChipLabels && this.topicChipLabels[i])
+                    || DEFAULT_CHIP_LABELS[i] || '';
+                if (!label) continue;
                 this.bindPinch(chip, () => this.setQuery(label), `chip[${label}]`);
+                this.setChipCaption(chip, label);
             }
         }
 
@@ -364,6 +378,20 @@ export class MatematexSearchScreen extends BaseScriptComponent {
             } catch (e) { /* ignore */ }
         }
         return null;
+    }
+
+    /** Write a chip's caption onto its own button.
+     *
+     *  The capsule prefab keeps its text on a child scene object, which
+     *  {@link getTextComp} already looks through to — the same arrangement the
+     *  book's Proof/Back button uses. */
+    private setChipCaption(chip: PinchButton, label: string): void {
+        const obj = this.getButtonSceneObject(chip);
+        if (!obj) return;
+        const comp = this.getTextComp(obj);
+        if (comp) {
+            try { comp.text = label; } catch (e) { /* ignore */ }
+        }
     }
 
     private getButtonSceneObject(btn: PinchButton): SceneObject | null {
