@@ -23,7 +23,6 @@ import {
 } from '../../Matematex/Assets/ProjectScripts/SpaceDOM';
 
 import { MatematexLayoutWalker, LayoutItem } from '../../Matematex/Assets/ProjectScripts/MatematexBridge';
-import { getTextWidthEm } from '../../Matematex/Assets/ProjectScripts/KaTeXFontMetrics';
 
 import { formulasFor, idsFromArgv } from './formulas';
 
@@ -101,9 +100,16 @@ function main(): void {
                     base.italic = it.italic;
                     if (it.bold) base.bold = true;
                     // Advance width, so the comparator can recover the pen
-                    // position (x is the visual centre). Same call emitText
-                    // uses, so this is exact rather than an approximation.
-                    base.w = round(getTextWidthEm(it.text, it.italic) * it.scale);
+                    // position (x is the visual centre).
+                    //
+                    // Taken from the item, never recomputed. Only the walker
+                    // knows which metrics table measured a glyph — a delimiter
+                    // inside a `delimsizing size3` subtree is KaTeX_Size3, and
+                    // `{text, italic}` alone cannot tell you that. This line
+                    // used to call getTextWidthEm(it.text, it.italic), which
+                    // silently fell back to Main and so reported every scaled
+                    // delimiter as a layout error of half the width difference.
+                    base.w = round(it.widthEm * it.scale);
                 } else if (it.kind === 'line') {
                     base.width = round(it.width);
                     base.thickness = round(it.thickness);

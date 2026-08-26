@@ -36,6 +36,7 @@
     chapter4Button: false
     containerWorldY: false
     containerWorldZ: false
+    cover: false
     displayMode: false
     emToWorld: false
     hideTemplate: false
@@ -46,6 +47,8 @@
     lineMaterial: false
     mainFont: false
     nextButton: false
+    pageSheet: false
+    pageTurnTrack: false
     prevButton: false
     proofButton: false
     proofOffsetX: false
@@ -55,10 +58,14 @@
     searchButton: false
     searchScreen: false
     showProofs: false
+    soundVolume: false
+    soundWindowLength: false
+    soundWindows: false
     sqrtWidthScale: false
     templateText: false
     textColor: false
     textScaleMultiplier: false
+    titleAccentColor: false
     useWorldSpace: false
   ScriptTypesHidden:
     {}
@@ -99,6 +106,13 @@
       searchButton: !<MappingBased.AssignableType_6> 00000000-0000-0000-0000-000000000000
       aboutButton: !<MappingBased.AssignableType_7> 00000000-0000-0000-0000-000000000000
       proofButton: !<MappingBased.AssignableType_8> 00000000-0000-0000-0000-000000000000
+      pageSheet: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      cover: !<MappingBased.AssignableType_9> 00000000-0000-0000-0000-000000000000
+      pageTurnTrack: !<reference.AudioTrackAsset> 00000000-0000-0000-0000-000000000000
+      soundWindows: 10
+      soundWindowLength: !<float> 1.000000
+      soundVolume: !<float> 1.000000
+      titleAccentColor: !<Vec4> {x: 1.000000, y: 0.780000, z: 0.350000, w: 1.000000}
       searchScreen: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       hideTemplate: true
       autoAdvanceSec: !<float> 0.000000
@@ -124,7 +138,7 @@
     - '// @input float proofWorldScale = 1.5 {"hint":"Multiplier from proof units to world units. ~1.5 places a 3-4-5 triangle in a comfortable ~15-unit footprint."}'
     - '// @input float proofOffsetX {"hint":"Local X offset for the proof relative to the formula container."}'
     - '// @input float proofOffsetY = -25 {"hint":"Local Y offset for the proof relative to the formula container. Negative places it below the formula."}'
-    - '// @input float proofOffsetZ = -10 {"hint":"Local Z offset for the proof relative to the formula container. More negative pushes the proof further from the user."}'
+    - '// @input float proofOffsetZ = 0.5 {"hint":"Local Z offset for the proof relative to the formula container. Must stay IN FRONT of the page (MatematexPage.pageZ, −0.6) — a proof is printed on the page, not floating behind it."}'
     - '// @input float containerWorldZ = -100 {"hint":"Local Z offset (negative = in front of parent). For device: parent this SceneObject to Camera Object."}'
     - '// @input float containerWorldY {"hint":"Local Y offset (height relative to parent)"}'
     - '// @input bool useWorldSpace {"hint":"Use world-space positioning (legacy). Leave OFF for on-device / head-tracked content."}'
@@ -137,6 +151,13 @@
     - '// @input AssignableType_6 searchButton {"hint":"PinchButton — open the Search screen. Optional."}'
     - '// @input AssignableType_7 aboutButton {"hint":"PinchButton — toggle the About page (sources, licences, credits). Pinching it again returns to the splash. Optional."}'
     - '// @input AssignableType_8 proofButton {"hint":"PinchButton — show the visual proof for the current formula, full size. Only appears on formulas that have one. Pinching it again returns to the formula. Optional."}'
+    - '// @input SceneObject pageSheet {"hint":"The MatematexPage SceneObject that draws the grid-paper sheet. Hidden on the cover."}'
+    - '// @input AssignableType_9 cover {"hint":"MatematexCover component — the closed book the lens opens on. Optional: without it the lens opens on the half title instead."}'
+    - '// @input Asset.AudioTrackAsset pageTurnTrack {"hint":"The page-turn recording. Optional — without it, turns are silent. The AudioComponent that plays it is created in script, so there is nothing else to wire."}'
+    - '// @input int soundWindows = "10" {"hint":"How many one-second windows to pick from in the recording. The source is 11.3s of repeated page turns, so each window is a different turn and no two consecutive pages sound identical."}'
+    - '// @input float soundWindowLength = "1.0" {"hint":"Seconds of audio played per turn."}'
+    - '// @input float soundVolume = "1.0" {"hint":"Playback volume for the turn."}'
+    - "// @input vec4 titleAccentColor = \"{1.00, 0.78, 0.35, 1.00}\" {\"hint\":\"Colour of the XR superscript on the title page. Gold by default — the title page carries no proof, so this is free to be an accent rather than one of the proof palette's four meaning-bearing hues.\"}"
     - '// @input SceneObject searchScreen {"hint":"SceneObject hosting the MatematexSearchScreen component. Optional — search is unavailable if empty."}'
     - '// @input bool hideTemplate = true {"hint":"Hide template after cloning"}'
     - '// @input float autoAdvanceSec {"hint":"Auto-advance interval in seconds (0 = disabled). Useful for testing without buttons."}'

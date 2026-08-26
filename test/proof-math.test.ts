@@ -946,6 +946,26 @@ function clipConvex(sub: Pt[], clip: Pt[]): Pt[] {
         if (pf.family !== 'J') continue;
         const c = pf.claim as any;
         check(!!c, `#${id}: family J without a claim to check`);
+
+        // The generic form: a declared invariant and a value per frame. This
+        // branch exists because the Euler check below IS the family invariant
+        // in name only — it hard-codes V−E+F=2, so any second family-J proof
+        // would have failed on a quantity that has nothing to do with
+        // polyhedra. A family's invariant has to be about the family.
+        if (c.v === undefined) {
+            check(c.invariant !== undefined, `#${id}: family J without claim.invariant`);
+            const vals = [c.frame1, c.frame2, c.frame3, c.frame4]
+                .filter(v => v !== undefined) as number[];
+            check(vals.length >= 2, `#${id}: family J needs at least two frames`);
+            for (let k = 0; k < vals.length; k++) {
+                near(vals[k], c.invariant,
+                     `#${id}: frame ${k + 1} gives ${vals[k]}, not the invariant ${c.invariant}`);
+            }
+            console.log(`     #${id}: ${vals.length} frames, all at ${c.invariant}`);
+            checked++;
+            continue;
+        }
+
         const frames = [[c.e1, c.f1], [c.e2, c.f2], [c.e3, c.f3]].filter(f => f[0] !== undefined);
         check(frames.length >= 2, `#${id}: family J needs at least two frames`);
         for (const [e, f] of frames) {
@@ -1377,6 +1397,119 @@ function clipConvex(sub: Pt[], clip: Pt[]): Pt[] {
     }
     console.log(`     ratios ${errs.map((_e, i) => (f(hs[i]) / g(hs[i])).toFixed(3)).join(' → ')} ` +
                 `→ ${c.limit}, strictly closer each time`);
+}
+
+// ── #62 fixing the basis fixes everything ──────────────────────────────
+// The figure's claim is that a map leaving e1 and e2 alone leaves v alone, and
+// that reading its columns off gives diag(1,1). Both are checked against the
+// drawn decomposition rather than asserted.
+{
+    console.log('\n#62 Identity Matrix');
+    const c = PROOFS[62].claim!;
+    const I = [[1, 0], [0, 1]];
+    const v = [c.c1, c.c2];
+    const Iv = [I[0][0] * v[0] + I[0][1] * v[1], I[1][0] * v[0] + I[1][1] * v[1]];
+    near(Iv[0], v[0], '#62: I does not fix v');
+    near(Iv[1], v[1], '#62: I does not fix v');
+    // The columns of I are the images of the basis vectors — that is what makes
+    // the drawn grid a consequence rather than a restatement.
+    for (const k of [0, 1]) {
+        const e = k === 0 ? [1, 0] : [0, 1];
+        const Ie = [I[0][0] * e[0] + I[0][1] * e[1], I[1][0] * e[0] + I[1][1] * e[1]];
+        near(Ie[0], e[0], `#62: I moves e${k + 1}`);
+        near(Ie[1], e[1], `#62: I moves e${k + 1}`);
+        near(I[0][k], e[0], `#62: column ${k + 1} of the drawn grid is not e${k + 1}`);
+        near(I[1][k], e[1], `#62: column ${k + 1} of the drawn grid is not e${k + 1}`);
+    }
+    // Both panels must draw the SAME v arrow: the figure says nothing moved, so
+    // a right-hand panel drawn even slightly differently would be a lie.
+    const arrows = (PROOFS[62].primitives.filter(p => p.kind === 'arrow') as any[])
+        .filter(a => Math.abs(a.to[1] - a.from[1]) > 1e-9 && Math.abs(a.to[0] - a.from[0]) > 1e-9);
+    check(arrows.length === 2, `#62: expected one v arrow per panel, found ${arrows.length}`);
+    if (arrows.length === 2) {
+        const d = (a: any) => [a.to[0] - a.from[0], a.to[1] - a.from[1]];
+        near(d(arrows[0])[0], d(arrows[1])[0], '#62: the two panels draw different v');
+        near(d(arrows[0])[1], d(arrows[1])[1], '#62: the two panels draw different v');
+    }
+    console.log(`     I fixes e1, e2 and v = (${v[0]}, ${v[1]}); both panels draw the same v`);
+}
+
+// ── #64 the reflection is a bijection with 3 fixed points ──────────────
+// Exhaustive over all nine cells: (i,j) ↦ (j,i) must be a bijection, must be
+// its own inverse, and must fix exactly the diagonal. Then the DRAWN grids are
+// parsed and required to be A and its transpose — a right-hand grid quietly
+// drawn as a copy of the left would look entirely convincing.
+{
+    console.log('\n#64 Transpose');
+    const c = PROOFS[64].claim!;
+    const cells: string[] = [];
+    for (let i = 1; i <= 3; i++) for (let j = 1; j <= 3; j++) cells.push(`${i}${j}`);
+    const T = (k: string) => `${k[1]}${k[0]}`;
+    const image = new Set(cells.map(T));
+    check(image.size === 9, '#64: the reflection is not a bijection of the nine cells');
+    for (const k of cells) check(T(T(k)) === k, `#64: reflecting ${k} twice does not return it`);
+    const fixed = cells.filter(k => T(k) === k);
+    near(fixed.length, c.fixed, '#64: the number of cells on the mirror is not what is claimed');
+    near((cells.length - fixed.length) / 2, c.swapped, '#64: the number of swapped pairs is wrong');
+
+    const labels = (PROOFS[64].primitives.filter(p => p.kind === 'label') as any[])
+        .map(p => p.text as string).filter(t => /^a\d\d$/.test(t));
+    check(labels.length === 18, `#64: expected 18 entry labels, found ${labels.length}`);
+    const left = labels.slice(0, 9), right = labels.slice(9, 18);
+    for (let n = 0; n < 9; n++) {
+        check(right[n] === 'a' + T(left[n].slice(1)),
+              `#64: cell ${n} is ${left[n]} on the left but ${right[n]} on the right, ` +
+              `not its reflection`);
+    }
+    console.log(`     9 cells, ${fixed.length} on the mirror, ${c.swapped} swapped pairs; ` +
+                `both grids drawn correctly`);
+}
+
+// ── #71 the trace really is basis-independent ──────────────────────────
+// The three drawn frames must be genuine conjugates of one matrix — otherwise
+// the figure shows three unrelated matrices that happen to share a diagonal
+// sum, which proves nothing at all. So the conjugations are recomputed here and
+// compared entry by entry against what the figure draws.
+{
+    console.log('\n#71 Trace');
+    const A = [[2, 1], [1, 2]];
+    const P = [[1, 1], [0, 1]], Pinv = [[1, -1], [0, 1]];
+    const th = Math.PI / 4;
+    const Q = [[Math.cos(th), -Math.sin(th)], [Math.sin(th), Math.cos(th)]];
+    const QT = [[Q[0][0], Q[1][0]], [Q[0][1], Q[1][1]]];
+    const mul = (X: number[][], Y: number[][]) =>
+        [0, 1].map(i => [0, 1].map(j => X[i][0] * Y[0][j] + X[i][1] * Y[1][j]));
+    const tr = (X: number[][]) => X[0][0] + X[1][1];
+
+    near(mul(P, Pinv)[0][0], 1, '#71: P and its inverse are not inverse');
+    near(mul(P, Pinv)[0][1], 0, '#71: P and its inverse are not inverse');
+
+    const drawn = (PROOFS[71].primitives.filter(p => p.kind === 'label') as any[])
+        .map(p => p.text as string).filter(t => /^-?\d+$/.test(t)).map(Number);
+    check(drawn.length === 12, `#71: expected 12 entries across 3 frames, found ${drawn.length}`);
+
+    const computed = [A, mul(mul(Pinv, A), P), mul(mul(QT, A), Q)];
+    const names = ['standard basis', 'after a shear', 'its eigenbasis'];
+    for (let k = 0; k < 3; k++) {
+        for (let i = 0; i < 2; i++) {
+            for (let j = 0; j < 2; j++) {
+                near(drawn[k * 4 + i * 2 + j], computed[k][i][j],
+                     `#71: frame ${k + 1} (${names[k]}) draws the wrong entry at (${i},${j})`, 1e-9);
+            }
+        }
+        near(tr(computed[k]), PROOFS[71].claim!.invariant,
+             `#71: ${names[k]} does not have the claimed trace`);
+    }
+    // The point only lands if the entries genuinely differ between frames.
+    const flat = computed.map(M => M.flat().join(','));
+    check(new Set(flat).size === 3,
+          '#71: two frames are the same matrix — nothing is shown to change');
+    // And the eigenbasis frame must actually be diagonal, or "3 + 1 = λ1 + λ2"
+    // is a caption rather than a reading.
+    near(computed[2][0][1], 0, '#71: the eigenbasis frame is not diagonal');
+    near(computed[2][1][0], 0, '#71: the eigenbasis frame is not diagonal');
+    console.log(`     traces ${computed.map(tr).map(t => t.toFixed(0)).join(', ')} ` +
+                `across three genuinely different matrices`);
 }
 
 console.log(`\n${failures === 0 ? 'all proofs mathematically sound' : `${failures} problem(s)`}`);

@@ -1,0 +1,83 @@
+- !<AssetImportMetadata/ff4c1795-06aa-4ab0-a058-97b96a15a907>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> d57182fa-395b-4450-afcb-a9db7be71867
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> d57182fa-395b-4450-afcb-a9db7be71867
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> ed634b05-8f34-484b-a26d-3d94745f1961
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/ed634b05-8f34-484b-a26d-3d94745f1961>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: 6cdd93af-32e1-443f-9ba2-337bbdf7b393
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    borderColor: false
+    borderWeight: false
+    halfHeight: false
+    halfWidth: false
+    majorColor: false
+    majorEvery: false
+    majorWeight: false
+    material: false
+    minorColor: false
+    minorWeight: false
+    pageZ: false
+    paperColor: false
+    pitch: false
+    planeZ: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - material: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      halfWidth: !<float> 0.000000
+      halfHeight: !<float> 0.000000
+      pitch: !<float> 0.000000
+      majorEvery: 5
+      minorWeight: !<float> 0.000000
+      majorWeight: !<float> 0.000000
+      borderWeight: !<float> 0.000000
+      paperColor: !<Vec4> {x: 0.090000, y: 0.100000, z: 0.130000, w: 0.550000}
+      minorColor: !<Vec4> {x: 0.450000, y: 0.620000, z: 0.950000, w: 0.280000}
+      majorColor: !<Vec4> {x: 0.500000, y: 0.680000, z: 1.000000, w: 0.500000}
+      borderColor: !<Vec4> {x: 0.700000, y: 0.800000, z: 1.000000, w: 0.750000}
+      pageZ: !<float> 0.000000
+      planeZ: !<float> 39.000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input Asset.Material material {"hint":"Unlit material — the same one assigned to MatematexBookOfMath.lineMaterial."}'
+    - '// @input float halfWidth = "26" {"hint":"Half-width of the sheet in world units. 26 with halfHeight 37 is portrait 1:1.41."}'
+    - '// @input float halfHeight = "37" {"hint":"Half-height of the sheet. Larger than the ±27 vertical FOV budget on purpose — see the header."}'
+    - '// @input float pitch = "4" {"hint":"Grid pitch in world units. 4 gives ~13 columns on a 26-half-width page."}'
+    - '// @input int majorEvery = "5" {"hint":"Every Nth line is drawn heavier. 5 is the school-exercise-book convention. 0 disables major lines."}'
+    - '// @input float minorWeight = "0.12"'
+    - '// @input float majorWeight = "0.22"'
+    - '// @input float borderWeight = "0.35"'
+    - '// @input vec4 paperColor = "{0.09, 0.10, 0.13, 0.55}" {"hint":"Paper fill RGBA. Alpha 0 draws no paper at all — that is the current transparent look, kept one input away for comparison."}'
+    - '// @input vec4 minorColor = "{0.45, 0.62, 0.95, 0.28}" {"hint":"Minor grid line RGBA."}'
+    - '// @input vec4 majorColor = "{0.50, 0.68, 1.00, 0.50}" {"hint":"Major grid line RGBA."}'
+    - '// @input vec4 borderColor = "{0.70, 0.80, 1.00, 0.75}" {"hint":"Border rule RGBA. This is the element that actually makes it read as a page."}'
+    - '// @input float pageZ = "-0.6" {"hint":"Local Z of the paper. Grid sits 0.05 in front, rule 0.10, so content at z 0 stays on top."}'
+    - "// @input float planeZ = \"39\" {\"hint\":\"Local Z this object moves itself to on awake, so the page lands on the same plane as the book's content. Must match MatematexBookOfMath.containerWorldZ.\"}"

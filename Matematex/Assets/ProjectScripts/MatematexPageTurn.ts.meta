@@ -1,0 +1,86 @@
+- !<AssetImportMetadata/3278377f-4dbe-4ee6-9a1b-c97f5cf7c4bc>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 2cba21c8-6b21-4018-bdf1-e22c9e2e28f5
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 2cba21c8-6b21-4018-bdf1-e22c9e2e28f5
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 2239080b-587f-4183-9151-6719f8070379
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/2239080b-587f-4183-9151-6719f8070379>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: dc4c8bf5-a29f-4c1c-ae91-e231729f741b
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    backoff: false
+    bookOfMath: false
+    debugHand: false
+    debugLog: false
+    driftRatio: false
+    gestureEnabled: false
+    invertDirection: false
+    maxDisarm: false
+    maxDuration: false
+    maxTravel: false
+    reverseLockout: false
+    settleHold: false
+    settleSpeed: false
+    speedBaseline: false
+    travelThreshold: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - bookOfMath: !<MappingBased.AssignableType> 00000000-0000-0000-0000-000000000000
+      gestureEnabled: true
+      travelThreshold: 0.220000
+      driftRatio: 0.500000
+      maxDuration: 0.500000
+      backoff: 0.450000
+      settleSpeed: 0.400000
+      settleHold: 0.250000
+      reverseLockout: 1.200000
+      maxDisarm: !<float> 2.000000
+      speedBaseline: 0.150000
+      maxTravel: 0.800000
+      invertDirection: false
+      debugHand: false
+      debugLog: true
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input AssignableType bookOfMath {"hint":"The MatematexBookOfMath component whose pages this turns."}'
+    - '// @input bool gestureEnabled = "true" {"hint":"Master switch. Off leaves the buttons as the only way to turn a page."}'
+    - '// @input float travelThreshold = "0.22" {"hint":"How far the hand must travel horizontally, as a fraction of the screen. Lower = easier to trigger AND easier to trigger by accident."}'
+    - '// @input float driftRatio = "1.2" {"hint":"Vertical drift allowed, as a multiple of horizontal travel. A real arm sweep ARCS, and the device log rejected honest 0.22-0.30 sweeps at 0.8. 1.2 is about 50 degrees, which is safe now that maxTravel catches the wild ones."}'
+    - '// @input float maxDuration = "0.6" {"hint":"Seconds of history the detector looks back over. A sweep must complete inside this window; anything slower is a reach."}'
+    - '// @input float backoff = "0.45" {"hint":"Seconds after a turn before the detector will even consider re-arming. See THE RETURN STROKE above — this is only half of what stops a double turn."}'
+    - '// @input float settleSpeed = "0.70" {"hint":"Screen widths per second below which the hand counts as settled. Raised from 0.4 after the device log showed the re-arm almost always falling through to its timeout — a hand held up in view is never as still as 0.4/s."}'
+    - '// @input float settleHold = "0.25" {"hint":"Seconds the hand must stay under settleSpeed CONTINUOUSLY before the detector re-arms. This is the number that stops the return stroke: a hand reversing direction is briefly slow at the turnaround, but only briefly. Raise it if pages still turn back."}'
+    - '// @input float reverseLockout = "1.20" {"hint":"Seconds before a turn in the OPPOSITE direction to the last one is allowed. Same-direction paging only waits for backoff. Raise it if reversals still slip through."}'
+    - '// @input float maxDisarm = "2.0" {"hint":"Hard ceiling: re-arm this many seconds after a turn even if the hand never settles. A detector that never re-arms is worse than one that occasionally turns twice — it kills the feature silently."}'
+    - "// @input float speedBaseline = \"0.15\" {\"hint\":\"Seconds over which speed is measured. Frame-to-frame differencing multiplies tracking jitter by the frame rate; this is the smoothing that makes 'settled' mean anything.\"}"
+    - "// @input float maxTravel = \"0.80\" {\"hint\":\"Largest sweep accepted, in screen widths. Above this it is not an arm, it is the tracker losing the hand and re-acquiring it somewhere else — the device log showed phantom 2.6-screen-width 'swipes' doing exactly that.\"}"
+    - "// @input bool invertDirection = \"false\" {\"hint\":\"Flip forward and back. Only needed if the camera's screen-space x runs the other way than expected; a swipe that pages the wrong direction is one field away from fixed.\"}"
+    - "// @input bool debugHand = \"false\" {\"hint\":\"Print the hand's state twice a second — tracked, pinching, position. Very noisy; turn it on only when swipes do not register at all, because it answers 'is the hand being seen', which no other log does.\"}"
+    - '// @input bool debugLog = "false" {"hint":"Diagnostics: why strokes were rejected, and why the detector is disarmed. Off by default — a page turn always logs one line regardless, which is the part worth reading. Rejections are aggregated, not printed per frame."}'

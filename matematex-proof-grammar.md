@@ -319,16 +319,16 @@ is a definition, a convention, or symbolic in content.
 | 59 | Laplacian | **none** | definition |
 | 60 | Schrödinger Equation | **none** | a postulate |
 | 61 | Matrix Multiplication | I | routes i→k→j, partitioned by the middle node |
-| 62 | Identity Matrix | **none** | definition |
+| 62 | Identity Matrix | K | fixing the basis fixes every combination of it |
 | 63 | Matrix Inverse | K | the square returns, from either order |
-| 64 | Transpose | **none** | definition |
+| 64 | Transpose | I | reflection in the diagonal: 3 cells fixed, 6 swapped in pairs |
 | 65 | Transpose of Product | K | reversing a composition of maps |
 | 66 | Determinant of 2×2 | A | the signed area of the spanned parallelogram |
 | 67 | Determinant of Product | K | area scale factors multiply |
 | 68 | Cofactor Expansion | I | the 3! permutation terms split by where row 1 lands |
 | 69 | Eigenvalue Equation | K | the direction a map does not turn |
 | 70 | Characteristic Polynomial | K | the square flattens exactly at the roots |
-| 71 | Trace | **none** | definition |
+| 71 | Trace | J | three bases, no shared entry, one diagonal sum |
 | 72 | Trace of Product | I | nine products, added by rows and by columns |
 | 73 | Dot Product | E | projection onto the other vector |
 | 74 | Cross Product Magnitude | E | ✅ built |
@@ -339,11 +339,11 @@ is a definition, a convention, or symbolic in content.
 | 79 | Spectral Decomposition | K | one frame does both turns — the eigenframe |
 | 80 | Singular Value Decomposition | K | circle → ellipse: rotate, scale, rotate |
 
-**Totals**: **67 built**, **0 to build**, **13 with no witness**.
+**Totals**: **70 built**, **0 to build**, **10 with no witness**.
 
 ### Progress
 
-**All 67 built.** Every formula in the book now has either a proof or a
+**All 70 built.** Every formula in the book now has either a proof or a
 recorded verdict of *no witness*.
 
 | family | count | ids |
@@ -356,15 +356,15 @@ recorded verdict of *no witness*.
 | F similarity | 7 | 3, 11, 16, 33, 42, 52, 54 |
 | G tangency | 1 | 13 |
 | H path | 1 | 34 |
-| I bijection | 9 | 31, 32, 37, 38, 39, 61, 68, 72, 78 |
-| J invariant | 1 | 18 |
-| K transformation | 11 | 15, 28, 40, 48, 63, 65, 67, 69, 70, 79, 80 |
+| I bijection | 10 | 31, 32, 37, 38, 39, 61, 64, 68, 72, 78 |
+| J invariant | 2 | 18, 71 |
+| K transformation | 12 | 15, 28, 40, 48, 62, 63, 65, 67, 69, 70, 79, 80 |
 
-The 13 with no witness: 30, 35, 36, 44, 47, 51, 57, 58, 59, 60, 62, 64, 71.
-Definitions (#35 #51 #59 #62 #64 #71), notational restatements (#30 #36 #44
-#47), and physical postulates (#57 #58 #60).
+The 10 with no witness: 30, 35, 36, 44, 47, 51, 57, 58, 59, 60. Definitions
+with no construction behind them (#35 #51 #59), notational restatements (#30
+#36 #44 #47), and physical postulates (#57 #58 #60).
 
-### The eight that were wrongly filed as *none*
+### The eleven that were wrongly filed as *none*
 
 The first pass through the catalogue put 21 formulas in step 4. Nine of those
 were linear algebra, which was itself the signal: a chapter does not contain a
@@ -372,6 +372,15 @@ disproportionate share of the unprovable statements in mathematics. Re-reading
 them turned up eight with genuine, falsifiable content, and one internal
 contradiction — family I already *listed* #61 as a member while the table filed
 it as **none**.
+
+Three more followed on a second challenge — **#62, #64 and #71** — and they are
+the more instructive case, because the first pass had a *defensible-sounding*
+reason to refuse them. All three are definitions as written. So is **#73**,
+`a·b = Σ aᵢbᵢ`, which has had a figure from the beginning: the projection
+picture, which shows why that definition is the right one rather than merely
+restating it. The rule was being applied more strictly to linear algebra than to
+geometry — the same bias that produced the 9-of-21 skew — and the honest fix was
+to hold every chapter to #73's standard:
 
 What went wrong each time was the same mistake, made in two directions:
 
@@ -391,12 +400,28 @@ decomposition) did not, though the spectral theorem is the easier statement and
 its figure is the SVD's with one rotation replaced by the other's transpose.
 That difference *is* the content, so it is now the caption.
 
-The check that would have caught all eight up front, and is now step 5 of the
+- **#62** — a linear map is fixed by what it does to a basis, so the map that
+  leaves e1 and e2 alone leaves every combination alone; read its columns off
+  and that map is diag(1, 1). The decomposition rails are the argument, and
+  they survive the map.
+- **#64** — transposition is the reflection of the index grid in its own
+  diagonal: three cells sit on the mirror and do not move, six change places in
+  three pairs. 3 + 2·3 = 9, exhaustively checkable, and it carries
+  (Aᵀ)ᵀ = A, which the entrywise formula does not make obvious.
+- **#71** — adding up the diagonal looks arbitrary until you change basis and
+  watch it refuse to move. One map in three bases, no entry surviving intact,
+  the sum 4 every time — and in the eigenbasis it is 3 + 1, which is what the
+  quantity actually is.
+
+The check that would have caught all eleven up front, and is now step 5 of the
 decision procedure: **before recording *none*, state the theorem in words
 without using the notation.** If a sentence comes out that could be false, there
 is something to draw. "The entries of a matrix are its entries transposed" is
-not such a sentence, and #64 stays empty. "Summing a grid by rows gives the same
-answer as summing it by columns" is, and #72 got a figure.
+"Summing a grid by rows gives the same answer as summing it by columns" is such
+a sentence, and #72 got a figure. So is "the sum of the diagonal does not change
+when you rewrite the map in another basis" — #71. What does *not* pass is a
+sentence with no construction behind it at all: "the absolute value of x is its
+distance from zero" (#35) restates the notation and stops there.
 
 ---
 
@@ -454,7 +479,8 @@ written for. That is the case for classifying before drawing.
 |---|---|---|
 | A | pieces tile exactly, pairwise disjoint | #4 and #66 were shapes layered on a filled background, not partitions — overlapping by 4.5 and 6.0 square units |
 | E | every right-angle mark sits on two real segments | #76 had a leg written as a guessed 45° instead of the actual floor diagonal |
-| I | `claim.cells` matches the figure; cells disjoint; the count enumerated exhaustively | clean on the figures, but the exhaustive half is what let #61, #68 and #72 be *classified* at all — each was filed as **none** until the set it counts was written down |
+| I | `claim.cells` matches the figure; cells disjoint; the count enumerated exhaustively | clean on the figures, but the exhaustive half is what let #61, #64, #68 and #72 be *classified* at all — each was filed as **none** until the set it counts was written down |
+| J | a declared invariant, equal at every frame | the family invariant hard-coded V−E+F=2, so it was Euler's check wearing the family's name; #71 would have failed on a quantity with nothing to do with polyhedra |
 | K | the map must appear as an arrow | — |
 | — | nothing entirely buried from the default view | #24's b³ corner, hidden behind two slabs |
 | — | no two labels overlap under the narrow font model | #10's corner label and dimension label, effectively on one line |

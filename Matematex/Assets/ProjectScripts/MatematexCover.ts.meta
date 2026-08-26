@@ -1,0 +1,83 @@
+- !<AssetImportMetadata/08f9b55a-af25-4c78-9682-031584374cc3>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 40880607-b5b0-42cf-8b0d-7690446de0de
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 40880607-b5b0-42cf-8b0d-7690446de0de
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 2a5c349b-a31d-4d25-a48f-feabc8ccea0a
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/2a5c349b-a31d-4d25-a48f-feabc8ccea0a>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  ComponentUid: f97a1ea6-0e04-4b6a-90c5-baa79b80407d
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    columns: false
+    coverColor: false
+    coverHalfDepth: false
+    coverHalfHeight: false
+    coverHalfWidth: false
+    edgeColor: false
+    facesPerDrop: false
+    fallSpeed: false
+    material: false
+    perColumn: false
+    planeZ: false
+    rainEnabled: false
+    rainScale: false
+    templateText: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - material: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      templateText: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      coverHalfWidth: !<float> 20.000000
+      coverHalfHeight: !<float> 28.000000
+      coverHalfDepth: !<float> 3.000000
+      planeZ: !<float> 39.000000
+      coverColor: !<Vec4> {x: 0.120000, y: 0.160000, z: 0.300000, w: 0.220000}
+      edgeColor: !<Vec4> {x: 0.650000, y: 0.780000, z: 1.000000, w: 0.850000}
+      columns: 9
+      perColumn: 4
+      fallSpeed: !<float> 9.000000
+      rainScale: 0.500000
+      facesPerDrop: 2
+      rainEnabled: true
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input Asset.Material material {"hint":"Unlit material — the same one assigned to MatematexBookOfMath.lineMaterial."}'
+    - '// @input SceneObject templateText {"hint":"Text3D template to clone glyphs from — the same one the book uses."}'
+    - '// @input float coverHalfWidth = "20" {"hint":"Half-width of the cover slab."}'
+    - '// @input float coverHalfHeight = "28" {"hint":"Half-height of the cover slab. Portrait, like the pages inside."}'
+    - '// @input float coverHalfDepth = "3" {"hint":"Half-depth — the thickness of the closed book."}'
+    - '// @input float planeZ = "39" {"hint":"Local Z this object moves itself to on awake. Must match MatematexBookOfMath.containerWorldZ."}'
+    - '// @input vec4 coverColor = "{0.12, 0.16, 0.30, 0.22}" {"hint":"Cover fill RGBA. Low alpha on purpose: enough to tint, not enough to block the room."}'
+    - '// @input vec4 edgeColor = "{0.65, 0.78, 1.00, 0.85}" {"hint":"Edge rule RGBA. On an additive display the EDGES are what make a slab read as a solid."}'
+    - '// @input int columns = "9" {"hint":"Columns of falling symbols across the cover face. columns x perColumn x facesPerDrop KaTeX layouts run once, when the cover is first shown — the build time is printed."}'
+    - '// @input int perColumn = "4" {"hint":"Symbols per column. columns x perColumn is the number of drops."}'
+    - '// @input float fallSpeed = "9.0" {"hint":"Base fall speed in world units per second. Each column varies 0.6-1.4x so they never phase-lock."}'
+    - "// @input float rainScale = \"0.5\" {\"hint\":\"Glyph scale for the rain, relative to the book's own text.\"}"
+    - '// @input int facesPerDrop = "2" {"hint":"Pre-laid-out fragments per drop. One is enabled at a time and they cycle on recycle, so this is how much variety a column has before it repeats. Every one costs a KaTeX layout at build."}'
+    - '// @input bool rainEnabled = "true"'

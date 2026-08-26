@@ -54,3 +54,20 @@ In the future, we plan to implement:
 - Shared viewing of diagrams
 - Web Publishing of content
 - Spatial Content libraries
+
+## Third-party assets
+
+Bundled in the lens and credited on its About page.
+
+| Asset | Source | Credit |
+|---|---|---|
+| `Matematex/Assets/591291__21100267__textbook-page-turn.mp3` — the page-turn sound | [freesound.org/people/21100267/sounds/591291](https://freesound.org/people/21100267/sounds/591291/) | "Textbook page turn" by freesound user **21100267** |
+| `KaTeX_Main-Regular.ttf`, `KaTeX_Math-Italic.ttf` and the metrics in `KaTeXFontMetrics.ts` | [KaTeX 0.16.22](https://github.com/KaTeX/KaTeX) | MIT, © Khan Academy and contributors |
+
+The 11.3 s recording is a page being turned over and over. `MatematexPageTurn`
+plays a random one-second window of it per turn, so no two consecutive pages
+sound identical — the same transient replayed twenty times while paging through
+a chapter is what makes a UI sound feel synthetic.
+
+Formula content sources (ProofWiki, DLMF/NIST, OpenStax, Wikibooks, LibreTexts,
+Wikipedia) are listed on the About page.

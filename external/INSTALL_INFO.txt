@@ -1,12 +1,90 @@
-These were extracted manually from a package 
+external/ — third-party trees, and which of them are in the repo.
 
-texsvg
+Two kinds live here, and the difference is whether anything in the tree
+actually reads them.
 
-installed by:
+────────────────────────────────────────────────────────────────────────
+COMMITTED — something depends on these
+────────────────────────────────────────────────────────────────────────
 
-npm install .
+mathjax/          mathjax@3.2.2, the npm distribution package (es5/ builds).
+svgo/
+texsvg/           Extracted manually from a package installed by
+                  `npm install .` from master at this commit:
+                  https://github.com/remarkablemark/texsvg/commit/9dc7367a4db19bb4f9964ea48259a5ccc35ee1ff
+                  Extract these manually, just pulling out the source
+                  directories.
 
-from master at this commit: https://github.com/remarkablemark/texsvg/commit/9dc7367a4db19bb4f9964ea48259a5ccc35ee1ff
+────────────────────────────────────────────────────────────────────────
+NOT COMMITTED — reading copies, restore on demand
+────────────────────────────────────────────────────────────────────────
 
-Extract these manually just pulling out the source directories.
+Gitignored. Nothing in Matematex/ or test/ imports from any of them, and
+none is a build input. They are here so the KaTeX and MathJax sources can
+be READ, which is this project's working rule: every layout rule we need
+is already written down in KaTeX's source, its CSS and its emitted HTML,
+so read it rather than infer it from measurements. That rule has paid for
+itself repeatedly — accent placement came straight out of accent.js
+(`left = skew − accentWidth/2`) and katex.scss stating outright that
+`.accent-body:not(.accent-full) { width: 0 }`.
 
+Roughly 50 MB between them, restored in a minute, so they are not worth
+carrying in every clone forever.
+
+KaTeX-0.16.22/          katex@0.16.22, the GitHub SOURCE tree — not the
+                        npm tarball, which ships dist/ without src/.
+                        The files worth reading are src/fontMetricsData.js,
+                        src/functions/*.js and src/styles/katex.scss.
+
+    curl -L https://github.com/KaTeX/KaTeX/archive/refs/tags/v0.16.22.tar.gz \
+      | tar xz -C external/
+
+    (GitHub strips the tag's leading "v", so this unpacks straight to
+     external/KaTeX-0.16.22/ — no rename needed. If the directory name
+     comes out different, fix it: the version is part of the path on
+     purpose, so an upgrade cannot be mistaken for the old copy.)
+
+MathJax-src-3.2.2/      mathjax-full@3.2.2, likewise the source tree.
+
+    curl -L https://github.com/mathjax/MathJax-src/archive/refs/tags/3.2.2.tar.gz \
+      | tar xz -C external/
+
+@types/web/             @types/web@0.0.256. Referenced only by
+                        proto/domzero/package.json, which restores it
+                        itself via `npm install`.
+
+────────────────────────────────────────────────────────────────────────
+WHAT THE BUILD AND THE TESTS ACTUALLY USE
+────────────────────────────────────────────────────────────────────────
+
+Everything derived from KaTeX is already committed, so a fresh clone
+builds and every test runs with external/KaTeX-0.16.22 absent:
+
+  Matematex/Assets/ProjectScripts/katex_bundle.ts
+      dist/katex.mjs from katex@0.16.22, unmodified.
+
+  Matematex/Assets/ProjectScripts/KaTeXFontMetrics.ts
+      The metrics tables, transcribed from src/fontMetricsData.js.
+      Main-Regular, Math-Italic, Main-Bold, Math-BoldItalic and
+      Size1–Size4.
+
+  test/layout-conformance/reference/
+      katex.mjs   a byte copy of katex_bundle.ts, so the browser
+                  reference and our walker run the SAME build — zero
+                  version skew, which is what makes every delta our bug.
+      katex.css   compiled from src/styles/katex.scss.
+      fonts/      the 22 .woff2 faces. A real directory, NOT a symlink
+                  into external/, so the browser capture step works on a
+                  fresh clone too.
+      index.html  references katex.css, which references fonts/ — all
+                  relative.
+
+Regenerating katex.css after a KaTeX upgrade needs the source tree back:
+
+    ln -sfn ../../../external/KaTeX-0.16.22/fonts test/layout-conformance/reference/fonts
+    printf '$font-folder: "fonts";\n@import "katex.scss";\n' > /tmp/katex-wrap.scss
+    npx --yes sass --no-source-map \
+      --load-path=external/KaTeX-0.16.22/src/styles \
+      /tmp/katex-wrap.scss test/layout-conformance/reference/katex.css
+
+Replace the symlink with a real copy of the fonts afterwards.

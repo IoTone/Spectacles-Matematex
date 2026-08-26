@@ -391,6 +391,92 @@ interface DrawCtx {
     /** For a spatial figure, the depth (in proof units, post-rotation) to place
      *  every label at, so none is swallowed by the solid. Null for flat art. */
     labelPlaneZ: number | null;
+    /** Label footprints in DRAW space, collected before any stroke is drawn, so
+     *  lines can open a gap where a word sits. See `gapLabelBoxes`. */
+    labelBoxes: LabelBox[];
+}
+
+/** A label's footprint in draw space, padded. */
+interface LabelBox { x0: number; y0: number; x1: number; y1: number; }
+
+// ─── Keeping text legible against strokes ───────────────────────────────
+//
+// A line that runs through a word makes both unreadable, and on THIS display
+// there is no way to fix that by adding ink.
+//
+// `ProofLabel.shadow` was the original answer: a black offset copy behind each
+// glyph, giving it a border. That works on a subtractive display and does
+// LITERALLY NOTHING on an additive one — the output is scene plus render, so
+// rendering black adds zero and the shadow is invisible on device. It survives
+// below because it still helps in the Lens Studio preview, but it cannot be the
+// mechanism.
+//
+// The mechanism that works when you can only add light is to add LESS: break
+// the stroke where the word sits. That is also what a careful draughtsman does
+// by hand, and it needs no change to any proof's data — every label in the
+// catalogue gets it, including the 45 the legibility sweep found and any
+// written later.
+
+/** Half-width per character and half-height of a label, in TEMPLATE-scale
+ *  units. Deliberately generous: a gap slightly too wide reads as deliberate,
+ *  a gap slightly too narrow reads as a mistake. */
+const GAP_CHAR_W = 0.62;
+const GAP_LINE_H = 1.05;
+
+function labelFootprint(p: ProofLabel, pos: vec3, opts: ProofRenderOptions): LabelBox {
+    const s = (p.scale ?? 1.0) * opts.templateScale.x * TEXT_UNITS_PER_SCALE;
+    const w = p.text.length * GAP_CHAR_W * s;
+    const h = GAP_LINE_H * s;
+    return { x0: pos.x - w / 2, x1: pos.x + w / 2, y0: pos.y - h / 2, y1: pos.y + h / 2 };
+}
+
+/** World units a template-scale unit of text actually draws. Matches the
+ *  bridge's textScaleMultiplier relationship: one template unit at scale 1
+ *  covers about this much. */
+const TEXT_UNITS_PER_SCALE = 2.6;
+
+/** Split a→b into the pieces that fall OUTSIDE every label box.
+ *
+ *  Parametric on t so it works for any orientation, and only in XY: a label is
+ *  a flat billboard, so its footprint is a rectangle in the plane of the page
+ *  regardless of how the geometry is turned. */
+function gapLabelBoxes(a: vec3, b: vec3, boxes: LabelBox[]): { t0: number; t1: number }[] {
+    let spans: { t0: number; t1: number }[] = [{ t0: 0, t1: 1 }];
+    if (boxes.length === 0) return spans;
+
+    const dx = b.x - a.x, dy = b.y - a.y;
+
+    for (const box of boxes) {
+        // Slab test: the t-range over which the segment is inside this box.
+        let tEnter = 0, tExit = 1;
+        let inside = true;
+        const axes: [number, number, number, number][] = [
+            [a.x, dx, box.x0, box.x1],
+            [a.y, dy, box.y0, box.y1],
+        ];
+        for (const [o, d, lo, hi] of axes) {
+            if (Math.abs(d) < 1e-9) {
+                if (o < lo || o > hi) { inside = false; break; }
+                continue;
+            }
+            let t1 = (lo - o) / d, t2 = (hi - o) / d;
+            if (t1 > t2) { const tmp = t1; t1 = t2; t2 = tmp; }
+            tEnter = Math.max(tEnter, t1);
+            tExit = Math.min(tExit, t2);
+        }
+        if (!inside || tEnter >= tExit) continue;
+
+        const next: { t0: number; t1: number }[] = [];
+        for (const sp of spans) {
+            if (tExit <= sp.t0 || tEnter >= sp.t1) { next.push(sp); continue; }
+            if (tEnter > sp.t0) next.push({ t0: sp.t0, t1: Math.min(tEnter, sp.t1) });
+            if (tExit < sp.t1) next.push({ t0: Math.max(tExit, sp.t0), t1: sp.t1 });
+        }
+        spans = next;
+        if (spans.length === 0) break;
+    }
+    // Drop slivers: a 2%-of-length stub either side of a word is visual lint.
+    return spans.filter(sp => sp.t1 - sp.t0 > 0.02);
 }
 
 /** Render a VisualProof. Returns the proof's container SceneObject; destroy
@@ -446,7 +532,27 @@ export function renderProof(rawProof: VisualProof, opts: ProofRenderOptions): Sc
         // "|b| sin θ" was cut to "|b| si" by its own parallelogram, which reads
         // exactly like font clipping and is not.
         labelPlaneZ: proof.spatial ? b.maxZ + (b.maxZ - b.minZ) * 0.15 + 0.5 : null,
+        labelBoxes: [],
     };
+
+    // Collect every label's footprint BEFORE drawing anything. Strokes are
+    // drawn first and labels last, so a gap can only be opened if the renderer
+    // already knows where the words will land.
+    //
+    // Flat figures only. A spatial proof is rotated into a three-quarter view
+    // and its labels are floated onto a plane in front of the solid, so a
+    // rectangle in the page plane is not what a word occupies there — gapping
+    // against it would cut holes in edges that nothing covers.
+    if (!ctx.spatial) {
+        for (const p of proof.primitives) {
+            if (p.kind !== 'label') continue;
+            const anchor: Vec3 = ctx.labelPlaneZ === null
+                ? p.position
+                : [p.position[0], p.position[1], ctx.labelPlaneZ];
+            ctx.labelBoxes.push(
+                labelFootprint(p, v3(anchor, ctx), ctx.opts));
+        }
+    }
 
     for (const p of proof.primitives) {
         switch (p.kind) {
@@ -575,6 +681,30 @@ function viewPerp(dx: number, dy: number, dz: number): vec3 | null {
 
 function drawLine(a: vec3, b: vec3, thickness: number, color: vec4,
                   ctx: DrawCtx, name: string): void {
+    // Break the stroke where a word sits. See the note above `gapLabelBoxes`:
+    // on an additive display this is the ONLY way to give text contrast against
+    // a line, because the alternative — drawing something dark behind it — adds
+    // no light and therefore changes nothing.
+    if (ctx.labelBoxes.length > 0) {
+        const spans = gapLabelBoxes(a, b, ctx.labelBoxes);
+        if (spans.length !== 1 || spans[0].t0 !== 0 || spans[0].t1 !== 1) {
+            for (const sp of spans) {
+                drawSegment(
+                    new vec3(a.x + (b.x - a.x) * sp.t0, a.y + (b.y - a.y) * sp.t0,
+                             a.z + (b.z - a.z) * sp.t0),
+                    new vec3(a.x + (b.x - a.x) * sp.t1, a.y + (b.y - a.y) * sp.t1,
+                             a.z + (b.z - a.z) * sp.t1),
+                    thickness, color, ctx, name);
+            }
+            return;
+        }
+    }
+    drawSegment(a, b, thickness, color, ctx, name);
+}
+
+/** One unbroken ribbon from a to b. */
+function drawSegment(a: vec3, b: vec3, thickness: number, color: vec4,
+                     ctx: DrawCtx, name: string): void {
     const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
     const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
     if (len < 1e-6) return;

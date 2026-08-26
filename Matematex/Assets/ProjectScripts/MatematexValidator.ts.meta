@@ -77,7 +77,7 @@
     - "// @input Asset.Font boldFont {\"hint\":\"Optional bold font for \\\\mathbf tests (T36). If unassigned, T36 still passes the layout count check; the visual swap just won't happen.\"}"
     - // @input float emToWorld = 5
     - // @input float textScaleMultiplier = 5
-    - // @input float layoutWidthMargin = 1.18
+    - // @input float layoutWidthMargin = 1
     - // @input float italicScaleAdjust = 1
     - "// @input vec4 textColor = {1,1,1,1}"
     - // @input float containerWorldZ = 39

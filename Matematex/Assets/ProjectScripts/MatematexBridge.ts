@@ -65,6 +65,19 @@ export interface TextLayoutItem extends LayoutBase {
     text: string;
     italic: boolean;
     bold?: boolean;
+    /** The advance width the layout actually used, in em, before `scale`.
+     *
+     *  Recorded rather than left to be recomputed. Only the walker knows which
+     *  metrics table measured a glyph — a delimiter inside a `delimsizing size3`
+     *  subtree is measured against KaTeX_Size3, and nothing downstream can tell
+     *  from `{text, italic}` alone. Three separate call sites recomputed this
+     *  with `getTextWidthEm(text, italic)` and so silently fell back to Main:
+     *  the conformance dump, the radical's ink-extent scan, and the calibration
+     *  probe. The conformance one reported every scaled delimiter as an error
+     *  of half the Main-to-Size width difference — 0.174em for "(", 0.126em for
+     *  "[" — which is 13 of the 24 failures, and all of them in the harness
+     *  rather than in the layout. */
+    widthEm: number;
 }
 
 export interface LineLayoutItem extends LayoutBase {
@@ -280,12 +293,13 @@ function sizeFamilyFor(classes: string[]): string | null {
     if (classes.indexOf('delim-size1') >= 0) return 'size1';
     if (classes.indexOf('delim-size4') >= 0) return 'size4';
 
-    // Deliberately NOT mapping `.op-symbol.small-op`/`.large-op` to Size1/Size2,
-    // even though katex.scss does. Measured: it makes `\sum` formulas worse
-    // (#68 0.360 → 0.471em). In display mode a large operator is wrapped in an
-    // `op-limits` vlist, so its glyph width feeds our limit-centring rather than
-    // the cursor directly, and a wider (correct) glyph shifts the centring the
-    // wrong way. That interaction needs fixing before the metric can be applied.
+    // katex.scss: `.op-symbol.small-op` is KaTeX_Size1, `.large-op` is Size2.
+    // "∑" is not in KaTeX_Main at all, so without this a large operator was
+    // measured by getCharWidthEm's 0.5em last-resort fallback.
+    if (classes.indexOf('op-symbol') >= 0) {
+        if (classes.indexOf('large-op') >= 0) return 'size2';
+        if (classes.indexOf('small-op') >= 0) return 'size1';
+    }
     return null;
 }
 
@@ -298,6 +312,10 @@ interface WalkContext {
     bold: boolean;
     /** Active KaTeX_Size* variant ('size1'..'size4'), or null for Main/Italic. */
     fontFamily: string | null;
+    /** Set while walking an `msupsub`, so the vlist it wraps knows not to
+     *  centre its rows. Consumed by the vlist immediately inside, so a fraction
+     *  nested within a superscript still centres normally. */
+    inSupSub: boolean;
 }
 
 interface WalkResult {
@@ -352,6 +370,7 @@ export class MatematexLayoutWalker {
             italic: false,
             bold: false,
             fontFamily: null,
+            inSupSub: false,
         };
 
         this.walk(katexHtmlRoot, ctx);
@@ -423,6 +442,7 @@ export class MatematexLayoutWalker {
         // KaTeX also uses `left:` (negative or positive em) on accent-body
         // spans to fine-tune horizontal placement of accent glyphs over
         // their base (e.g. `\hat{H}` uses left:-0.25em).
+        const cursorBeforeOffsets = ctx.cursorX;
         const marginLeft = parseEm(getStyle(el, 'marginLeft'));
         const paddingLeft = parseEm(getStyle(el, 'paddingLeft'));
         const leftOffset = parseEm(getStyle(el, 'left'));
@@ -443,7 +463,34 @@ export class MatematexLayoutWalker {
         const sizeFamily = sizeFamilyFor(classes);
         const savedFamily = ctx.fontFamily;
         if (sizeFamily) ctx.fontFamily = sizeFamily;
-        const restoreFamily = () => { ctx.fontFamily = savedFamily; };
+        // Rides the same save/restore as the font family: `msupsub` is always
+        // exactly one span above the vlist whose rows must not be centred.
+        const savedSupSub = ctx.inSupSub;
+        if (classes.indexOf('msupsub') >= 0) ctx.inSupSub = true;
+        const restoreFamily = () => {
+            ctx.fontFamily = savedFamily;
+            ctx.inSupSub = savedSupSub;
+        };
+
+        // Accent body: draws, but occupies no width.
+        //
+        // katex.scss says so outright — `.accent-body:not(.accent-full)
+        // { width: 0 }` — and accent.js positions the glyph with
+        // `left = skew − accentWidth/2` on a `position: relative` box. So the
+        // hat over `\hat{H}` overhangs a zero-width slot: it is drawn at the
+        // slot's origin plus `left`, and the slot contributes nothing to the
+        // row. Counting the glyph's 0.5em advance made the accent row measure
+        // 0.31em instead of 0, which then fed the vlist centring and left the
+        // hat 0.156em short of the middle of the H.
+        //
+        // The cursor is restored to before `left` as well as before the glyph:
+        // `position: relative` shifts what is painted, never what follows.
+        if (classes.indexOf('accent-body') >= 0 && classes.indexOf('accent-full') < 0) {
+            this.walkChildren(el, ctx);
+            ctx.cursorX = cursorBeforeOffsets;
+            restoreFamily();
+            return;
+        }
 
         // mspace: explicit horizontal space, no children to walk
         if (hasClass(el, 'mspace')) {
@@ -586,7 +633,7 @@ export class MatematexLayoutWalker {
         //    NOT per-character height. Per-character height varies (e.g., "i" is
         //    taller than "s" due to its dot) which causes characters on the same
         //    line to render at different y positions. Using x-height keeps them aligned.
-        const widthEm = getTextWidthEm(text, ctx.italic, ctx.fontFamily);
+        const widthEm = getTextWidthEm(text, ctx.italic, ctx.fontFamily, ctx.bold);
         const widthWorld = widthEm * ctx.emToWorld * ctx.scale;
         const centerX = ctx.cursorX + widthWorld / 2;
 
@@ -602,6 +649,7 @@ export class MatematexLayoutWalker {
             scale: ctx.scale,
             italic: ctx.italic,
             bold: ctx.bold,
+            widthEm,
         });
 
         ctx.cursorX += widthWorld;
@@ -725,6 +773,10 @@ export class MatematexLayoutWalker {
         // Structure: vlist-t > vlist-r > vlist > [children with top:-Xem]
         // (vlist-t2 has 2 vlist-r — second is depth strut, usually empty)
         const startX = ctx.cursorX;
+        // Consume the flag: this vlist is the sub/superscript one, and anything
+        // nested deeper inside its rows is an ordinary vlist again.
+        const noCenter = ctx.inSupSub;
+        ctx.inSupSub = false;
         let maxX = startX;
         const lineItemIndices: number[] = [];
         // Record the items index BEFORE walking this vlist's children so we can
@@ -734,7 +786,8 @@ export class MatematexLayoutWalker {
 
         // Track per-child item ranges so we can CENTER narrower children
         // within the widest child's width (LaTeX centers numerator/denominator).
-        const childRanges: { startIdx: number; endIdx: number; width: number }[] = [];
+        const childRanges: { startIdx: number; endIdx: number; width: number;
+                              placed: boolean }[] = [];
 
         for (const vlistR of vlistT._childNodes) {
             if (vlistR.nodeType !== ELEMENT_NODE) continue;
@@ -823,6 +876,9 @@ export class MatematexLayoutWalker {
                             startIdx: childStartIdx,
                             endIdx: this.items.length,
                             width: childWidth,
+                            // A row KaTeX moved itself is already where it
+                            // belongs — see the centring pass below.
+                            placed: rowMarginLeft !== 0,
                         });
                         if (ctx.cursorX > maxX) maxX = ctx.cursorX;
                     }
@@ -847,7 +903,7 @@ export class MatematexLayoutWalker {
                 const it = this.items[i];
                 if (it.kind === 'text') {
                     const halfWidthWorld =
-                        (getTextWidthEm(it.text, it.italic) * svg.ctx.emToWorld * it.scale) / 2;
+                        (it.widthEm * svg.ctx.emToWorld * it.scale) / 2;
                     const rightEdge = it.x + halfWidthWorld;
                     if (rightEdge > inkRightX) inkRightX = rightEdge;
                 } else if (it.kind === 'svg' || it.kind === 'line') {
@@ -888,7 +944,28 @@ export class MatematexLayoutWalker {
         }
 
         // CENTER each child's items within the total width.
+        //
+        // Except a row KaTeX placed itself. A subscript row on a large operator
+        // carries `margin-left:-0.4445em` — TeX's rule that a subscript sits
+        // back by the operator's italic correction — and the row is applied
+        // above. Centring it afterwards undid exactly that: `width` is measured
+        // from the vlist origin, so a row shifted LEFT of the origin measures
+        // short (here, negative), and the centring pass pushed it right by half
+        // the deficit. On `\int_a^b` the lower limit came out 0.187em too far
+        // right while the upper limit — no margin, so nothing to undo — was
+        // exact to four decimals. That asymmetry is the tell.
+        //
+        // Rows KaTeX did NOT place carry `margin-left:0em` or nothing at all
+        // (fraction numerators, and the limits over a `\sum`), and those really
+        // do want centring.
         for (const range of childRanges) {
+            // A sub/superscript pair is not centred at ALL. Both rows start at
+            // the vlist origin and the vlist is as wide as the wider of them —
+            // so on `\int_{-\infty}^{\infty}` the narrow upper limit was being
+            // pushed right by half the lower limit's overhang. `placed` alone
+            // did not cover this: that row carries no margin of its own, so
+            // nothing marked it as already positioned.
+            if (noCenter || range.placed) continue;
             if (range.width < totalWidth && range.endIdx > range.startIdx) {
                 const shift = (totalWidth - range.width) / 2;
                 for (let i = range.startIdx; i < range.endIdx; i++) {
@@ -907,6 +984,7 @@ export class MatematexLayoutWalker {
         // Advance the parent cursor using the FULL width (including margin)
         // so parent vlists (e.g., an outer fraction) see the complete extent.
         ctx.cursorX = startX + totalWidth;
+        ctx.inSupSub = noCenter;
     }
 
     private findChildByClass(parent: SpaceElement, cls: string): SpaceElement | null {
@@ -1126,7 +1204,7 @@ export class MatematexSceneRenderer {
         if (this._calibrationSamples > 0) {
             this._calibrationSamples--;
             this._probeRecords.push({ text: item.text, italic: item.italic, comp, obj,
-                                      metricW: getTextWidthEm(item.text, item.italic) * this._probeEmToWorld * item.scale });
+                                      metricW: item.widthEm * this._probeEmToWorld * item.scale });
         }
 
         // Diagnostic for the first text only (verbose mode only)
@@ -1325,7 +1403,11 @@ export class MatematexSceneRenderer {
             }
 
             this.created.push(container);
-            print(`[MatematexBridge] SVG rendered: ${groups.length} mesh groups`);
+            // Silent by default: the cover lays out dozens of fragments at
+            // startup and this fired for each one. `verbose` still shows it.
+            if (this.verbose) {
+                print(`[MatematexBridge] SVG rendered: ${groups.length} mesh groups`);
+            }
 
         } catch (e: any) {
             print(`[MatematexBridge] SVG render failed: ${e.message || e}`);

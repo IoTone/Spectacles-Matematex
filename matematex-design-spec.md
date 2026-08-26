@@ -930,12 +930,26 @@ and one outright contradiction — the grammar's family-I section already listed
 | 72 | Trace of Product | I | nine products in a grid, added by rows (tr AB) and by columns (tr BA) |
 | 79 | Spectral Decomposition | K | the SVD's figure with one rotation replaced by the other's transpose — and that difference is the content |
 
-The thirteen that remain empty are definitions (#35 #51 #59 #62 #64 #71),
-notational restatements (#30 #36 #44 #47) and physical postulates (#57 #58 #60).
-**#64 Transpose stays empty on purpose**: a reflection across the diagonal draws
-beautifully and asserts nothing, and the discipline that a figure hung on a
-definition teaches the reader that figures are decoration is worth more than a
-round number.
+Three more followed on a second challenge, and they are the more instructive
+case because the first pass had a defensible-sounding reason to refuse them:
+
+| # | was | now | witness |
+|---|---|---|---|
+| 62 | Identity Matrix | K | fixing the basis fixes every combination of it — read the columns off and the map is diag(1,1) |
+| 64 | Transpose | I | reflection in the diagonal: 3 cells on the mirror, 6 swapped in 3 pairs, so transposing twice returns A |
+| 71 | Trace | J | one map in three bases, no entry surviving intact, the diagonal sum 4 every time — and in the eigenbasis it is λ₁ + λ₂ |
+
+All three are definitions as written. So is **#73**, `a·b = Σ aᵢbᵢ`, which has
+carried a figure from the beginning — the projection picture, which shows why
+that definition is the right one rather than restating it. The rule was being
+applied more strictly to linear algebra than to geometry, which is the same bias
+that produced the 9-of-21 skew, and the fix was to hold every chapter to #73's
+standard.
+
+**Ten remain empty**: definitions with no construction behind them (#35 #51
+#59), notational restatements (#30 #36 #44 #47) and physical postulates (#57 #58
+#60). The bar is whether the theorem can be said in a sentence that could be
+false — not whether the notation looks definitional.
 
 ### What went wrong the first time
 
@@ -988,4 +1002,187 @@ the notation; if the sentence could be false, there is something to draw*:
   found a pre-existing defect in **#10**, whose corner label and dimension label
   sat 0.2 units apart vertically with several units of text each.
 
-**Catalogue: 67 proofs, 13 recorded as no witness.**
+Family J's "generic" invariant turned out to be Euler's check wearing the
+family's name — it hard-coded V−E+F=2, so #71 would have failed on a quantity
+with nothing to do with polyhedra. It now takes a declared `claim.invariant` and
+a value per frame, with the Euler branch kept for #18.
+
+**Catalogue: 70 proofs, 10 recorded as no witness.**
+
+
+## Phase 7.4 — layout conformance: 61 → 83 of 88
+
+The harness had only ever been run against its committed 10-formula golden
+capture. Regenerated at full scope (all 80 book formulas plus the 8 extra
+constructs), it reproduced the remembered figure exactly: **PASS 61 / WARN 3 /
+FAIL 24**. Four fixes took that to **PASS 83 / WARN 3 / FAIL 2**, and the two
+that remain — `cases` and `aligned` — are constructs that are not in the book.
+
+**Every one of the 80 shipping formulas now passes or warns.**
+
+| fix | PASS | fixed |
+|---|---|---|
+| baseline | 61 | — |
+| the harness measured scaled delimiters with the wrong font | 70 | 9 |
+| large operators mapped to KaTeX_Size1/Size2 | 75 | 5 |
+| KaTeX_Main-Bold and Math-BoldItalic metrics added | 79 | 4 |
+| sub/superscript rows are never centred | 82 | 3 |
+| `.accent-body` occupies zero width | 83 | 1 |
+
+### The harness was wrong, again, in the same way
+
+Thirteen of the 24 failures were not in the bridge. `compare.ts` recovers a pen
+position from the emitted visual centre as `x − w/2`, and `dump-ours.ts`
+computed that `w` with `getTextWidthEm(text, italic)` — no font family. So every
+delimiter that KaTeX had scaled was reported as an error of exactly half the
+difference between its Main and Size widths: **0.174em for `(`, 0.126em for
+`[`**. The constant tracking the *glyph* is what gave it away; a real layout bug
+would not care which bracket it was.
+
+The fix is structural rather than a corrected formula: `TextLayoutItem` now
+carries `widthEm`, the advance the layout actually used. Only the walker knows
+which metrics table measured a glyph, and **three** separate places were
+re-deriving it from `{text, italic}` and silently falling back to Main — the
+conformance dump, the radical's ink-extent scan, and the calibration probe. Two
+of those are on the render path.
+
+This is the second time the harness reported confident wrong numbers (the first
+was ink-box centres inventing ~1em of drift, which is why pen positions are
+compared at all). Both times the tell was the same: **an error whose magnitude
+is a clean function of the glyph, not of the expression.**
+
+### It also invalidated an earlier decision
+
+`sizeFamilyFor` carried a comment explaining that mapping `.op-symbol.large-op`
+to KaTeX_Size2 had been tried and reverted because it made #68 worse
+(0.360 → 0.471em). That measurement came from the broken comparator. Re-enabled
+against a correct one, the mapping fixes five formulas. A reverted change is
+worth re-testing whenever the instrument that condemned it turns out to be
+faulty.
+
+### Three real bridge bugs
+
+- **No bold metrics at all.** `\mathbf` selects KaTeX_Main-Bold, a genuinely
+  different face — bold `u` advances 0.63889em against Main-Regular's 0.55556 —
+  and `getCharWidthEm` only ever chose between Main-Regular and Math-Italic.
+  Main-Bold and Math-BoldItalic are now lifted verbatim from
+  katex@0.16.22 `src/fontMetricsData.js`, the same source as the existing
+  tables, so there is no version skew against the bundle we render. The bold
+  faces are sparse (Math-BoldItalic has 107 glyphs), so lookup falls back along
+  slant before weight.
+- **Sub/superscript rows were being centred.** KaTeX shifts a subscript row left
+  by the base's italic correction — `\int_a^b` carries
+  `margin-left:-0.4445em` — and the centring pass then measured that row's width
+  *from the unshifted vlist origin*, found it short, and pushed it back right by
+  half the deficit. It undid precisely the offset that had just been applied.
+  The asymmetry was the tell: on `\int_a^b` the lower limit was 0.187em out
+  while the upper limit, which carries no margin and so had nothing to undo, was
+  exact to four decimals. A sub/superscript pair is not centred at all, so the
+  rule is now structural — `msupsub` sets a context flag that the vlist
+  immediately inside consumes, leaving a fraction nested within a superscript
+  centring normally.
+- **`.accent-body` is zero-width.** katex.scss says so outright:
+  `.accent-body:not(.accent-full) { width: 0 }`, with accent.js placing the
+  glyph via `left = skew − accentWidth/2` on a `position: relative` box. The hat
+  over `\hat{H}` overhangs a slot that contributes nothing to the row. Counting
+  its 0.5em advance made the accent row measure 0.31em instead of 0, which fed
+  the vlist centring and left the hat 0.156em short of the middle of the H.
+
+### Note on the golden capture
+
+`reference.json` now holds all 88 formulas rather than the 10-formula prototype
+set. `reference/formulas.json` already listed 88, so the two had drifted apart
+and the committed gate was covering an eighth of the corpus. Regenerating needs
+playwright and the two-step `serve` / `capture` dance in the README; steps 1, 2
+and 4 still run with no browser.
+
+---
+
+## Phase 7.5 — the portrait page
+
+The book stopped being a slide deck. Full design in
+`matematex-book-format-brief.md`; this records what shipped.
+
+**The sheet.** `MatematexPage.ts` draws a portrait sheet — paper fill, minor
+grid, major grid every 5th line, border rule — as four scene objects regardless
+of pitch, one `MeshBuilder` mesh per line weight. Thin quads rather than
+`MeshTopology.Lines`, because line topology gives a one-pixel hairline with no
+control over weight, and a grid whose minor lines are lighter than its major
+lines is exactly what makes it read as graph paper. Every dimension and colour
+is an `@input`: the difference between "paper" and "lightbox" on an additive
+display is a few tenths of alpha and cannot be judged in a preview that
+composites over black.
+
+`depthWrite` is forced off on the page's visuals, on a CLONED material's
+`mainPass`. `proofOffsetZ` ships at −10, so a depth-writing sheet z-culls every
+proof and the Proof button appears to do nothing — which is exactly what shipped
+first time round. `mainPassOverrides.depthWrite` does not do this: overrides
+carry shader uniforms, depth writing is pass state, and setting it there fails
+silently. The build log now prints the resulting `depthWrite` so the fix is
+evidence rather than hope. Note what the earlier device log did NOT tell us:
+"81 objects, built in 16ms" was true the whole time the proof was invisible.
+
+**Portrait, and its price.** `SAFE_HALF_WIDTH` went 34 → 24.
+`test/layout-conformance/page-fit-audit.ts` prices that against all 80 formulas
+at the scene's `emToWorld`: 17 of 80 now shrink to fit, worst #40 De Moivre at
+64%. It was 2 of 80 at ±34. That was paid knowingly to get a page that is a
+page; `--half-width=N` re-prices any alternative in seconds.
+
+The sheet is ±26 × ±37 and the TYPE AREA is ±24 × ±27. The sheet is
+deliberately taller than the FOV budget — a real book at reading distance does
+not fit in your field of view either, and the book is world-locked (it always
+was; nothing is parented to Camera Object), so a reader who wants the whole
+sheet steps back.
+
+**Page furniture.** Running head (chapter) and folio (page number = formula id)
+at the top of the TYPE area, not the top of the sheet — a page number you have
+to tilt your head to read is not a page number. Both are anchored from their own
+measured width, because **Text3D centres its string on the object's position**:
+placing "Linear Algebra" with its centre at the left margin ran it 2.6 units off
+the page on all 20 pages of chapter 4. The audit caught it before the device did.
+
+**Guards added.** `renderLines` now measures every hand-laid line through
+`KaTeXFontMetrics` — the same table the formula layout uses, so it is exact
+rather than a character-count heuristic — and warns when one would overhang.
+`page-fit-audit.ts` does the same offline for all 300 formula, chapter, proof
+title and proof caption labels. Widest survivor: #43's proof caption at 22.6 of
+the 24 available, which is 94% of the measure and worth knowing about.
+
+**Buttons.** Positioned in script (`alignPageButtons`) rather than in the scene,
+so the page geometry has one home. They were authored at x ±18, which put a
+capsule's outer edge at 27 — past the ±26 page edge, floating off the paper.
+Now ±14. TOC rows were shortened and offset to x +7 for the same reason: a row
+centred on 0 ran underneath its own chapter button.
+
+**Removed.** `Matematex/Assets/School Pack.lspkg` (1.2 MB) — untracked,
+unreferenced, never placed in the scene.
+
+---
+
+## Phase 7.6 — page-turn gestures
+
+`MatematexPageTurn.ts`: a horizontal sweep of the dominant hand turns the page,
+right-to-left forward, left-to-right back — the direction the page moves, and
+the direction your hand goes turning a real one.
+
+Tracks `indexKnuckle.screenPosition` from `SIK.HandInputData.getDominantHand()`.
+Knuckle rather than fingertip because the tip pitches as the finger curls, which
+reads as horizontal travel the hand never made. Screen space rather than world
+space because that is the space the gesture is performed in — how far the reader
+is standing from the book has nothing to do with it.
+
+Thresholds, all `@input`: 0.22 of screen width travelled, within 0.5 s, vertical
+drift under 0.5× the horizontal, 0.35 s cooldown, and gated on `isTracked()` and
+NOT `isPinching()` — a pinch is a button press, and treating someone pulling
+back from a chapter button as a page turn is the most annoying thing this
+component could do. `bookOfMath.canTurnPage()` keeps swipes inert on the search
+screen and inside a proof.
+
+Losing tracking abandons the stroke rather than pausing it: a stale origin is
+how a hand that reappears somewhere else fires a turn nobody asked for.
+
+`debugLog` prints the numbers behind every accepted AND rejected stroke, because
+the thresholds above are a starting point, not a result — nothing here can be
+tested at a desk, where there is a MouseInteractor and no hands. The prev/next
+buttons therefore stay for now. **Tune against the false-positive rate while
+idle, not the hit rate.**

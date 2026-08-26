@@ -1,6 +1,17 @@
 # Dependency trees — never checked in, restored with `npm install`.
 node_modules/
 
+# Upstream reading copies. Nothing in Matematex/ or test/ imports from these
+# and none is a build input — everything derived from KaTeX is committed
+# (katex_bundle.ts, KaTeXFontMetrics.ts, and the whole of
+# test/layout-conformance/reference/), so a fresh clone builds and every test
+# runs without them. They are kept locally so the KaTeX and MathJax SOURCES can
+# be read, which is how the layout rules get settled rather than guessed at.
+# ~50 MB between them; see external/INSTALL_INFO.txt to restore.
+external/KaTeX-0.16.22/
+external/MathJax-src-3.2.2/
+external/@types/
+
 # macOS / editor noise
 .DS_Store
 *.swp

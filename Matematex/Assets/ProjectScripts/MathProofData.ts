@@ -23,7 +23,7 @@ import {
 } from './MatematexProof';
 import {
     rectPieces, dimension, rightAngle, angleArc, PIECE_COLORS,
-    matrixGrid, GridCell, unitSquareImage,
+    matrixGrid, GridCell, unitSquareImage, CELL_DIM,
 } from './MathProofTemplates';
 
 // ─── Pythagoras (formula #1: a² + b² = c²) ──────────────────────────────
@@ -2623,6 +2623,178 @@ const PROOF_LHOPITAL: VisualProof = {
     ],
 };
 
+// #62  Iₙ = diag(1, 1, …, 1)   — the map that fixes the basis fixes everything
+//
+// Filed as **none** ("definition"), and that was the wrong standard: #73 states
+// the dot product's definition and carries a figure showing why THAT definition
+// is the natural one. Same case here, and the argument is a real one. A linear
+// map is determined by what it does to a basis, so a map that leaves e1 and e2
+// alone leaves every combination of them alone — and reading its columns off,
+// that map is diag(1, 1). The decomposition rails are the proof: they survive
+// the map, and v rides across on them.
+const ID_S = 1.8, ID_C1 = 1.6, ID_C2 = 1.1;
+const ID_PANEL = [-7.0, 3.0];
+const idPanel = (x0: number, tag: string): ProofPrimitive[] => {
+    const vx = x0 + ID_C1 * ID_S, vy = ID_C2 * ID_S;
+    return [
+        // The rails that decompose v — thin, because they are scaffolding.
+        { kind: 'line', p1: [vx, 0, 0], p2: [vx, vy, 0], color: COLOR_BLUE, thickness: 0.03 },
+        { kind: 'line', p1: [x0, vy, 0], p2: [vx, vy, 0], color: COLOR_GREEN, thickness: 0.03 },
+        { kind: 'arrow', from: [x0, 0, 0], to: [x0 + ID_S, 0, 0],
+          color: COLOR_BLUE, thickness: 0.07, headSize: 0.3 },
+        { kind: 'arrow', from: [x0, 0, 0], to: [x0, ID_S, 0],
+          color: COLOR_GREEN, thickness: 0.07, headSize: 0.3 },
+        { kind: 'arrow', from: [x0, 0, 0], to: [vx, vy, 0],
+          color: COLOR_RED, thickness: 0.08, headSize: 0.34 },
+        { kind: 'label', position: [x0 + 0.95, -0.5, 0], text: 'e1', scale: 0.3, color: COLOR_BLUE },
+        { kind: 'label', position: [x0 - 0.5, 0.95, 0], text: 'e2', scale: 0.3, color: COLOR_GREEN },
+        { kind: 'label', position: [vx + 0.45, vy + 0.25, 0], text: 'v', scale: 0.34, color: COLOR_RED },
+        { kind: 'label', position: [x0 + 1.44, -1.25, 0], text: tag, scale: 0.28, color: COLOR_INK },
+    ];
+};
+const PROOF_IDENTITY: VisualProof = {
+    title: 'Identity Matrix',
+    caption: 'fix the basis and every combination of it is fixed too',
+    family: 'K',
+    claim: { c1: ID_C1, c2: ID_C2 },
+    primitives: [
+        ...idPanel(ID_PANEL[0], 'v = 1.6 e1 + 1.1 e2'),
+        ...idPanel(ID_PANEL[1], '1.6 e1 + 1.1 e2 = v'),
+        { kind: 'arrow', from: [-3.4, 1.0, 0], to: [2.4, 1.0, 0],
+          color: COLOR_INK, thickness: 0.06, headSize: 0.36 },
+        { kind: 'label', position: [-0.5, 1.6, 0], text: 'I', scale: 0.4, color: COLOR_INK },
+        { kind: 'label', position: [-0.5, 0.45, 0], text: 'e1 and e2 both stay put',
+          scale: 0.26, color: COLOR_INK },
+
+        // Read the columns off: they are exactly where e1 and e2 landed.
+        ...matrixGrid(-1.8, -2.2, 2, 2, 1.2, 1.2, [
+            { row: 0, col: 0, label: '1', fill: COLOR_BLUE_FILL, stroke: COLOR_BLUE, labelColor: COLOR_BLUE },
+            { row: 1, col: 0, label: '0', fill: COLOR_BLUE_FILL, stroke: COLOR_BLUE, labelColor: COLOR_BLUE },
+            { row: 0, col: 1, label: '0', fill: COLOR_GREEN_FILL, stroke: COLOR_GREEN, labelColor: COLOR_GREEN },
+            { row: 1, col: 1, label: '1', fill: COLOR_GREEN_FILL, stroke: COLOR_GREEN, labelColor: COLOR_GREEN },
+        ]),
+        { kind: 'label', position: [0.6, -5.3, 0], text: 'its columns are e1 and e2',
+          scale: 0.3, color: COLOR_INK },
+        { kind: 'label', position: [0.6, -6.2, 0], text: 'so I = diag(1, 1)',
+          scale: 0.36, color: COLOR_RED },
+    ],
+};
+
+// #64  (Aᵀ)ᵢⱼ = Aⱼᵢ   — the grid reflected in its own diagonal
+//
+// The transpose swaps the two index slots, so as a map on the nine cells it is
+// the reflection across the main diagonal: three cells sit ON the mirror and do
+// not move, and the other six change places in three pairs. That is a genuine
+// count — 3 + 2·3 = 9 — it is exhaustively checkable, and it carries the fact
+// that transposing twice is the identity, which the entrywise formula alone
+// does not make obvious.
+const TP_W = 1.7, TP_H = 1.3;
+const TP_X = [-7.9, 1.1];
+/** Colour by orbit under the reflection: the diagonal is fixed, and each
+ *  off-diagonal pair shares a colour so the reader can follow where it goes. */
+const TP_ORBIT: Color[][] = [
+    [COLOR_AMBER, COLOR_BLUE, COLOR_GREEN],
+    [COLOR_BLUE, COLOR_AMBER, COLOR_RED],
+    [COLOR_GREEN, COLOR_RED, COLOR_AMBER],
+];
+const tpFillFor = (c: Color): Color => [c[0], c[1], c[2], 0.35];
+const tpCells = (transposed: boolean): GridCell[] => {
+    const out: GridCell[] = [];
+    for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+            // The right-hand grid holds Aᵀ, so cell (r,c) shows a(c+1)(r+1).
+            const i = transposed ? c : r, j = transposed ? r : c;
+            const col = TP_ORBIT[i][j];
+            out.push({ row: r, col: c, label: `a${i + 1}${j + 1}`,
+                       fill: tpFillFor(col), stroke: col, labelColor: col, labelScale: 0.32 });
+        }
+    }
+    return out;
+};
+const PROOF_TRANSPOSE: VisualProof = {
+    title: 'Transpose',
+    caption: 'reflect in the diagonal: three cells stay, six swap in pairs',
+    family: 'I',
+    claim: { cells: 18, fixed: 3, swapped: 3 },
+    primitives: [
+        ...matrixGrid(TP_X[0], 1.95, 3, 3, TP_W, TP_H, tpCells(false)),
+        ...matrixGrid(TP_X[1], 1.95, 3, 3, TP_W, TP_H, tpCells(true)),
+        // The mirror itself, drawn down the first grid's diagonal.
+        { kind: 'line', p1: [TP_X[0] - 0.3, 2.25, 0],
+          p2: [TP_X[0] + 3 * TP_W + 0.3, 1.95 - 3 * TP_H - 0.3, 0],
+          color: COLOR_AMBER, thickness: 0.05 },
+        { kind: 'label', position: [TP_X[0] + 3.6, 2.6, 0], text: 'the mirror',
+          scale: 0.28, color: COLOR_AMBER },
+
+        { kind: 'arrow', from: [-2.4, 0.0, 0], to: [0.4, 0.0, 0],
+          color: COLOR_INK, thickness: 0.06, headSize: 0.34 },
+        { kind: 'label', position: [-1.0, 0.6, 0], text: 'transpose', scale: 0.3, color: COLOR_INK },
+        { kind: 'label', position: [TP_X[0] + 2.55, -2.6, 0], text: 'A', scale: 0.4, color: COLOR_INK },
+        { kind: 'label', position: [TP_X[1] + 2.55, -2.6, 0], text: 'A transposed',
+          scale: 0.32, color: COLOR_INK },
+        { kind: 'label', position: [-0.5, -3.6, 0], text: '3 on the mirror stay, 6 swap in 3 pairs',
+          scale: 0.3, color: COLOR_INK },
+        { kind: 'label', position: [-0.5, -4.5, 0], text: 'so reflecting twice gives A back',
+          scale: 0.3, color: COLOR_RED },
+    ],
+};
+
+// #71  tr(A) = Σ aᵢᵢ   — the one number the diagonal keeps
+//
+// Adding up the diagonal looks arbitrary until you change basis and watch it
+// refuse to move. The same linear map is written three ways here — in the
+// standard basis, after a shear, and in its own eigenbasis — and although not
+// one entry survives intact, the diagonal sum is 4 every time. In the third
+// frame it is 3 + 1, the eigenvalues, which is what the quantity actually is.
+const TR_A = [[2, 1], [1, 2]];
+const TR_SHEAR = [[1, 0], [1, 3]];      // P⁻¹AP with P = [[1,1],[0,1]]
+const TR_EIGEN = [[3, 0], [0, 1]];      // QᵀAQ with Q = rotation by 45°
+const TR_FRAMES = [TR_A, TR_SHEAR, TR_EIGEN];
+const TR_CW = 1.6, TR_CH = 1.3, TR_STEP = 5.8;
+const trFrame = (k: number): ProofPrimitive[] => {
+    const M = TR_FRAMES[k], x0 = -7.4 + k * TR_STEP;
+    const cells: GridCell[] = [];
+    for (let r = 0; r < 2; r++) {
+        for (let c = 0; c < 2; c++) {
+            const diag = r === c;
+            cells.push({ row: r, col: c, label: `${M[r][c]}`,
+                         fill: diag ? COLOR_AMBER_FILL : CELL_DIM,
+                         stroke: diag ? COLOR_AMBER : COLOR_INK,
+                         labelColor: diag ? COLOR_AMBER : COLOR_INK, labelScale: 0.34 });
+        }
+    }
+    return [
+        ...matrixGrid(x0, 1.3, 2, 2, TR_CW, TR_CH, cells),
+        { kind: 'label', position: [x0 + TR_CW, -1.9, 0],
+          text: `tr = ${M[0][0] + M[1][1]}`, scale: 0.32, color: COLOR_AMBER },
+        { kind: 'label', position: [x0 + TR_CW, -2.6, 0],
+          text: ['standard basis', 'after a shear', 'its eigenbasis'][k],
+          scale: 0.26, color: COLOR_INK },
+    ];
+};
+const PROOF_TRACE: VisualProof = {
+    title: 'Trace',
+    caption: 'not one entry survives a change of basis, but the diagonal sum does',
+    family: 'J',
+    claim: { invariant: 4, frame1: 4, frame2: 4, frame3: 4 },
+    primitives: [
+        ...[0, 1, 2].flatMap(k => trFrame(k)),
+        ...[0, 1].flatMap((k): ProofPrimitive[] => {
+            const x0 = -7.4 + k * TR_STEP;
+            return [
+                { kind: 'arrow', from: [x0 + 3.4, 0, 0], to: [x0 + 5.6, 0, 0],
+                  color: COLOR_INK, thickness: 0.05, headSize: 0.3 },
+                { kind: 'label', position: [x0 + 4.5, 0.6, 0], text: 'change basis',
+                  scale: 0.26, color: COLOR_INK },
+            ];
+        }),
+        { kind: 'label', position: [-7.4 + 2 * TR_STEP + TR_CW, -3.3, 0],
+          text: '3 + 1 = λ1 + λ2', scale: 0.3, color: COLOR_GREEN },
+        { kind: 'label', position: [0, -4.4, 0], text: 'one map, three bases, one diagonal sum',
+          scale: 0.32, color: COLOR_RED },
+    ],
+};
+
 // ─── Catalog ────────────────────────────────────────────────────────────
 //
 // Keyed by formula id (1-based, matches MathFormula.id). Look up via
@@ -2696,10 +2868,20 @@ export const PROOFS: { [id: number]: VisualProof } = {
     70: PROOF_CHAR_POLY,
     72: PROOF_TRACE_PRODUCT,
     79: PROOF_SPECTRAL,
-    // The thirteen that stay empty are definitions (#35 #51 #59 #62 #64 #71),
-    // notational restatements (#30 #36 #44 #47) and physical postulates
-    // (#57 #58 #60). A figure hung on a definition teaches the reader that
-    // figures are decoration, so those get none. See matematex-proof-grammar.md.
+    62: PROOF_IDENTITY,
+    64: PROOF_TRANSPOSE,
+    71: PROOF_TRACE,
+    // The ten that stay empty: definitions with no construction behind them
+    // (#35 #51 #59), notational restatements (#30 #36 #44 #47) and physical
+    // postulates (#57 #58 #60). A figure hung on a definition teaches the
+    // reader that figures are decoration.
+    //
+    // #62, #64 and #71 sat on this list until the test was applied to them the
+    // way it had already been applied to #73 — which states the dot product's
+    // definition and carries a figure showing why THAT definition is the right
+    // one. The bar is whether the theorem can be said in a sentence that could
+    // be false, not whether the notation looks definitional. See
+    // matematex-proof-grammar.md.
 };
 
 /** Formula ids that have a visual proof, for UI that needs to know whether to
